@@ -35,5 +35,11 @@
     <ClInclude Include="SLGE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Macro Definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Template Classes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

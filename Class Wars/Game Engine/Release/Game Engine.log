@@ -1,5 +1,5 @@
-﻿Build started 2/16/2015 11:04:08 PM.
-     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" on node 2 (Rebuild target(s)).
+﻿Build started 2/17/2015 9:26:10 PM.
+     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D SLGE_EXPORT /D _WINDLL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt DllMaincpp.cpp Image.cpp Object.cpp Timer.cpp Window.cpp
          DllMaincpp.cpp
@@ -17,8 +17,8 @@
          Generating code
          Finished generating code
          Game Engine.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.dll
-     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" (Rebuild target(s)).
+     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:05.72
+Time Elapsed 00:00:05.41

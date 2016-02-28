@@ -79,6 +79,12 @@
   <ItemGroup>
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Class Definitions.h" />
+    <ClInclude Include="Constant Instantiations.h" />
+    <ClInclude Include="Function Definitions.h" />
+    <ClInclude Include="Object Instantiations.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

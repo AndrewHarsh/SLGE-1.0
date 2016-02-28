@@ -392,6 +392,12 @@ SDL_Window DLL_API *SLGE::SDL_CreateWindowEx(const char* in_Title, int in_X, int
 			return NULL;
 		}
 
+		//if (SDL_VideoInit("windows") == -1)
+		//{
+		//	printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+		//	return NULL;
+		//}
+
 		if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
 		{
 			printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
@@ -401,7 +407,7 @@ SDL_Window DLL_API *SLGE::SDL_CreateWindowEx(const char* in_Title, int in_X, int
 
 		if (TTF_Init() < 0)
 		{
-			printf("SDL_Mixer could not initialize! SDL_Error: %s\n", SDL_GetError());
+			printf("SDL_TTF could not initialize! SDL_Error: %s\n", SDL_GetError());
 			IMG_Quit();
 			SDL_Quit();
 			return NULL;

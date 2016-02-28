@@ -247,9 +247,9 @@ const Uint8 Window_t::GetKeyState(int in_Key) const
 	return KeyState[in_Key];
 }
 
-const Uint32 Window_t::GetMouseState(int &in_X, int &in_Y) const
+const Uint32 Window_t::GetMouseState(int *in_X, int *in_Y) const
 {
-	return SDL_GetMouseState(&in_X, &in_Y);
+	return SDL_GetMouseState(in_X, in_Y);
 }
 
 
@@ -312,7 +312,6 @@ int DLL_API Window_t::Init()
 
 	if (HardwareAccelerated)
 	{
-		//Create renderer for window
 		HScreen = SDL_CreateRenderer(WindowHandle, -1, SDL_RENDERER_ACCELERATED);
 		if (HScreen == NULL)
 		{

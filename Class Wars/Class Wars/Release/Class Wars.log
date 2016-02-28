@@ -1,5 +1,5 @@
-﻿Build started 2/16/2015 11:04:13 PM.
-     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Rebuild target(s)).
+﻿Build started 2/17/2015 9:26:15 PM.
+     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
          Source.cpp
@@ -8,8 +8,8 @@
          Generating code
          Finished generating code
          Class Wars.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.exe
-     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" (Rebuild target(s)).
+     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.57
+Time Elapsed 00:00:02.56
