@@ -115,7 +115,7 @@ public:
 		}
 
 		AddText(in_Message, Font, { 0x01, 0x01, 0x01 });
-		(*Image)[Image->size() - 1].SetCoords(X, Y, 0, 0);
+		(*Image)[Image->size() - 1].SetCoords(X, Y);
 		AddLayer(Image->size() - 1);
 	}
 
@@ -166,17 +166,23 @@ protected:
 	bool Open;
 	bool Moving;
 	double Speed; //in pixels per second
+	int UnitsKilled;
+
+	TTF_Font *Font;
 
 	void ClearData()
 	{
 		Open = false;
 		Moving = false;
 		Speed = 0;
+	    UnitsKilled;
 
 		UI_t::ClearData();
 	}
 
 public:
+
+	UI_t KillCounter;
 
 	Menu_t() : UI_t()
 	{
@@ -188,9 +194,22 @@ public:
 		Register(in_Window);
 	}
 
+	void DisplayAll()
+	{
+		Display();
+		KillCounter.Display();
+	}
+
 	void Init(double in_Speed)
 	{
 		Speed = in_Speed;
+		(*Image)[0].SetTransparency(0.75);
+
+		Font = TTF_OpenFont("Cheeseburger.ttf", 30);
+
+		KillCounter.Register(WindowHandle);
+		KillCounter.AddText("Units Killed: " + std::to_string(UnitsKilled), Font, { 0, 0, 0, 255 });
+		KillCounter.SetCoords(X, Y + 100);
 
 		//this->Button.Spawn(1, in_Window);
 		//OpenButton.Register(in_Window);
@@ -198,6 +217,11 @@ public:
 		//OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
 		//OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
 		//OpenButton.SetCoords(OpenButton.GetW() / 2, WindowHandle->GetHeight() / 2);
+	}
+
+	void AddToKilledUnits()
+	{
+		UnitsKilled++;
 	}
 
 	void HandleEvents()
@@ -231,6 +255,12 @@ public:
 			else
 				Moving = false;
 		}
+		else if (!Open)
+			SetCoords(WindowHandle->GetWidth() + W / 2, Y);
+
+		SDL_Color TextColor = { 0, 0, 0, 0 };
+		KillCounter.GetImageAtIndex(0)->Load("Units Killed: " + std::to_string(UnitsKilled), Font, TextColor);
+		KillCounter.SetCoords(X, Y + 100);
 	}
 };
 
@@ -241,8 +271,11 @@ class HUD_t : public UI_t
 {
 protected:
 
+	int SelectorPosition;
+
 	void ClearData()
 	{
+		SelectorPosition = 0;
 		UI_t::ClearData();
 	}
 
@@ -264,6 +297,7 @@ public:
 	{
 		Selector.Register(WindowHandle);
 		Selector.AddLayer("HUD2.png", { 640, 0, 81, 0 }, { NULL });
+		SelectorPosition = 0;
 	}
 
 	void DisplayAll()
@@ -276,14 +310,18 @@ public:
 	{
 		int HUD_BOX_SIZE = (int) (W / 8);
 
+		SetCoords(WindowHandle->GetWidth() / 2, WindowHandle->GetHeight() - 30);
+
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_1))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 0 + 160, Y, 0, 0);
+			SelectorPosition = 0;
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_2))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 1 + 160, Y, 0, 0);
+			SelectorPosition = 1;
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_3))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 2 + 160, Y, 0, 0);
+			SelectorPosition = 2;
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_4))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 3 + 160, Y, 0, 0);
+			SelectorPosition = 3;
+
+		Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * SelectorPosition + 160, Y);
 	}
 };
 
@@ -303,12 +341,15 @@ protected:
 		UI_t::ClearData();
 	}
 
-	virtual void SetDisplay(int in_ImageIndex)
+	void SetImage(int in_ImageIndex)
 	{
 		if (in_ImageIndex != 1)
-			Object_t::SetDisplay(in_ImageIndex);
+			Object_t::SetImage(in_ImageIndex);
 		else if (in_ImageIndex >= 0 && in_ImageIndex < (int) Image->size())
-			(*Image)[in_ImageIndex].SetCoords(X - W / 2, Y - (*Image)[in_ImageIndex].H() / 2, (*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
+		{
+			(*Image)[in_ImageIndex].SetCoords(X - W / 2, Y - (*Image)[in_ImageIndex].H() / 2);
+			(*Image)[in_ImageIndex].SetSize((*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
+		}
 	}
 
 public:
@@ -323,12 +364,15 @@ public:
 		Register(in_Window);
 	}
 
+	void Init()
+	{
+		StartWidth = (*Image)[0].W();
+	}
+
 	void SetPercentage(double in_Percentage)
 	{ 
-		//if (in_Percentage >= 0 && in_Percentage >= 1)
-		//{
-		//	(*Image)[1].SetCoords(X, Y, )
-		//}
+		if (in_Percentage >= 0 && in_Percentage <= 1)
+			(*Image)[1].SetSize((int) (StartWidth * in_Percentage), (int) H);
 	}
 };
  
@@ -435,7 +479,6 @@ protected:
 public:
 
 	Attack MainWeapon;
-
 	Bar_t HealthBar;
 
 	Entity_t() : Object_t()
@@ -448,9 +491,21 @@ public:
 		Register(in_Window);
 	}
 
+	virtual void Init()
+	{
+		HealthBar.Init();
+	}
+
+	virtual void PerFrameFunctions()
+	{
+		LastX = X;
+		LastY = Y;
+	}
+
 	virtual void DisplayAll()
 	{
 		Display();
+		PerFrameFunctions();
 	}
 
 	virtual void LoopRefresh()
@@ -472,10 +527,10 @@ public:
 			{
 				Attacking.TimeDisplayed -= Attacking.Duration;
 
-				if (++(*ImageToDisplay)[0] >= (Facing + Attacking.StartPosition + 1) * Attacking.TotalNumber ||
-					(*ImageToDisplay)[0] < (Facing + Attacking.StartPosition) * Attacking.TotalNumber)
+				if (++(*ImageToDisplay)[ImageToDisplay->size() - 1] >= (Facing + Attacking.StartPosition + 1) * Attacking.TotalNumber ||
+					(*ImageToDisplay)[ImageToDisplay->size() - 1] < (Facing + Attacking.StartPosition) * Attacking.TotalNumber)
 				{
-					(*ImageToDisplay)[0] = (Facing + Attacking.StartPosition) * Attacking.TotalNumber + 1;
+					(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Attacking.StartPosition) * Attacking.TotalNumber + 1;
 				}
 			}
 		}
@@ -487,19 +542,27 @@ public:
 			{
 				Moving.TimeDisplayed -= Moving.Duration;
 
-				if (++(*ImageToDisplay)[0] >= (Facing + Moving.StartPosition + 1) * Moving.TotalNumber ||
-					(*ImageToDisplay)[0] < (Facing + Moving.StartPosition) * Moving.TotalNumber)
+				if (++(*ImageToDisplay)[ImageToDisplay->size() - 1] >= (Facing + Moving.StartPosition + 1) * Moving.TotalNumber ||
+					(*ImageToDisplay)[ImageToDisplay->size() - 1] < (Facing + Moving.StartPosition) * Moving.TotalNumber)
 				{
-					(*ImageToDisplay)[0] = (Facing + Moving.StartPosition) * Moving.TotalNumber + 1;
+					(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Moving.StartPosition) * Moving.TotalNumber + 1;
 				}
 			}
 		}
 		else
-			(*ImageToDisplay)[0] = (Facing + Idle.StartPosition) * Idle.TotalNumber;
+			(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Idle.StartPosition) * Idle.TotalNumber;
 	}
 
 
 	//Class specific methods
+	bool IsDead()
+	{
+		if (CurrentHealth <= 0)
+			return true;
+		else
+			return false;
+	}
+
 	int Move(Direction in_Direction)
 	{
 		if (WindowHandle->TimerHandle.GetFPS() <= 0)
@@ -562,8 +625,10 @@ public:
 		return 0;
 	}
 
-	int Move(int in_X, int in_Y)
+	int MoveTo(int in_X, int in_Y)
 	{
+		Moving.Active = false;
+
 		double DistanceX = in_X - X;
 		double DistanceY = in_Y - Y;
 
@@ -586,20 +651,239 @@ public:
 				SetCoords(X - SpeedX, Y - SpeedY);
 			else
 				SetCoords(X + SpeedX, Y + SpeedY);
+
+			Moving.Active = true;
 		}
 
 		return 0;
 	}
 
-	void Attack(Entity_t *in_Victim, Attack Weapon)
+	bool HandleCollisionWithO(Object_t *in_Object)
 	{
-		in_Victim->TakeDamage(Weapon.Damage);
+		Entity_t *in_Entity = this;
+
+		if (static_cast <Entity_t*> (in_Object) == in_Entity)
+			return false;
+
+		if (in_Entity->IsOverlapping(in_Object) && in_Entity->Moving.Active)
+		{	
+			//in_Entity->TakeDamage(1);
+
+			/*
+			if (LastX < in_Object->GetX() &&
+				LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 &&
+				LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			{
+				SetCoords(in_Object->GetX() - in_Object->GetW() / 2 - W / 2, Y);
+			}
+			else if (LastX > in_Object->GetX() &&
+					 LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 &&
+					 LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			{
+				SetCoords(in_Object->GetX() + in_Object->GetW() / 2 + W / 2, Y);
+			}
+			else if (LastY < in_Object->GetY() &&
+					 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 &&
+					 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			{
+				SetCoords(X, in_Object->GetY() - in_Object->GetH() / 2 - H / 2);
+			}
+			else if (LastY > in_Object->GetY() &&
+					 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 &&
+					 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			{
+				SetCoords(X, in_Object->GetY() + in_Object->GetH() / 2 + H / 2);
+			}
+			//*/
+
+			///*
+			//Left side
+			if (in_Entity->LastX < in_Object->GetX() && 
+				in_Entity->LastY + in_Entity->H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
+				in_Entity->LastY - in_Entity->H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			{
+				in_Entity->SetCoords(in_Object->GetX() - (in_Entity->W + in_Object->GetW()) / 2, in_Entity->Y);
+			}
+			//Right side
+			else if (in_Entity->LastX < in_Object->GetX() && 
+					in_Entity->LastY + in_Entity->H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
+					in_Entity->LastY - in_Entity->H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			{
+				in_Entity->SetCoords(in_Object->GetX() + (in_Entity->W + in_Object->GetW()) / 2, in_Entity->Y);
+			}
+			//Top
+			else if (in_Entity->LastY < in_Object->GetY() && 
+					in_Entity->LastX + in_Entity->W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
+					in_Entity->LastX - in_Entity->W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			{
+				in_Entity->SetCoords(in_Entity->X, in_Object->GetY() - (in_Entity->H + in_Object->GetH()) / 2);
+			}
+			//Bottom
+			else if (in_Entity->LastY < in_Object->GetY() && 
+					in_Entity->LastX + in_Entity->W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
+					in_Entity->LastX - in_Entity->W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			{
+				in_Entity->SetCoords(in_Entity->X, in_Object->GetY() + (in_Entity->H + in_Object->GetH()) / 2);
+			}
+			//*/
+		
+			return true;
+		}
+
+		return false;
 	}
 
-	void TakeDamage(double in_Damage)
+	bool HandleCollisionWithE(Entity_t *in_Entity2)
+	{
+		Entity_t *in_Entity = this;
+
+		if (static_cast <Entity_t*> (in_Entity2) == in_Entity)
+			return false;
+
+		if (in_Entity->IsOverlapping(in_Entity2) && in_Entity->Moving.Active)
+		{	
+			//in_Entity->TakeDamage(1);
+
+			///*
+			if (LastX < in_Entity2->GetX() &&
+				LastY + H / 2 > in_Entity2->GetY() - in_Entity2->GetH() / 2 &&
+				LastY - H / 2 < in_Entity2->GetY() + in_Entity2->GetH() / 2)
+			{
+				SetCoords(in_Entity2->GetX() - in_Entity2->GetW() / 2 - W / 2, Y);
+			}
+			else if (LastX > in_Entity2->GetX() &&
+					 LastY + H / 2 > in_Entity2->GetY() - in_Entity2->GetH() / 2 &&
+					 LastY - H / 2 < in_Entity2->GetY() + in_Entity2->GetH() / 2)
+			{
+				SetCoords(in_Entity2->GetX() + in_Entity2->GetW() / 2 + W / 2, Y);
+			}
+			else if (LastY < in_Entity2->GetY() &&
+					 LastX + W / 2 > in_Entity2->GetX() - in_Entity2->GetW() / 2 &&
+					 LastX - W / 2 < in_Entity2->GetX() + in_Entity2->GetW() / 2)
+			{
+				SetCoords(X, in_Entity2->GetY() - in_Entity2->GetH() / 2 - H / 2);
+			}
+			else if (LastY > in_Entity2->GetY() &&
+					 LastX + W / 2 > in_Entity2->GetX() - in_Entity2->GetW() / 2 &&
+					 LastX - W / 2 < in_Entity2->GetX() + in_Entity2->GetW() / 2)
+			{
+				SetCoords(X, in_Entity2->GetY() + in_Entity2->GetH() / 2 + H / 2);
+			}
+			//*/
+
+
+			/*
+			if (LastX < in_Entity2->GetX() &&
+				LastY + H / 2 > in_Entity2->GetY() - in_Entity2->GetH() / 2 &&
+				LastY - H / 2 < in_Entity2->GetY() + in_Entity2->GetH() / 2)
+			{
+				SetCoords(LastX, Y);
+				in_Entity2->SetCoords(in_Entity2->LastX, in_Entity2->Y);
+			}
+			else if (LastX > in_Entity2->GetX() &&
+					 LastY + H / 2 > in_Entity2->GetY() - in_Entity2->GetH() / 2 &&
+					 LastY - H / 2 < in_Entity2->GetY() + in_Entity2->GetH() / 2)
+			{
+				SetCoords(LastX, Y);
+				in_Entity2->SetCoords(in_Entity2->LastX, in_Entity2->Y);
+			}
+			else if (LastY < in_Entity2->GetY() &&
+					 LastX + W / 2 > in_Entity2->GetX() - in_Entity2->GetW() / 2 &&
+					 LastX - W / 2 < in_Entity2->GetX() + in_Entity2->GetW() / 2)
+			{
+				SetCoords(X, LastY);
+				in_Entity2->SetCoords(in_Entity2->X, in_Entity2->LastY);
+			}
+			else if (LastY > in_Entity2->GetY() &&
+					 LastX + W / 2 > in_Entity2->GetX() - in_Entity2->GetW() / 2 &&
+					 LastX - W / 2 < in_Entity2->GetX() + in_Entity2->GetW() / 2)
+			{
+				SetCoords(X, LastY);
+				in_Entity2->SetCoords(in_Entity2->X, in_Entity2->LastY);
+			}
+			//*/
+
+			/*
+			//Left side
+			if (in_Entity->LastX < in_Entity2->LastX && 
+				in_Entity->LastY + in_Entity->H / 2 > in_Entity2->LastY - in_Entity2->GetH() / 2 && 
+				in_Entity->LastY - in_Entity->H / 2 < in_Entity2->LastY + in_Entity2->GetH() / 2)
+			{
+				in_Entity->SetCoords(in_Entity2->LastX - (in_Entity->W + in_Entity2->GetW()) / 2, in_Entity->LastY);
+			}
+			//Right side
+			else if (in_Entity->LastX < in_Entity2->LastX && 
+					in_Entity->LastY + in_Entity->H / 2 > in_Entity2->LastY - in_Entity2->GetH() / 2 && 
+					in_Entity->LastY - in_Entity->H / 2 < in_Entity2->LastY + in_Entity2->GetH() / 2)
+			{
+				in_Entity->SetCoords(in_Entity2->LastX + (in_Entity->W + in_Entity2->GetW()) / 2, in_Entity->Y);
+			}
+			//Top
+			else if (in_Entity->LastY < in_Entity2->LastY && 
+					in_Entity->LastX + in_Entity->W / 2 > in_Entity2->LastX - in_Entity2->GetW() / 2 && 
+					in_Entity->LastX - in_Entity->W / 2 < in_Entity2->LastX + in_Entity2->GetW() / 2)
+			{
+				in_Entity->SetCoords(in_Entity->X, in_Entity2->LastY - (in_Entity->H + in_Entity2->GetH()) / 2);
+			}
+			//Bottom
+			else if (in_Entity->LastY < in_Entity2->LastY && 
+					in_Entity->LastX + in_Entity->W / 2 > in_Entity2->LastX - in_Entity2->GetW() / 2 && 
+					in_Entity->LastX - in_Entity->W / 2 < in_Entity2->LastX + in_Entity2->GetW() / 2)
+			{
+				in_Entity->SetCoords(in_Entity->X, in_Entity2->LastY + (in_Entity->H + in_Entity2->GetH()) / 2);
+			}
+			//*/
+		
+			return true;
+		}
+
+		return false;
+	}
+
+	bool IsFacing(Entity_t *in_Victim)
+	{
+		double XDist = in_Victim->GetX() - X;
+		double YDist = in_Victim->GetY() - Y;
+
+		if (XDist > YDist && XDist < -YDist && Facing == Up)
+			return true;
+		else if (XDist < YDist && XDist > -YDist && Facing == Down)
+			return true;
+		else if (XDist < YDist && XDist < -YDist && Facing == Left)
+			return true;
+		else if (XDist > YDist && XDist > -YDist && Facing == Right)
+			return true;
+		else
+			return false;
+	}
+
+	virtual bool CanAttack(Entity_t *in_Victim)
+	{
+		SDL_Rect Temp;
+
+		Temp.x = (int) X;
+		Temp.y = (int) Y;
+		Temp.w = (int) (W + (2 * MainWeapon.Range));
+		Temp.h = (int) (H + (2 * MainWeapon.Range));
+
+		//{ in_Victim->GetX(), in_Victim->GetY(), in_Victim->GetW() + 2 * AttackRange, in_Victim->GetH() + 2 * AttackRange }
+
+		if (in_Victim->IsOverlapping(Temp) && IsFacing(in_Victim))
+			return true;
+		else
+			return false;
+	}
+
+	void Attack(Entity_t *in_Victim, Attack Weapon)
+	{
+		in_Victim->TakeDamage(Weapon.Damage / WindowHandle->TimerHandle.GetFPS());
+	}
+
+	virtual void TakeDamage(double in_Damage)
 	{
 		CurrentHealth -= in_Damage;
 		
+		HealthBar.SetPercentage((double) CurrentHealth / (double)InitialHealth);
 		//HealthBar.Image->operator[](1).SetCoords(HealthBar.GetX(), HealthBar.GetY(), (CurrentHealth / InitialHealth) * 50, 0);
 	}
 };
@@ -609,6 +893,7 @@ public:
 //Base class for all players
 class Player_t : public Entity_t
 {
+
 protected:
 
 	void ClearData()
@@ -649,11 +934,11 @@ public:
 			if (MouseX > X)
 				Angle -= 180;
 
-			(*Image)[0].SetImageProp(Angle - 90, { (*Image)[0].W() / 2, (*Image)[0].H() + 30 }, SDL_FLIP_NONE);
+			(*Image)[0].Rotate(Angle - 90, { (*Image)[0].W() / 2, (*Image)[0].H() + 30});
 		}
 
 	} Sword;
-
+							   
 	friend class Sword_t;
 
 	Player_t() : Entity_t()
@@ -669,8 +954,8 @@ public:
 	void Init()
 	{
 		Facing = Down;
-		MainWeapon.Range = 30;
-		MainWeapon.Damage = 10;
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
 
 		Moving.Duration = 0.1;
 		Moving.StartPosition = 0;
@@ -679,9 +964,28 @@ public:
 		Attacking.Duration = 0.1;
 		Attacking.StartPosition = 4;
 		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 0;
+		Idle.TotalNumber = 8;
+
+		W = 16;
+		H = 38;
 	
 		Sword.Register(WindowHandle);
 		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		MoveLayer(ImageToDisplay->size() - 1, 0);
+
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
 	}
 
 	void EventHandler()
@@ -733,7 +1037,7 @@ public:
 		else if (XDist > YDist && XDist > -YDist)
 			Facing = Right;
 
-		Sword.SetCoords(X, Y - MainWeapon.Range);//- 15);
+		Sword.SetCoords(X, Y - 30);//- 15);
 		Sword.EventHandler();
 	}
 
@@ -743,44 +1047,12 @@ public:
 	{
 		Display();
 		Sword.Display();
+		HealthBar.DisplayAll();
+		PerFrameFunctions();
 	}
 
 
 	//Object specific methods
-	bool IsFacing(Entity_t *in_Victim)
-	{
-		double XDist = in_Victim->GetX() - X;
-		double YDist = in_Victim->GetY() - Y;
-
-		if (XDist > YDist && XDist < -YDist && Facing == Up)
-			return true;
-		else if (XDist < YDist && XDist > -YDist && Facing == Down)
-			return true;
-		else if (XDist < YDist && XDist < -YDist && Facing == Left)
-			return true;
-		else if (XDist > YDist && XDist > -YDist && Facing == Right)
-			return true;
-		else
-			return false;
-	}
-
-	bool CanAttack(Entity_t *in_Victim)
-	{
-		SDL_Rect Temp;
-
-		Temp.x = (int) X;
-		Temp.y = (int) Y;
-		Temp.w = (int) (W + 2 * MainWeapon.Range);
-		Temp.h = (int) (H + 2 * MainWeapon.Range);
-
-		//{ in_Victim->GetX(), in_Victim->GetY(), in_Victim->GetW() + 2 * AttackRange, in_Victim->GetH() + 2 * AttackRange }
-
-		if (in_Victim->IsOverlapping(Temp) &&
-			IsFacing(in_Victim))
-			return true;
-		else
-			return false;
-	}
 };
 
 //======================================
@@ -813,16 +1085,47 @@ public:
 
 	void Init(int in_X, int in_Y, int in_MoveSpeed)
 	{
-		SetCoords(in_X, in_Y, 32, 32);
+		SetCoords(in_X, in_Y);
+		//SetSize((*Image)[0].ClipW(), (*Image)[0].ClipH());
+		SetSize(16, 16);
 		MoveSpeed = in_MoveSpeed;
 		DestinationX = X;
 		DestinationY = Y;
 		InitialHealth = 100;
 		CurrentHealth = 100;
 
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 0;
+		Moving.TotalNumber = 10;
+
+		MainWeapon.Range = 5;
+		MainWeapon.Damage = 5;
+		MainWeapon.Speed = 0.5;
+
 		HealthBar.Register(WindowHandle);
 		HealthBar.AddImage("Health.png", { 0, 50, 50, 5 }, { NULL });
 		HealthBar.AddLayer("Health.png", { 0, 100, 50, 5 }, { NULL });
+		HealthBar.Init();
+
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		MoveLayer(ImageToDisplay->size() - 1, 0);
+	}
+
+	virtual bool CanAttack(Entity_t *in_Victim)
+	{
+		SDL_Rect Temp;
+
+		Temp.x = (int) X;
+		Temp.y = (int) Y;
+		Temp.w = (int) (W + (2 * MainWeapon.Range));
+		Temp.h = (int) (H + (2 * MainWeapon.Range));
+
+		//{ in_Victim->GetX(), in_Victim->GetY(), in_Victim->GetW() + 2 * AttackRange, in_Victim->GetH() + 2 * AttackRange }
+
+		if (in_Victim->IsOverlapping(Temp))
+			return true;
+		else
+			return false;
 	}
 
 
@@ -831,9 +1134,10 @@ public:
 	{
 		Display();
 
-		HealthBar.SetCoords(X, Y - H / 2);
-
+		HealthBar.SetCoords(X, Y - (*Image)[(*ImageToDisplay)[0]].H() / 2);
 		HealthBar.Display();
+
+		PerFrameFunctions();
 	}
 
 
@@ -855,6 +1159,6 @@ public:
 			DestinationY = rand() % (in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2));//sets random y
 		}
 		else
-			Move((int) DestinationX, (int) DestinationY);
+			MoveTo((int) DestinationX, (int) DestinationY);
 	}
 };

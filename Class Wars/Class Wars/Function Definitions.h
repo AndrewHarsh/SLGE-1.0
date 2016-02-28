@@ -29,7 +29,7 @@ FunctionReturn SpawnMainMenu()
 
 	//Setup backgrouns
 	Background[0].AddImage("Main Menu.png", { 0, 0, 640, 480}, { NULL });
-	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2, 0, 0);
+	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2);
 
 	//Setup Buttons
 	for (int i = 0; i < Button.NumberOfObjects(); i++)
@@ -73,8 +73,8 @@ FunctionReturn RunMainMenu()
 	}
 
 	//Display all
-	DynamicClass <Object_t>::All(&Object_t::Display);
-	DynamicClass <UI_t>::All(&UI_t::DisplayAll);
+	All <Object_t> (&Object_t::Display);
+	All <UI_t> (&UI_t::DisplayAll);
 
 	return Continue;
 }
@@ -109,11 +109,16 @@ FunctionReturn SpawnGame()
 	//Setup the background
 	Background[0].AddImage("Image.png", { NULL }, { NULL });
 	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2);
+	Background[0].SetID("Background");
 
 	//Setup the monsters
 	for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
 	{
-		DummyTarget[i].AddImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[i].AddImage("1.png", { ii * 32, 0, 32, 32 }, { 255, 0, 153, 0 });
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[i].AddImage("1.png", { ii * 32, 32, 32, 32 }, { 255, 0, 153, 0 });
+
 		DummyTarget[i].Init(rand() % WIDTH, rand() % HEIGHT, 50);
 	}
 
@@ -124,26 +129,28 @@ FunctionReturn SpawnGame()
 			Player[0].AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
 	}
 	Player[0].Init();
-	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2, 0, 0);
+	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2);
 
 	//Setup the "tab" menu
-	Inventory[0].AddImage("Players.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0x44 });
+	Inventory[0].AddImage("Players.png", { NULL }, { NULL });
+	Inventory[0].Init(1000);
 	Inventory[0].SetCoords(WIDTH + 212, HEIGHT / 2 - 30);
 
 	//Setup the HUD
+	HUD[0].Init();
 	HUD[0].AddImage("HUD2.png", { 0, 0, 640, 0 }, { NULL });
 	HUD[0].SetCoords(WIDTH / 2, HEIGHT - 30);
 	HUD[0].Selector.SetCoords(WIDTH / 2 - 120, HEIGHT - 30);
 
 	//Setup the player health bar
-	Bar[0].AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
-	Bar[0].AddLayer("Health.png", { 0, 100, 120, 20 }, { NULL });
-	Bar[0].SetCoords(Bar[0].GetW() / 2 + 10, Bar[0].GetH() / 2 + 10);
+	//Bar[0].AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+	//Bar[0].AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+	//Bar[0].SetCoords(Bar[0].GetW() / 2 + 10, Bar[0].GetH() / 2 + 10);
 
 	//Setup the player magic bar
 	Bar[1].AddImage("Health.png", { 0, 150, 200, 20 }, { NULL });
 	Bar[1].AddLayer("Health.png", { 0, 0, 30, 20 }, { NULL });
-	Bar[1].SetCoords(Bar[1].GetW() / 2 + 10, Bar[0].GetY() + Bar[0].GetH() + 10);
+	Bar[1].SetCoords(Bar[1].GetW() / 2 + 10, 50);//Bar[0].GetY() + Bar[0].GetH() + 10);
 
 	//Setup the player experience bar
 	Bar[2].AddImage("Health.png", { 0, 50, 20, 5 }, { NULL });
@@ -163,23 +170,36 @@ FunctionReturn SpawnGame()
 
 	return Continue;
 }
- 
+
 //Runs all code that must be executed each frame in the Game
 FunctionReturn RunGame()
 {
-	//Window1.TimerHandle.Benchmark("Run Game");
+	///*
+
+	WIDTH = Window1.GetWidth();
+	HEIGHT = Window1.GetHeight();
 
 	//Check events for all
-	DynamicClass <Player_t>::All(&Player_t::EventHandler);
-	DynamicClass <Menu_t>::All(&Menu_t::HandleEvents);
-	DynamicClass <HUD_t>::All(&HUD_t::HandleEvents);
+	//Window1.TimerHandle.Benchmark("Check Events");
+	All <Player_t> (&Player_t::EventHandler);
+	All <Menu_t> (&Menu_t::HandleEvents);
+	All <HUD_t> (&HUD_t::HandleEvents);
 		
 	//Move enemies
-	SDL_Rect Temp = { WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT }; //Cant pass an initialization list into a variadic template function
-	DynamicClass <Monster_t>::All(&Monster_t::Wander, Temp, NULL);
+	//Window1.TimerHandle.Benchmark("Move Enemies");
+	//SDL_Rect Temp = { WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT }; //Cant pass an initialization list into a variadic template function
+	//All <Monster_t> (&Monster_t::Wander, Temp, NULL);
+	All<Monster_t>(&Monster_t::MoveTo, Player[0].GetX(), Player[0].GetY());
+
+	if (Player[0].IsDead())
+	{
+		CurrentScreen = MainMenu;
+		return Exit;
+	}
 
 
 	//Spawn/despawn enemies 
+	//Window1.TimerHandle.Benchmark("Spawn / Despawn Enemies");
 	if (Window1.GetKeyState(SDL_SCANCODE_Q))
 	{
 		DummyTarget.Despawn(0, 1);
@@ -187,8 +207,13 @@ FunctionReturn RunGame()
 	if (Window1.GetKeyState(SDL_SCANCODE_E))
 	{
 		DummyTarget.Spawn(1, &Window1);
-		DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { 0, 0, 32, 32 }, { NULL });
-		DummyTarget[DummyTarget.NumberOfObjects() - 1].Init(rand() % Window1.GetWidth(), rand() % Window1.GetHeight(), 50);
+		
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { ii * 32, 0, 32, 32 }, { 255, 0, 153, 0 });
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { ii * 32, 32, 32, 32 }, { 255, 0, 153, 0 });
+
+		DummyTarget[DummyTarget.NumberOfObjects() - 1].Init(rand() % WIDTH, rand() % HEIGHT, 50);
 	}
 	if (Window1.GetKeyState(SDL_SCANCODE_ESCAPE))
 	{
@@ -196,8 +221,33 @@ FunctionReturn RunGame()
 		return Exit;
 	}
 
+	int TotalEnemies = DummyTarget.NumberOfObjects();
+	for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
+	{
+		if (DummyTarget[i].IsDead())
+		{
+			DummyTarget.Despawn(i, 1);
+			i--;
+			Inventory[0].AddToKilledUnits();
+		}
+	}
+	int EnemiesKilled = TotalEnemies - DummyTarget.NumberOfObjects();
+
+	for (int i = 0; i < EnemiesKilled * 2; i++)
+	{
+	   DummyTarget.Spawn(1, &Window1);
+		
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { ii * 32, 0, 32, 32 }, { 255, 0, 153, 0 });
+		for (int ii = 0; ii < 5; ii++)
+			DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { ii * 32, 32, 32, 32 }, { 255, 0, 153, 0 });
+
+		DummyTarget[DummyTarget.NumberOfObjects() - 1].Init(rand() % WIDTH, rand() % HEIGHT, 50);
+	}
+
 	
 	//Attack
+	//Window1.TimerHandle.Benchmark("Attack Enemies");
 	if (Window1.GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
 		for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
@@ -207,9 +257,16 @@ FunctionReturn RunGame()
 		}
 	}
 
+	for (int i = 0; i < NumberOfObjects<Monster_t>(); i++)
+	{
+		if (Get<Monster_t>(i).CanAttack(&Player[0]))
+			Get<Monster_t>(i).Attack(&Player[0], Get<Monster_t>(i).MainWeapon);
+	}
+
 
 	//Scroll screen
-	int ScrollSpeed = (int) (150 / Window1.TimerHandle.GetFPS()); //Speed at which the screen scrolls
+	//Window1.TimerHandle.Benchmark("Scroll Screen");
+	double ScrollSpeed = (double) (100 / Window1.TimerHandle.GetFPS()); //Speed at which the screen scrolls
 	int BoxSize = 50; //Size from center to edge of box that player can freely walk in without moving the screen
 
 	if (Player[0].GetX() > WIDTH / 2 + BoxSize)
@@ -248,15 +305,36 @@ FunctionReturn RunGame()
 			DummyTarget[i].SetCoords(DummyTarget[i].GetX(), DummyTarget[i].GetY() + ScrollSpeed);
 	}
 
+	
+	Bar[2].SetCoords(Window1.GetWidth() / 2 + 200, Window1.GetHeight() - Bar[2].GetH() / 2 - 10);
+	Bar[3].SetCoords(Window1.GetWidth() / 2 + 280, Window1.GetHeight() - Bar[3].GetH() / 2 - 10);
+	Bar[4].SetCoords((Window1.GetWidth() - HUD[0].GetW() + Bar[4].GetW()) / 2 + 10, Window1.GetHeight() - HUD[0].GetH() - 20);
 
-	//Window1.TimerHandle.Benchmark("Display"); 
+
+	
+
+	//Check Collision
+	for (int i = 0; i < (int) NumberOfObjects<Entity_t>(); i++)
+	{		  
+		for (int ii = 0; ii < (int) NumberOfObjects<Entity_t>(); ii++)
+			Get<Entity_t>(ii).HandleCollisionWithE(&Get<Entity_t>(i));
+	}
+
+	//Window1.TimerHandle.Benchmark("Display All"); 
 
 	//Display
-	Player[0].Animate();
+	All <Entity_t> (&Entity_t::Animate);
 
-	DynamicClass <Object_t>::All(&Object_t::Display);
-	DynamicClass <Entity_t>::All(&Entity_t::DisplayAll);
-	DynamicClass <UI_t>::All(&UI_t::DisplayAll);
+	//*/
+
+
+	///*
+	All <Object_t> (&Object_t::Display);
+	All <Entity_t> (&Entity_t::DisplayAll);
+	All <UI_t> (&UI_t::DisplayAll);
+	//*/
+
+	//Window1.TimerHandle.Benchmark("Refresh loop");
 
 	return Continue;
 }

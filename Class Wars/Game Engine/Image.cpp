@@ -6,6 +6,9 @@ using namespace SLGE;
 
 DLL_API Image_t::Image_t()
 {
+	ID = new std::string();
+	ID->empty();
+
 	WindowHandle = nullptr;
 	Software = nullptr;
 	Hardware = nullptr;
@@ -15,7 +18,8 @@ DLL_API Image_t::Image_t()
 
 DLL_API Image_t::Image_t(Window_t *in_Window) : Image_t()
 {
-	Register(in_Window);
+	if (in_Window != nullptr)
+		Register(in_Window);
 }
 
 DLL_API Image_t::~Image_t()
@@ -56,7 +60,7 @@ void DLL_API Image_t::ClearData()
 
 int DLL_API Image_t::Register(Window_t *in_Window)
 {
-	if (in_Window->WindowHandle == nullptr || !in_Window->IsRunning())
+	if (in_Window == nullptr || in_Window->WindowHandle == nullptr || !in_Window->IsRunning())
 		return 1;
 
 	if (in_Window->HardwareAccelerated  && in_Window->HScreen != nullptr)
@@ -82,10 +86,30 @@ int DLL_API Image_t::Y()
 
 int DLL_API Image_t::W()
 {
-	return LoadClip.w;
+	return DisplayClip.w;
 }
 
 int DLL_API Image_t::H()
+{
+	return DisplayClip.h;
+}
+
+int DLL_API Image_t::ClipX()
+{
+	return LoadClip.x;
+}
+
+int DLL_API Image_t::ClipY()
+{
+	return LoadClip.y;
+}
+
+int DLL_API Image_t::ClipW()
+{
+	return LoadClip.w;
+}
+
+int DLL_API Image_t::ClipH()
 {
 	return LoadClip.h;
 }
@@ -105,7 +129,13 @@ SDL_RendererFlip DLL_API Image_t::GetFlipType()
 	return FlipType;
 }
 
-int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, const SDL_Color in_ColorKey)
+const char DLL_API *Image_t::GetID() const
+{
+	return ID->c_str();
+}
+
+
+int DLL_API Image_t::Load(const std::string in_Filename, SDL_Rect in_Clip, const SDL_Color in_ColorKey)
 {
 	if (WindowHandle == nullptr || 
 		!WindowHandle->IsRunning() || 
@@ -219,7 +249,7 @@ int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, 
 	return 0;
 }
 
-int DLL_API Image_t::LoadText(std::string in_Message, TTF_Font *in_Font, SDL_Color in_TextColor)
+int DLL_API Image_t::Load(std::string in_Message, TTF_Font *in_Font, SDL_Color in_TextColor)
 {
 	if (WindowHandle == nullptr || 
 		!WindowHandle->IsRunning() || 
@@ -290,29 +320,101 @@ int DLL_API Image_t::LoadText(std::string in_Message, TTF_Font *in_Font, SDL_Col
 	return 0;
 }
 
+int DLL_API Image_t::SetID(const char in_ID[])
+{
+	if (*ID == "")
+		*ID = in_ID;
+	else
+		return 1;
 
-int DLL_API Image_t::SetCoords(double in_X, double in_Y, double in_W, double in_H)
+	return 0;
+}
+
+
+int DLL_API Image_t::SetClip(int in_X, int in_Y, int in_W, int in_H)
+{
+	LoadClip.x = in_X;
+	LoadClip.y = in_Y;
+
+	if (in_W >= 0)
+		LoadClip.w = in_W;
+	if (in_H >= 0)
+		LoadClip.h = in_H;
+
+	if (!WindowHandle->HardwareAccelerated)
+	{
+		DisplayClip.w = LoadClip.w;
+		DisplayClip.h = LoadClip.h;
+	}
+
+	return 0;
+}
+					 
+int DLL_API Image_t::SetCoords(double in_X, double in_Y)
 {
 	DisplayClip.x = static_cast <int> (in_X);
 	DisplayClip.y = static_cast <int> (in_Y);
 
-	if (in_W > 0)
-		DisplayClip.w = static_cast <int> (in_W);
-	if (in_H > 0)
-		DisplayClip.h = static_cast <int> (in_H);
+	return 0;
+}
+
+int DLL_API Image_t::SetSize(int in_W, int in_H)
+{
+	if (in_W >= 0)
+		DisplayClip.w = in_W;
+	if (in_H >= 0)
+		DisplayClip.h = in_H;
+
+	if (!WindowHandle->HardwareAccelerated)
+	{
+		LoadClip.w = DisplayClip.w;
+		LoadClip.h = DisplayClip.h;
+	}
 
 	return 0;
 }
 
-int DLL_API Image_t::SetImageProp(double in_Angle, SDL_Point in_Center, SDL_RendererFlip in_FlipType)
+int DLL_API Image_t::SetTransparency(double in_Percentage)
+{
+	if (in_Percentage < 0 || in_Percentage > 1)
+		return 1;
+
+	if (WindowHandle->HardwareAccelerated)
+	{
+		//Set blending function
+		SDL_SetTextureBlendMode(Hardware, SDL_BLENDMODE_BLEND);
+
+		//Modulate texture alpha
+		SDL_SetTextureAlphaMod(Hardware, (Uint8) (255 * in_Percentage));
+	}
+	else
+	{
+		//Set blending function
+		SDL_SetSurfaceBlendMode(Software, SDL_BLENDMODE_BLEND);
+
+		//Modulate texture alpha
+		SDL_SetSurfaceAlphaMod(Software, (Uint8) (255 * in_Percentage));
+	}
+
+	return 0;
+}
+
+int DLL_API Image_t::Rotate(double in_Angle, SDL_Point in_Center)
 {
 	Angle = in_Angle;
 	Center.x = in_Center.x;
 	Center.y = in_Center.y;
+
+	return 0;
+}
+
+int DLL_API Image_t::Flip(SDL_RendererFlip in_FlipType)
+{
 	FlipType = in_FlipType;
 
 	return 0;
 }
+
 
 int DLL_API Image_t::Display()
 {

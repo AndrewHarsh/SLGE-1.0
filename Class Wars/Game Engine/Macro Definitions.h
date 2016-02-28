@@ -32,6 +32,9 @@
 #define Colour Color
 #define colour color
 
+//For an overloaded class method
+#define HandleCollisionWith HandleCollisionWithO
+
 #define SDL_CreateWindow SDL_CreateWindowEx
 #define SDL_DestroyWindow SDL_DestroyWindowEx
 
@@ -48,9 +51,23 @@ namespace SLGE
 	const char Version[] = "1.0.0";
 	const int HARDWARE_ACCELERATION = 0x01; //0000 0001
 
-	typedef std::chrono::high_resolution_clock HRC;
+	//REAL high resolution clock structure stolen from Stack Overflow user Dave
+	//http://stackoverflow.com/questions/16299029/resolution-of-stdchronohigh-resolution-clock-doesnt-correspond-to-measureme
+	struct HighResClock
+	{
+		typedef long long                               rep;
+		typedef std::nano                               period;
+		typedef std::chrono::duration<rep, period>      duration;
+		typedef std::chrono::time_point<HighResClock>   time_point;
+		static const bool is_steady = true;
+
+		static time_point now();
+	};
+
+	typedef HighResClock HRC;
 	using std::chrono::milliseconds;
 	using std::chrono::microseconds;
+	using std::chrono::nanoseconds;
 	using std::chrono::duration_cast;
 
 	//Injected functions

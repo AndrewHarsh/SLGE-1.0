@@ -27,7 +27,7 @@ namespace SLGE
 		int Height; //Window height
 		const int BitsPerPixel = 32;
 		std::string *Caption; //Title of window
-		int WindowID; //Window identifier
+		int ID; //Window identifier
 
 		bool Shown;	//True if window is shown
 		bool MouseFocus; //True if mouse events are handled by window
@@ -58,8 +58,10 @@ namespace SLGE
 		protected:
 
 			//FPS
-			Uint32 StartTime; //Point in time that the last frame set this variable 
+			static const int FRAME_SAMPLE_SIZE = 100;
 			double CurrentFPS; //Actual FPS
+			double LastFPS[FRAME_SAMPLE_SIZE];
+			HRC::time_point *LastFrame;
 			HRC::time_point *LastFPSDisplay; //Point in time that the FPS was last displayed
 
 			//Benchmarking
@@ -187,6 +189,8 @@ namespace SLGE
 
 	protected:
 
+		std::string *ID; //A character string with the name / ID of the image
+
 		Window_t *WindowHandle;	//Handle to the window
 		SDL_Surface *Software; //Handle to the software pixels
 		SDL_Texture *Hardware; //Handle to the hardware pixels
@@ -197,7 +201,6 @@ namespace SLGE
 		double Angle; //Degrees rotated counter clockwise from loaded position
 		SDL_Point Center; //Center of the rotation
 		SDL_RendererFlip FlipType; //Determines whether to flip horizontally, verticlaly, or not at all
-					
 
 		//Clears all data
 		void ClearData();
@@ -227,6 +230,18 @@ namespace SLGE
 		//Returns the image height
 		int H();
 
+		//Returns the original image X coordinate
+		int ClipX();
+
+		//Returns the original image Y coordinate
+		int ClipY();
+
+		//Returns the original image width
+		int ClipW();
+
+		//Returns the original image height
+		int ClipH();
+
 		//Returns the rotation of the image
 		double GetAngle();
 
@@ -234,7 +249,10 @@ namespace SLGE
 		SDL_Point GetCenter();
 
 		//Returns what type of flip has been applied to the image
-		SDL_RendererFlip GetFlipType();							  
+		SDL_RendererFlip GetFlipType();	
+
+		//Returns the ID of the Image
+		const char* GetID() const;
 
 
 		//Registers an image with a window
@@ -248,27 +266,48 @@ namespace SLGE
 		//		NULL loads the entire image
 		//	@ColorKey is an RGB value that determines what color will become transparent
 		//		NULL specifies no colorkey
-		int OpenImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+		int Load(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
 
 		//Creates a text image
 		//	@Message is the text to load
 		//	@Font is a handle to the desired font
 		//	@TextColor is an RGB value that determines the text color
-		int LoadText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
+		int Load(std::string Message, TTF_Font *Font, SDL_Color TextColor);
 
+		//Assigns a character string ID to the image once
+		//	@ID is a character string ID
+		//returns 1 if ID is already set
+		int SetID(const char ID[]);
+
+		//Sets the clipping rect of the loaded image
+		//	@X is the X position of the upper left corner
+		// 	@Y is the Y of the upper left corner
+		//	@W is the Width
+		//	@H is the Height
+		int SetClip(int X, int Y, int W, int H);
 
 		//Sets the coordinates of the image
 		//	@X is the X coordinate
 		// 	@Y is the Y coordinate
+		int SetCoords(double X, double Y);
+		
+		//Sets the size of the image
 		//	@W is the Width
 		//	@H is the Height
-		int SetCoords(double X, double Y, double W, double H);
+		int SetSize(int W, int H);
 
-		//Sets some properties of the Image
+		//Sets the transparency
+		//	@Percentage is a fractional number from 0 to 1 representing the percentage of opacity of the image
+		int SetTransparency(double Percentage);
+
+		//Rotates the image
 		// @Angle sets the rotation of the image
 		// @Center sets the center of rotation of the image
+		int Rotate(double Angle, SDL_Point Center);
+
+		//Flips the image
 		// @FlipType sets the type of flipping to apply to the image (horizontal, vertical, none)
-		int SetImageProp(double Angle, SDL_Point Center, SDL_RendererFlip FlipType);
+		int Flip(SDL_RendererFlip FlipType);
 
 
 		//Displays the image
@@ -284,6 +323,8 @@ namespace SLGE
 	{
 	protected:
 
+		std::string *ID;
+
 		Window_t *WindowHandle;
 
 	//Image
@@ -297,8 +338,12 @@ namespace SLGE
 		double H; //Height of the object but NOT the image
 
 	//Replacable functions
-		virtual void ClearData(); //Clears all internal variables
-		virtual void SetDisplay(int ImageIndex); //Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
+		//Clears all internal variables
+		virtual void ClearData(); 
+
+		//Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
+		//	@ImageIndex is the position of the image in the image array to set
+		virtual void SetImage(int ImageIndex); 
 
 	public:
 
@@ -314,17 +359,20 @@ namespace SLGE
 		~Object_t();
 
 		//Manual register function for static arrays
+		//	@Window is the window to register the object with
 		int Register(Window_t *Window);
+
+		//Sets the ID for the object
+		//	@ID is the character string ID
+		int SetID(const char ID[]);
+
+		//Sets the ID for an image
+		//	@ID is the character string ID
+		//	@Index is the location of the image
+		int SetImageID(const char ID[], int Index);
 
 
 	//Status
-		//Returns the total number of images inside the object 
-		int GetNumberOfImages();
-
-		//Returns the index of a layered image
-		//	@Layer is the layer that the image will be displayed at
-		int GetLayeredImage(int Layer);
-
 		//Returns the object's X coordinate
 		double GetX();
 		
@@ -336,6 +384,33 @@ namespace SLGE
 		
 		//Returns the object's height
 		double GetH();
+
+		//Returns the ID of the object
+		const char* GetID() const;
+
+
+		//Returns the Image at an index
+		//	@Index is the index of the image
+		Image_t* GetImageAtIndex(int Index);
+
+		//Returns the index of a layered image
+		//	@Layer is the layer that the image will be displayed at
+		int GetImageAtLayer(int Layer);
+
+		//Returns the index of an image
+		//	@Image is a pointer to an image stored in the internal image array
+		int GetIndexOfImage(const Image_t* Image);
+
+		//Returns the index of an image
+		//	@ID is a character string ID of an image stored in the internal image array
+		int GetIndexOfImage(const char ID[]);
+
+		//Returns the total number of images inside the object 
+		int GetNumberOfImages();
+
+		//Returns the number of layers
+		int GetNumberOfLayers();
+
 
 
 		//True if the object overlaps a rectangle
@@ -356,14 +431,17 @@ namespace SLGE
 
 
 	//Actions
-		//Sets the X, Y, Width and Height
+		//Sets the X and Y coordinates
 		//	@X sets the X coordinate
 		//	@Y sets the Y coordinate
+		void SetCoords(double X, double Y);
+		
+		//Sets the size of the object
 		//	@W sets the width
-		//		If NULL the width remains unchanged
+		//		If less than 0 the width remains unchanged
 		//	@H sets the height
-		//		If NULL the height remains unchanged
-		void SetCoords(double X, double Y, double W = NULL, double H = NULL);
+		//		If less than 0 the height remains unchanged
+		void SetSize(double W, double H);
 
 
 		//Opens an image from a file 

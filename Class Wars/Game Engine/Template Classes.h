@@ -140,7 +140,7 @@ namespace SLGE
 			//Delete Data						  
 			Data_t <T1>::Data.erase(Data_t <T1>::Data.begin() + Link[TYPE_NUM][in_Index].Data);
 			Data_t <T1>::Link.erase(Data_t <T1>::Link.begin() + Link[TYPE_NUM][in_Index].Index);
-			Link[TYPE_NUM].erase(Link[TYPE_NUM].begin());
+			Link[TYPE_NUM].erase(Link[TYPE_NUM].begin() + in_Index);
 		}
 
 		template <typename T1, typename T2, typename ...Args>
@@ -177,7 +177,7 @@ namespace SLGE
 			//Delete Data						  
 			Data_t <T1>::Data.erase(Data_t <T1>::Data.begin() + Link[TYPE_NUM][in_Index].Data);
 			Data_t <T1>::Link.erase(Data_t <T1>::Link.begin() + Link[TYPE_NUM][in_Index].Index);
-			Link[TYPE_NUM].erase(Link[TYPE_NUM].begin());
+			Link[TYPE_NUM].erase(Link[TYPE_NUM].begin() + in_Index);
 
 			DeletePointer <T2, Args...>(in_Index);
 		}
@@ -293,66 +293,93 @@ namespace SLGE
 
 			return *(Data[0]);
 		}
-
-	//Global
-		//Swaps the position of two objects in the global array
-		//	@Position is the location of the first object
-		//	@NewPosition is the location of the second object
-		static void Swap(int Position, int NewPosition)
-		{
-			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
-			{
-				Global Temp2 = Data_t <C>::Link[Position];
-				C* Temp3 = Data_t <C>::Data[Position];
-
-				Data_t <C>::Link[Position] = Data_t <C>::Link[NewPosition];
-				Data_t <C>::Link[NewPosition] = Temp2;
-
-				Data_t <C>::Data[Position] = Data_t <C>::Data[NewPosition];
-				Data_t <C>::Data[NewPosition] = Temp3;
-			}
-		}
-
-		//Moves an object to a new position in the global array
-		//	@Position is the position of the object to move
-		//	@NewPosition is the position to move the object to
-		static void Move(int Position, int NewPosition)
-		{
-			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
-			{
-				if (Position > NewPosition)
-				{
-					for (int i = NewPosition; i < Position - 1; i++)
-						Swap(i, i + 1);
-				}
-
-				else if (Position < NewPosition)
-				{
-					for (int i = Position; i < NewPosition - 1; i++)
-						Swap(i, i + 1);
-				}
-			}
-		}
-
-		//Executes a method for all objects in the global array
-		//	@Function is a pointer to a method to be called on all objects
-		//	@...Args is a variadic argument for the arguments in the method
-		//	
-		//	Usage:
-		//			DynamicClass <Class>::All(&Class::Method(), Arg1, Arg2, etc);
-		template <typename F, typename ...A>
-		static void All(F Function, A... Args)
-		{
-			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
-				(Data_t <C>::Data[i]->*Function)(Args...);
-		}
-
-		//Retuns the number of objects in the global array
-		static int NumberOfAllObjects()
-		{
-			return Data_t <C>::Data.size();
-		}
 	};
+
+	
+//Global
+	//Returns a non modifiable object at the specified index
+	//	@in_Index is the index of the spawned object
+	template <typename C>
+	C &Get(unsigned in_Index)
+	{
+		if (in_Index >= 0 && in_Index < Data_t <C>::Data.size())
+			return *(Data_t <C>::Data[in_Index]);
+
+		return *(Data_t <C>::Data[0]);
+	}
+
+	template <typename C>
+	C &GetByID(const char* ID)
+	{
+		for (int i = 0; i < Data_t <C>::Data.size(); i++)
+		{
+			if (!strcmp(Data_t <C>::Data[i]->GetID(), ID))
+				return *(Data_t <C>::Data[i]);
+		}
+
+		return nullptr;// *(Data_t <C>::Data[0]);
+	}
+
+   	//Swaps the position of two objects in the global array
+	//	@Position is the location of the first object
+	//	@NewPosition is the location of the second object
+	template <typename C>
+	void Swap(int Position, int NewPosition)
+	{
+		if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
+		{
+			Global Temp2 = Data_t <C>::Link[Position];
+			C* Temp3 = Data_t <C>::Data[Position];
+
+			Data_t <C>::Link[Position] = Data_t <C>::Link[NewPosition];
+			Data_t <C>::Link[NewPosition] = Temp2;
+
+			Data_t <C>::Data[Position] = Data_t <C>::Data[NewPosition];
+			Data_t <C>::Data[NewPosition] = Temp3;
+		}
+	}
+
+	//Moves an object to a new position in the global array
+	//	@Position is the position of the object to move
+	//	@NewPosition is the position to move the object to
+	template <typename C>
+	void Move(int Position, int NewPosition)
+	{
+		if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
+		{
+			if (Position > NewPosition)
+			{
+				for (int i = NewPosition; i < Position - 1; i++)
+					Swap <C> (i, i + 1);
+			}
+
+			else if (Position < NewPosition)
+			{
+				for (int i = Position; i < NewPosition - 1; i++)
+					Swap <C> (i, i + 1);
+			}
+		}
+	}
+
+	//Executes a method for all objects in the global array
+	//	@Function is a pointer to a method to be called on all objects
+	//	@...Args is a variadic argument for the arguments in the method
+	//	
+	//	Usage:
+	//			DynamicClass <Class>::All(&Class::Method(), Arg1, Arg2, etc);
+	template <class C, typename F, typename ...A>
+	void All(F Function, A... Args)
+	{
+		for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
+			(Data_t <C>::Data[i]->*Function)(Args...);
+	}
+
+	//Retuns the number of objects in the global array	
+	template <typename C>
+	int NumberOfObjects()
+	{
+		return Data_t <C>::Data.size();
+	}
 
 	///^^^^^^^^^^^^^^^///
 	//	     WIP	   //

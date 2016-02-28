@@ -58,7 +58,7 @@ void DLL_API Window_t::ClearData()
 
 	Width = 1080;
 	Height = 720;
-	WindowID = 0;
+	ID = 0;
 
 	Shown = true;
 	MouseFocus = true;
@@ -79,7 +79,7 @@ int DLL_API Window_t::EventHandler()
 		}
 	}
 
-	if (Event.type == SDL_WINDOWEVENT && Event.window.windowID == WindowID)
+	if (Event.type == SDL_WINDOWEVENT && Event.window.windowID == ID)
 	{
 		switch (Event.window.event)
 		{
@@ -184,8 +184,8 @@ int DLL_API Window_t::FetchEvents()
 
 int DLL_API Window_t::Refresh()
 {
-	TimerHandle.CapFPS(60);
-	TimerHandle.DisplayFPS(10000);
+	TimerHandle.CapFPS(0);
+	TimerHandle.DisplayFPS(100);
 
 	/*
 	if (HardwareAccelerated)
@@ -196,7 +196,7 @@ int DLL_API Window_t::Refresh()
 	*/
 
 	//Screen title is FPS
-	SDL_SetWindowTitle(WindowHandle, std::to_string((int)TimerHandle.CurrentFPS).c_str());
+	SDL_SetWindowTitle(WindowHandle, std::to_string((int)TimerHandle.GetFPS()).c_str());
 
 	if (HardwareAccelerated)
 	{
@@ -308,7 +308,7 @@ int DLL_API Window_t::Init()
 		return EXIT_FAILURE;
 	}
 
-	WindowID = SDL_GetWindowID(WindowHandle);
+	ID = SDL_GetWindowID(WindowHandle);
 
 	if (HardwareAccelerated)
 	{
