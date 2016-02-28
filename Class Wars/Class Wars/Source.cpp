@@ -71,10 +71,26 @@ void SpawnGame()
 		for (int ii = 0; ii < 8; ii++)
 			Player[0].OpenImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
 	}
+
+	for (int i = 0; i < 20; i++)
+	{
+		for (int ii = 0; ii < 8; ii++)
+			Player[1].OpenImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+	}
+
+	Player[0].SetCoords(300, 500, 32, 32);
+	Player[1].SetCoords(100, 100, 32, 32);
 }
 
 void RunGame()
 {
+	//std::vector <Object_t> Array1;
+
+	//for (int i = 0; i < Array1.size(); i++)
+	//	Array[i].Display();
+
+
+
 	//Player[0].EventHandler();
 	DynamicClass <Player_TT>::All(&Player_TT::EventHandler);
 
