@@ -74,8 +74,8 @@ int DLL_API Window_t::EventHandler()
 	{
 		if (Event.key.keysym.sym == SDLK_ESCAPE)
 		{
-			SDL_HideWindow(WindowHandle);
-			ClearData();
+			//SDL_HideWindow(WindowHandle);
+			//ClearData();
 		}
 	}
 

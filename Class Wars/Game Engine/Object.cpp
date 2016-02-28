@@ -39,13 +39,13 @@ void DLL_API Object_t::ClearData()
 
 void DLL_API Object_t::SetDisplay(int in_ImageIndex)
 {
-	if (in_ImageIndex >= 0 && in_ImageIndex < Image->size())
+	if (in_ImageIndex >= 0 && in_ImageIndex < (int) Image->size())
 		(*Image)[in_ImageIndex].SetCoords(X - (*Image)[in_ImageIndex].W() / 2, Y - (*Image)[in_ImageIndex].H() / 2, (*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
 }
 
 int DLL_API Object_t::Display()
 {
-	for (int i = 0; i < ImageToDisplay->size(); i++)
+	for (int i = 0; i < (int) ImageToDisplay->size(); i++)
 	{
 		SetDisplay((*ImageToDisplay)[i]);
 
@@ -65,7 +65,7 @@ int DLL_API Object_t::GetNumberOfImages()
 
 int DLL_API Object_t::GetLayeredImage(int in_Layer)
 {
-	if (in_Layer >= 0 && in_Layer < ImageToDisplay->size())
+	if (in_Layer >= 0 && in_Layer < (int) ImageToDisplay->size())
 		return (*ImageToDisplay)[in_Layer];
 	else
 		return -1;
@@ -193,8 +193,8 @@ int DLL_API Object_t::AddText(std::string in_Message, TTF_Font *in_Font, SDL_Col
 int DLL_API Object_t::MoveImage(int in_Position, int in_NewPosition)
 {
 	if (in_Position == in_NewPosition || 
-		in_Position < 0 || in_Position >= Image->size() || 
-		in_NewPosition < 0 || in_NewPosition >= Image->size())
+		in_Position < 0 || in_Position >= (int) Image->size() || 
+		in_NewPosition < 0 || in_NewPosition >= (int) Image->size())
 		return 1;
 
 	Image->insert(Image->begin() + in_NewPosition, (*Image)[in_Position]);
@@ -209,7 +209,7 @@ int DLL_API Object_t::MoveImage(int in_Position, int in_NewPosition)
 
 int DLL_API Object_t::DeleteImage(int in_Position)
 {
-	if (in_Position >= 0 && in_Position < Image->size())
+	if (in_Position >= 0 && in_Position < (int) Image->size())
 		Image->erase(Image->begin() + in_Position);
 	else
 		return 1;
@@ -230,7 +230,7 @@ int DLL_API Object_t::AddLayer(std::string in_Filename, SDL_Rect in_Clip, SDL_Co
 
 int DLL_API Object_t::AddLayer(int in_ImagePosition)
 {
-	if (in_ImagePosition >= 0 && in_ImagePosition < Image->size())
+	if (in_ImagePosition >= 0 && in_ImagePosition < (int) Image->size())
 		ImageToDisplay->push_back(in_ImagePosition);
 	else
 		return 1;
@@ -241,8 +241,8 @@ int DLL_API Object_t::AddLayer(int in_ImagePosition)
 int DLL_API Object_t::MoveLayer(int in_Position, const int in_NewPosition)
 {
 	if (in_Position == in_NewPosition || 
-		in_Position < 0 || in_Position >= ImageToDisplay->size() || 
-		in_NewPosition < 0 || in_NewPosition >= ImageToDisplay->size())
+		in_Position < 0 || in_Position >= (int) ImageToDisplay->size() || 
+		in_NewPosition < 0 || in_NewPosition >= (int) ImageToDisplay->size())
 		return 1;
 
 	ImageToDisplay->insert(ImageToDisplay->begin() + in_NewPosition, (*ImageToDisplay)[in_Position]);
@@ -257,7 +257,7 @@ int DLL_API Object_t::MoveLayer(int in_Position, const int in_NewPosition)
 
 int DLL_API Object_t::DeleteLayer(int in_Position)
 {
-	if (in_Position >= 0 && in_Position < ImageToDisplay->size())
+	if (in_Position >= 0 && in_Position < (int) ImageToDisplay->size())
 		ImageToDisplay->erase(ImageToDisplay->begin() + in_Position);
 	else
 		return 1;

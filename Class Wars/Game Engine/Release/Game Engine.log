@@ -1,22 +1,24 @@
-﻿Build started 2/7/2015 12:40:35 AM.
-     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" on node 2 (Build target(s)).
+﻿Build started 2/16/2015 11:04:08 PM.
+     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" on node 2 (Rebuild target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D SLGE_EXPORT /D _WINDLL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Object.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D SLGE_EXPORT /D _WINDLL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt DllMaincpp.cpp Image.cpp Object.cpp Timer.cpp Window.cpp
+         DllMaincpp.cpp
+         Image.cpp
          Object.cpp
+         Timer.cpp
+         Window.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.dll" /NOLOGO SDL2.lib SDL2main.lib SDL2_image.lib SDL2_mixer.lib SDL2_ttf.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.lib" /MACHINE:X86 /SAFESEH /DLL Release\DllMaincpp.obj
-         Release\Entity.obj
-         Release\NPC.obj
+         Release\Image.obj
          Release\Object.obj
          Release\Timer.obj
-         Release\UI.obj
          Release\Window.obj
             Creating library C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.lib and object C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.exp
          Generating code
          Finished generating code
          Game Engine.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\SLGE.dll
-     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" (Build target(s)).
+     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Game Engine\Game Engine.vcxproj" (Rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.08
+Time Elapsed 00:00:05.72

@@ -513,11 +513,11 @@ namespace SLGE
 
 		Window_t *WindowHandle;
 
-		union
-		{
+		//union
+		//{
 			SDL_Surface *Software;
 			SDL_Texture *Hardware;
-		};
+		//};
 
 		SDL_Rect LoadClip;
 		SDL_Rect DisplayClip;
@@ -541,7 +541,7 @@ namespace SLGE
 		int H();
 		double GetAngle();
 		SDL_Point GetCenter();
-		SDL_RendererFlip GetFlipType();
+		SDL_RendererFlip GetFlipType();							  
 
 		int Register(Window_t *Window);
 
@@ -561,7 +561,9 @@ namespace SLGE
 		Window_t *WindowHandle;
 
 		//Image
+	public:
 		std::vector <Image_t> *Image;
+	protected:
 		std::vector <int> *ImageToDisplay;
 			
 		//Location

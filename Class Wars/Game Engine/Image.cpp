@@ -169,6 +169,11 @@ int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, 
 			return EXIT_FAILURE;
 		}
 
+		//Set blending function
+		SDL_SetTextureBlendMode(Hardware, SDL_BLENDMODE_BLEND);
+
+		//Modulate texture alpha
+		SDL_SetTextureAlphaMod(Hardware, 255 - in_ColorKey.a);
 	}
 	else
 	{
@@ -181,6 +186,12 @@ int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, 
 			SDL_FreeSurface(LoadedSurface);
 			return EXIT_FAILURE;
 		}
+
+		//Set blending function
+		SDL_SetSurfaceBlendMode(Software, SDL_BLENDMODE_BLEND);
+
+		//Modulate texture alpha
+		SDL_SetSurfaceAlphaMod(Software, 255 - in_ColorKey.a);
 	}
 
 

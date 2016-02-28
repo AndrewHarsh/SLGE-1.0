@@ -361,7 +361,7 @@ BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved
 				}
 				if (DeleteData->HData != nullptr)
 				{
-					SDL_DestroyTexture(DeleteData->HData);
+					//SDL_DestroyTexture(DeleteData->HData);
 					DeleteData->HData = nullptr;
 				}
 			}

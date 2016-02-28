@@ -38,378 +38,6 @@ public:
 };
 
 
-//
-//  Define your classes	(Can be in separate header or dll)
-//
-class Entity_t : public Object_t
-{
-protected:
-
-	enum Direction
-	{
-		Up,
-		UpRight,
-		Right,
-		DownRight,
-		Down,
-		DownLeft,
-		Left,
-		UpLeft
-	};
-
-	//Movement
-	double MoveSpeed; //In Pixels per second
-	double TargetX;
-	double TargetY;
-	double LastX;
-	double LastY;
-
-	//Attack
-	double AttackDamage;
-	double AttackSpeed;
-	double CurrentHealth;
-	double InitialHealth;
-
-	//Animation
-	Direction Facing;
-
-	int Animate_IdleSpeed;
-	int Animate_MovingSpeed;
-	int Animate_AttackingSpeed;
-	int Animate_HitSpeed;
-
-	//Status
-	bool Idle;
-	bool Moving;
-	bool Attacking;
-	bool Hit;
-
-	void ClearData()
-	{
-		MoveSpeed = 0; //In Pixels per second
-		TargetX = 0;
-		TargetY = 0;
-		LastX = 0;
-		LastY = 0;
-
-		//Attack
-		AttackDamage = 0;
-		AttackSpeed = 0;
-		CurrentHealth = 0;
-		InitialHealth = 0;
-
-		//Animation
-		Facing = Down;
-
-		Animate_IdleSpeed = 0;
-		Animate_MovingSpeed = 0;
-		Animate_AttackingSpeed = 0;
-		Animate_HitSpeed = 0;
-
-		//Status
-		Idle = false;
-		Moving = false;
-		Attacking = false;
-		Hit = false;
-
-		Object_t::ClearData();
-	}
-
-public:
-
-	Entity_t() : Object_t()
-	{
-		ClearData();
-	}
-
-	Entity_t(Window_t *in_Window) : Entity_t()
-	{
-		Register(in_Window);
-	}
-
-	int Move(Direction in_Direction)
-	{
-		if (WindowHandle->TimerHandle.GetFPS() <= 0)
-			return 1;
-
-		switch (in_Direction)
-		{
-			case Up:
-			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = Up;
-			break;
-
-			case UpRight:
-			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = UpRight;
-			break;
-
-			case Right:
-			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = Right;
-			break;
-
-			case DownRight:
-			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = DownRight;
-			break;
-
-			case Down:
-			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = Down;
-			break;
-
-			case DownLeft:
-			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = DownLeft;
-			break;
-
-			case Left:
-			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = Left;
-			break;
-
-			case UpLeft:
-			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
-			Facing = UpLeft;
-			break;	   
-		
-			default:
-			Facing = Down;
-			Moving = false;
-			return 0;
-			break;
-		}
-
-		Moving = true;
-		return 0;
-	}
-
-	int Move(int in_X, int in_Y)
-	{
-		double DistanceX = in_X - X;
-		double DistanceY = in_Y - Y;
-
-		if (DistanceX == 0)
-		{
-			SetCoords(X, MoveSpeed / WindowHandle->TimerHandle.GetFPS());
-			return 0;
-		}
-
-		double SpeedX = MoveSpeed * cos(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
-		double SpeedY = MoveSpeed * sin(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
-
-		if (IsOverlapping({ in_X, in_Y, MoveSpeed / WindowHandle->TimerHandle.GetFPS(), MoveSpeed / WindowHandle->TimerHandle.GetFPS() }))
-		{
-			SetCoords(in_X, in_Y);
-		}
-		else
-		{
-			if (DistanceX < 0)
-				SetCoords(X - SpeedX, Y - SpeedY);
-			else
-				SetCoords(X + SpeedX, Y + SpeedY);
-		}
-
-		return 0;
-	}
-
-	void Attack(Entity_t *in_Victim)
-	{
-		in_Victim->TakeDamage(AttackDamage);
-	}
-
-	void TakeDamage(double in_Damage)
-	{
-		CurrentHealth -= in_Damage;
-	}
-
-	virtual void Animate()
-	{
-		
-	}
-};
-
-class Player_t : public Entity_t
-{
-	int Looking;
-	double ImagesPerSecond;
-	double AnimateCounter;
-	bool Moving;
-
-public:
-
-	class Sword_t : public Object_t
-	{
-	protected:
-
-		void ClearData()
-		{
-			//Todo: Add code to clear all attributes of the class
-		}
-
-	public:
-
-		Sword_t() : Object_t()
-		{
-			ClearData();
-		}
-
-		Sword_t(Window_t *in_Window) : Sword_t()
-		{
-			Register(in_Window);
-		}
-
-		void EventHandler()
-		{
-			int MouseX, MouseY;
-			WindowHandle->GetMouseState(MouseX, MouseY);
-
-			double Angle = atan((MouseY - Y) / (MouseX - X)) * RADIANS_TO_DEGREES;
-
-			if (MouseX > X)
-				Angle -= 180;
-
-			(*Image)[0].SetImageProp(Angle - 90, { (*Image)[0].W() / 2, (*Image)[0].H() + 30 }, SDL_FLIP_NONE);
-		}
-
-	} Sword;
-
-	friend class Sword_t;
-
-	Player_t()
-	{
-	}
-
-	Player_t(Window_t *in_Window)
-	{
-		Register(in_Window);  
-
-		Looking = 0;
-		ImagesPerSecond = 0.1;
-		AnimateCounter = 0;
-		Moving = false;
-
-		Sword.Register(in_Window);
-		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF });
-	}
-
-	void EventHandler()
-	{
-		Moving = false;
-
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
-		{
-			Y -= 100 / WindowHandle->TimerHandle.GetFPS();
-			Looking = 3;
-			Moving = true;
-		}
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
-		{
-			Y += 100 / WindowHandle->TimerHandle.GetFPS();
-			Looking = 0;
-			Moving = true;
-		}
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
-		{
-			X -= 100 / WindowHandle->TimerHandle.GetFPS();
-			Looking = 2;
-			Moving = true;
-		}
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
-		{
-			X += 100 / WindowHandle->TimerHandle.GetFPS();
-			Looking = 1;
-			Moving = true;
-		}
-
-		Sword.SetCoords(X, Y - 30);//- 15);
-		Sword.EventHandler();
-	}
-
-	void Animate()
-	{
-		//if (++ImageToDisplay >= NumberOfImages)
-		//	ImageToDisplay = 0;
-
-		if (Moving)
-		{
-			AnimateCounter += 1 / WindowHandle->TimerHandle.GetFPS();
-
-			while (AnimateCounter > ImagesPerSecond)
-			{
-				AnimateCounter -= ImagesPerSecond;
-
-				if (++(*ImageToDisplay)[0] >= (Looking + 1) * 8 || (*ImageToDisplay)[0] < Looking * 8)
-					(*ImageToDisplay)[0] = Looking * 8;
-
-			}
-		}
-		else
-			(*ImageToDisplay)[0] = Looking * 8;
-	}
-};
-
-class Monster_t : public Entity_t
-{
-protected:
-
-	Uint32 Clock_Wander;
-
-	void ClearData()
-	{
-		Clock_Wander = 0;
-	}
-
-public:
-
-	Monster_t() : Entity_t()
-	{
-		ClearData();
-	}
-
-	Monster_t(Window_t *in_Window) : Monster_t()
-	{
-		Register(in_Window);
-	}
-
-	void Init(int in_X, int in_Y, int in_MoveSpeed)
-	{
-		SetCoords(in_X, in_Y, 32, 32);
-		MoveSpeed = in_MoveSpeed;
-		TargetX = X;
-		TargetY = Y;
-	}
-
-	//moves object to random position in rectangle with sides WIDTH and HEIGHT and middle of rectangle located at (XMiddle, YMiddle). object stays at random position for TIME seconds
-	void Wander(SDL_Rect in_WanderArea, double in_WaitTime)
-	{
-		/*
-		if (SDL_GetTicks() - Clock_Wander > in_WaitTime * 1000)//sets random points within the rectangle and begins the failure timer
-		{
-			TargetX = rand() % in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2);//sets random x
-			TargetY = rand() % in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2);//sets random y
-			Clock_Wander = SDL_GetTicks();// +10000 * in_WaitTime;//this keeps the object from getting stuck while moving towards a non-reachable coordinate. 
-		}
-		*/
-
-		if (IsWithin({ TargetX, TargetY, MoveSpeed, MoveSpeed }))
-		{
-			TargetX = rand() % (in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2));//sets random x
-			TargetY = rand() % (in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2));//sets random y
-		}
-		else
-			Move(TargetX, TargetY);
-	}
-
-};
-
-
-
 class UI_t : public Object_t
 {
 public:
@@ -522,8 +150,6 @@ protected:
 
 public:
 
-	Button_t OpenButton;
-
 	Menu_t() //: UI_t()
 	{
 	}
@@ -535,16 +161,16 @@ public:
 		Open = false;
 
 		//this->Button.Spawn(1, in_Window);
-		OpenButton.Register(in_Window);
-		OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});	
-		OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
-		OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
-		OpenButton.SetCoords(OpenButton.GetW() / 2, WindowHandle->GetHeight() / 2);
+		//OpenButton.Register(in_Window);
+		//OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});	
+		//OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
+		//OpenButton.AddImage("Arrow button.png", { 0, 0, 30, 64 }, { 0xff, 0xff, 0xff});
+		//OpenButton.SetCoords(OpenButton.GetW() / 2, WindowHandle->GetHeight() / 2);
 	}
 
 	void HandleEvents()
 	{
-		if (OpenButton.IsPressed() && !Moving)
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_TAB) && !Moving)
 		{
 			if (Open)
 				Open = false;
@@ -556,27 +182,19 @@ public:
 
 		if (Moving)
 		{
-			if (X < W / 2 && Open)
-			{
-				X += Speed / WindowHandle->TimerHandle.GetFPS();
-				OpenButton.SetCoords(OpenButton.GetX() + Speed / WindowHandle->TimerHandle.GetFPS(), OpenButton.GetY());
-
-				if (X > W / 2)
-				{
-					X = W / 2;
-					OpenButton.SetCoords(W + OpenButton.GetW() / 2, OpenButton.GetY());
-				}
-			}
-			else if (X > -W / 2 && !Open)
+			if (X > WindowHandle->GetWidth() - W / 2 && Open)
 			{
 				X -= Speed / WindowHandle->TimerHandle.GetFPS();
-				OpenButton.SetCoords(OpenButton.GetX() - Speed / WindowHandle->TimerHandle.GetFPS(), OpenButton.GetY());
 
-				if (X < -W / 2)
-				{
-					X = -W / 2 ;
-					OpenButton.SetCoords(OpenButton.GetW() / 2, OpenButton.GetY());
-				}
+				if (X < WindowHandle->GetWidth() - W / 2 )
+					X = WindowHandle->GetWidth() - W / 2 ;
+			}
+			else if (X < WindowHandle->GetWidth() + W / 2 && !Open)
+			{
+				X += Speed / WindowHandle->TimerHandle.GetFPS();
+	
+				if (X > WindowHandle->GetWidth() + W / 2 )
+					X = WindowHandle->GetWidth() + W / 2 ;
 			}
 			else
 				Moving = false;
@@ -601,34 +219,520 @@ public:
 		Register(in_Window);
 
 		Selector.Register(in_Window);
-		Selector.AddImage("HUD Selector.png", { NULL }, { NULL });
-		Selector.SetCoords(WIDTH / 2 - 441 / 2 + Selector.GetW() / 2, HEIGHT - 50);
+		Selector.AddLayer("HUD2.png", { 640, 0, 81, 0 }, { NULL });
 	}
 
 	void HandleEvents()
 	{
-		int HUD_BOX_SIZE = W / 9;
+		int HUD_BOX_SIZE = (int) (W / 8);
 
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_1))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 0, Y);
+			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 0 + 160, Y, 0, 0);
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_2))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 1, Y);
+			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 1 + 160, Y, 0, 0);
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_3))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 2, Y);
+			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 2 + 160, Y, 0, 0);
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_4))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 3, Y);
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_5))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 4, Y);
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_6))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 5, Y);
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_7))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 6, Y);
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_8))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 7, Y);
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_9))
-			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 8, Y);
+			Selector.SetCoords(X - W / 2 + Selector.GetW() / 2 + HUD_BOX_SIZE * 3 + 160, Y, 0, 0);
 	}
 };
+		 
+class Bar_t : public UI_t
+{
+protected:
+
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+	}
+
+	virtual void SetDisplay(int in_ImageIndex)
+	{
+		if (in_ImageIndex != 1)
+			Object_t::SetDisplay(in_ImageIndex);
+		else if (in_ImageIndex >= 0 && in_ImageIndex < (int) Image->size())
+			(*Image)[in_ImageIndex].SetCoords(X - W / 2, Y - (*Image)[in_ImageIndex].H() / 2, (*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
+	}
+
+public:
+
+	Bar_t() : UI_t()
+	{
+		ClearData();
+	}
+
+	Bar_t(Window_t *in_Window) : Bar_t()
+	{
+		Register(in_Window);
+	}
+
+
+};
+
+
+//
+//  Define your classes	(Can be in separate header or dll)
+//
+class Entity_t : public Object_t
+{
+protected:
+
+	enum Direction
+	{
+		Down,
+		Right,
+		Left,
+		Up,
+
+		DownRight,
+		DownLeft,
+		UpRight,
+		UpLeft,
+	};
+
+	//Movement
+	double MoveSpeed; //In Pixels per second
+	double TargetX;
+	double TargetY;
+	double LastX;
+	double LastY;
+
+	//Attack
+	double AttackDamage;
+	double AttackSpeed;
+	double AttackRange;
+	double CurrentHealth;
+	double InitialHealth;
+
+	//Animation
+	Direction Facing;
+
+	int Animate_IdleSpeed;
+	int Animate_MovingSpeed;
+	int Animate_AttackingSpeed;
+	int Animate_HitSpeed;
+
+	//Status
+	bool Idle;
+	bool Moving;
+	bool Attacking;
+	bool Hit;
+
+	void ClearData()
+	{
+		MoveSpeed = 0; //In Pixels per second
+		TargetX = 0;
+		TargetY = 0;
+		LastX = 0;
+		LastY = 0;
+
+		//Attack
+		AttackDamage = 0;
+		AttackSpeed = 0;
+		CurrentHealth = 0;
+		InitialHealth = 0;
+
+		//Animation
+		Facing = Down;
+
+		Animate_IdleSpeed = 0;
+		Animate_MovingSpeed = 0;
+		Animate_AttackingSpeed = 0;
+		Animate_HitSpeed = 0;
+
+		//Status
+		Idle = false;
+		Moving = false;
+		Attacking = false;
+		Hit = false;
+
+		Object_t::ClearData();
+	}
+
+public:
+
+	Bar_t HealthBar;
+
+	Entity_t() : Object_t()
+	{
+		ClearData();
+	}
+
+	Entity_t(Window_t *in_Window) : Entity_t()
+	{
+		Register(in_Window);
+	}
+
+	int Move(Direction in_Direction)
+	{
+		if (WindowHandle->TimerHandle.GetFPS() <= 0)
+			return 1;
+
+		switch (in_Direction)
+		{
+			case Up:
+			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = Up;
+			break;
+
+			case UpRight:
+			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = UpRight;
+			break;
+
+			case Right:
+			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = Right;
+			break;
+
+			case DownRight:
+			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = DownRight;
+			break;
+
+			case Down:
+			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = Down;
+			break;
+
+			case DownLeft:
+			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = DownLeft;
+			break;
+
+			case Left:
+			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = Left;
+			break;
+
+			case UpLeft:
+			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
+			Facing = UpLeft;
+			break;	   
+		
+			default:
+			Facing = Down;
+			Moving = false;
+			return 0;
+			break;
+		}
+
+		Moving = true;
+		return 0;
+	}
+
+	int Move(int in_X, int in_Y)
+	{
+		double DistanceX = in_X - X;
+		double DistanceY = in_Y - Y;
+
+		if (DistanceX == 0)
+		{
+			SetCoords(X, MoveSpeed / WindowHandle->TimerHandle.GetFPS());
+			return 0;
+		}
+
+		double SpeedX = MoveSpeed * cos(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
+		double SpeedY = MoveSpeed * sin(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
+
+		if (IsOverlapping({ (int) in_X, (int) in_Y, (int) (MoveSpeed / WindowHandle->TimerHandle.GetFPS()), (int) (MoveSpeed / WindowHandle->TimerHandle.GetFPS()) }))
+		{
+			SetCoords(in_X, in_Y);
+		}
+		else
+		{
+			if (DistanceX < 0)
+				SetCoords(X - SpeedX, Y - SpeedY);
+			else
+				SetCoords(X + SpeedX, Y + SpeedY);
+		}
+
+		return 0;
+	}
+
+	void Attack(Entity_t *in_Victim)
+	{
+		in_Victim->TakeDamage(AttackDamage);
+	}
+
+	void TakeDamage(double in_Damage)
+	{
+		CurrentHealth -= in_Damage;
+		
+		HealthBar.Image->operator[](1).SetCoords(HealthBar.GetX(), HealthBar.GetY(), (CurrentHealth / InitialHealth) * 50, 0);
+	}
+
+	virtual void Animate()
+	{
+		
+	}
+};
+
+class Player_t : public Entity_t
+{
+	double ImagesPerSecond;
+	double AnimateCounter;
+	bool Moving;
+
+public:
+
+	class Sword_t : public Object_t
+	{
+	protected:
+
+		void ClearData()
+		{
+			//Todo: Add code to clear all attributes of the class
+		}
+
+	public:
+
+		Sword_t() : Object_t()
+		{
+			ClearData();
+		}
+
+		Sword_t(Window_t *in_Window) : Sword_t()
+		{
+			Register(in_Window);
+		}
+
+		void EventHandler()
+		{
+			int MouseX, MouseY;
+			WindowHandle->GetMouseState(MouseX, MouseY);
+
+			double Angle = atan((MouseY - Y) / (MouseX - X)) * RADIANS_TO_DEGREES;
+
+			if (MouseX > X)
+				Angle -= 180;
+
+			(*Image)[0].SetImageProp(Angle - 90, { (*Image)[0].W() / 2, (*Image)[0].H() + 30 }, SDL_FLIP_NONE);
+		}
+
+	} Sword;
+
+	friend class Sword_t;
+
+	Player_t()
+	{
+	}			
+
+	Player_t(Window_t *in_Window)
+	{
+		Register(in_Window);  
+
+		Facing = Down;
+		ImagesPerSecond = 0.1;
+		AnimateCounter = 0;
+		Moving = false;
+		AttackRange = 30;
+		AttackDamage = 10;
+
+		Sword.Register(in_Window);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+	}
+
+	bool IsFacing(Entity_t *in_Victim)
+	{
+		double XDist = in_Victim->GetX() - X;
+		double YDist = in_Victim->GetY() - Y;
+
+		if (XDist > YDist && XDist < -YDist && Facing == Up)
+			return true;
+		else if (XDist < YDist && XDist > -YDist && Facing == Down)
+			return true;
+		else if (XDist < YDist && XDist < -YDist && Facing == Left)
+			return true;
+		else if (XDist > YDist && XDist > -YDist && Facing == Right)
+			return true;
+		else
+			return false;
+	}
+
+	bool CanAttack(Entity_t *in_Victim)
+	{
+		SDL_Rect Temp;
+
+		Temp.x = (int) X;
+		Temp.y = (int) Y;
+		Temp.w = (int) (W + 2 * AttackRange);
+		Temp.h = (int) (H + 2 * AttackRange);
+
+		//{ in_Victim->GetX(), in_Victim->GetY(), in_Victim->GetW() + 2 * AttackRange, in_Victim->GetH() + 2 * AttackRange }
+
+		if (in_Victim->IsOverlapping(Temp) &&
+			IsFacing(in_Victim))
+			return true;
+		else
+			return false;
+	}
+
+	void EventHandler()
+	{
+		Moving = false;
+
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
+		{
+			Y -= 100 / WindowHandle->TimerHandle.GetFPS();
+			//Looking = 3;
+			Moving = true;
+		}
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
+		{
+			Y += 100 / WindowHandle->TimerHandle.GetFPS();
+			//Looking = 0;
+			Moving = true;
+		}
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
+		{
+			X -= 100 / WindowHandle->TimerHandle.GetFPS();
+			//Looking = 2;
+			Moving = true;
+		}
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
+		{
+			X += 100 / WindowHandle->TimerHandle.GetFPS();
+			//Looking = 1;
+			Moving = true;
+		}
+
+		int MouseX, MouseY;
+
+		if (WindowHandle->GetMouseState(MouseX, MouseY) & SDL_BUTTON(SDL_BUTTON_LEFT))
+			Attacking = true;
+		else
+			Attacking = false;
+
+		double XDist = MouseX - X;
+		double YDist = MouseY - Y;
+
+		if (XDist > YDist && XDist < -YDist)
+			Facing = Up;
+		else if (XDist < YDist && XDist > -YDist)
+			Facing = Down;
+
+		else if (XDist < YDist && XDist < -YDist)
+			Facing = Left;
+		else if (XDist > YDist && XDist > -YDist)
+			Facing = Right;
+
+		Sword.SetCoords(X, Y - AttackRange);//- 15);
+		Sword.EventHandler();
+	}
+
+	void Animate()
+	{
+		//if (++ImageToDisplay >= NumberOfImages)
+		//	ImageToDisplay = 0;
+
+		if (Attacking)
+		{
+			AnimateCounter += 1 / WindowHandle->TimerHandle.GetFPS();
+
+			while (AnimateCounter > ImagesPerSecond)
+			{
+				AnimateCounter -= ImagesPerSecond;
+
+				if (++(*ImageToDisplay)[0] >= (Facing + 5) * 8 || (*ImageToDisplay)[0] < (Facing + 4) * 8)
+					(*ImageToDisplay)[0] = (Facing + 4) * 8 + 1;
+
+			}
+		}
+		else if (Moving)
+		{
+			AnimateCounter += 1 / WindowHandle->TimerHandle.GetFPS();
+
+			while (AnimateCounter > ImagesPerSecond)
+			{
+				AnimateCounter -= ImagesPerSecond;
+
+				if (++(*ImageToDisplay)[0] >= (Facing + 1) * 8 || (*ImageToDisplay)[0] < Facing * 8)
+					(*ImageToDisplay)[0] = Facing * 8;
+
+			}
+		}
+		else
+			(*ImageToDisplay)[0] = Facing * 8;
+	}
+};
+
+class Monster_t : public Entity_t
+{
+protected:
+
+	Uint32 Clock_Wander;
+
+	void ClearData()
+	{
+		Clock_Wander = 0;
+	}
+
+public:
+
+	Monster_t() : Entity_t()
+	{
+		ClearData();
+	}
+
+	Monster_t(Window_t *in_Window) : Monster_t()
+	{
+		Register(in_Window);
+
+		HealthBar.Register(in_Window);
+		HealthBar.AddImage("Health.png", { 0, 50, 50, 5 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 50, 5 }, { NULL });
+	}
+
+	void Init(int in_X, int in_Y, int in_MoveSpeed)
+	{
+		SetCoords(in_X, in_Y, 32, 32);
+		MoveSpeed = in_MoveSpeed;
+		TargetX = X;
+		TargetY = Y;
+		InitialHealth = 100;
+		CurrentHealth = 100;
+	}
+
+	//moves object to random position in rectangle with sides WIDTH and HEIGHT and middle of rectangle located at (XMiddle, YMiddle). object stays at random position for TIME seconds
+	void Wander(SDL_Rect in_WanderArea, double in_WaitTime)
+	{
+		/*
+		if (SDL_GetTicks() - Clock_Wander > in_WaitTime * 1000)//sets random points within the rectangle and begins the failure timer
+		{
+			TargetX = rand() % in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2);//sets random x
+			TargetY = rand() % in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2);//sets random y
+			Clock_Wander = SDL_GetTicks();// +10000 * in_WaitTime;//this keeps the object from getting stuck while moving towards a non-reachable coordinate. 
+		}
+		*/
+
+		if (IsWithin({ (int) TargetX, (int) TargetY, (int) MoveSpeed, (int) MoveSpeed }))
+		{
+			TargetX = rand() % (in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2));//sets random x
+			TargetY = rand() % (in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2));//sets random y
+		}
+		else
+			Move((int) TargetX, (int) TargetY);
+	}
+
+	void DisplayAll()
+	{
+		Display();
+
+		HealthBar.SetCoords(X, Y - H / 2);
+
+		HealthBar.Display();
+	}
+
+};
+
+
+
+
 
 
 
@@ -649,12 +753,24 @@ DynamicClass <Player_t, Entity_t, Object_t> Player;
 DynamicClass <Button_t, Object_t> Button;
 DynamicClass <Menu_t, Object_t> Inventory;
 DynamicClass <HUD_t, Object_t> HUD;
+DynamicClass <Bar_t, Object_t> Bar;
+
 
 
 
 //
 //  Declare the game init, loop, and despawn code (Can be in separate header or dll but must come after classes are initialized)
 //
+
+enum GameScreen_t
+{
+	MainMenu,
+	Options,
+	Audio,
+	Video,
+	Quit,
+	PlayGame
+} CurrentScreen;
 
 FunctionReturn SpawnMainMenu()
 {
@@ -681,14 +797,33 @@ FunctionReturn SpawnMainMenu()
 
 FunctionReturn RunMainMenu()
 {
+	//if (Window1.GetKeyState(SDL_SCANCODE_ESCAPE))
+	//{
+		//CurrentScreen = Quit;
+		//return Exit;
+	//}
+
+
 	if (Button[0].IsPressed())
+	{
+		CurrentScreen = PlayGame;
 		return Exit;
+	}
 	if (Button[1].IsPressed())
+	{
+		CurrentScreen = Options;
 		return Exit;
+	}
 	if (Button[2].IsPressed())
+	{
+		CurrentScreen = MainMenu;
 		return Exit;
+	}
 	if (Button[3].IsPressed())
+	{
+		CurrentScreen = Quit;
 		return Exit;
+	}
 
 	DynamicClass <Object_t>::All(&Object_t::Display);
 
@@ -714,6 +849,7 @@ FunctionReturn SpawnGame()
 	Player.Spawn(1, &Window1);
 	Inventory.Spawn(1, &Window1);
 	HUD.Spawn(1, &Window1);
+	Bar.Spawn(5, &Window1);
 
 
 	//Set the objects in their place and load images
@@ -726,18 +862,39 @@ FunctionReturn SpawnGame()
 		DummyTarget[i].Init(rand() % WIDTH, rand() % HEIGHT, 50);
 	}
 
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 20; i++)	
 	{
 		for (int ii = 0; ii < 8; ii++)
 			Player[0].AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
 	}
 	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2, 0, 0);
 
-	Inventory[0].AddImage("Menu.png", { NULL }, { NULL });
-	Inventory[0].SetCoords(-212, HEIGHT / 2);
+	Inventory[0].AddImage("Players.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0x44 });
+	Inventory[0].SetCoords(WIDTH + 212, HEIGHT / 2 - 30);
 
-	HUD[0].AddImage("HUD.png", { NULL }, { NULL });
-	HUD[0].SetCoords(WIDTH / 2, HEIGHT - 50);
+	HUD[0].AddImage("HUD2.png", { 0, 0, 640, 0 }, { NULL });
+	HUD[0].SetCoords(WIDTH / 2, HEIGHT - 30);
+	HUD[0].Selector.SetCoords(WIDTH / 2 - 120, HEIGHT - 30);
+
+	Bar[0].AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+	Bar[0].AddLayer("Health.png", { 0, 100, 120, 20 }, { NULL });
+	Bar[0].SetCoords(Bar[0].GetW() / 2 + 10, Bar[0].GetH() / 2 + 10);
+
+	Bar[1].AddImage("Health.png", { 0, 150, 200, 20 }, { NULL });
+	Bar[1].AddLayer("Health.png", { 0, 0, 30, 20 }, { NULL });
+	Bar[1].SetCoords(Bar[1].GetW() / 2 + 10, Bar[0].GetY() + Bar[0].GetH() + 10);
+
+	Bar[2].AddImage("Health.png", { 0, 50, 20, 5 }, { NULL });
+	Bar[2].AddLayer("Health.png", { 0, 0, 15, 5 }, { NULL });
+	Bar[2].SetCoords(WIDTH - 40, HEIGHT - Bar[2].GetH() / 2 - 10);
+
+	Bar[3].AddImage("Health.png", { 0, 50, 20, 5 }, { NULL });
+	Bar[3].AddLayer("Health.png", { 0, 0, 10, 5 }, { NULL });
+	Bar[3].SetCoords(WIDTH - 120, HEIGHT - Bar[3].GetH() / 2 - 10);
+
+	Bar[4].AddImage("Health.png", { 0, 150, 150, 15 }, { NULL });
+	Bar[4].AddLayer("Health.png", { 0, 0, 130, 15 }, { NULL });
+	Bar[4].SetCoords(Bar[4].GetW() / 2 + 10, HEIGHT - HUD[0].GetH() - 20);
 
 
 	return Continue;
@@ -760,10 +917,27 @@ FunctionReturn RunGame()
 		DummyTarget[DummyTarget.NumberOfObjects() - 1].AddImage("1.png", { 0, 0, 32, 32 }, { NULL });
 		DummyTarget[DummyTarget.NumberOfObjects() - 1].Init(rand() % Window1.GetWidth(), rand() % Window1.GetHeight(), 50);
 	}
+	if (Window1.GetKeyState(SDL_SCANCODE_ESCAPE))
+	{
+		CurrentScreen = MainMenu;
+		return Exit;
+	}
+
+	
+	//Attack
+	int null;
+	if (Window1.GetMouseState(null, null) & SDL_BUTTON(SDL_BUTTON_LEFT))
+	{
+		for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
+		{
+			if (Player[0].CanAttack(&DummyTarget[i]))
+				Player[0].Attack(&DummyTarget[i]);
+		}
+	}
 
 
 	//Scroll screen
-	int ScrollSpeed = 150 / Window1.TimerHandle.GetFPS();
+	int ScrollSpeed = (int) (150 / Window1.TimerHandle.GetFPS());
 	int BoxSize = 50;
 
 	if (Player[0].GetX() > WIDTH / 2 + BoxSize)
@@ -816,13 +990,17 @@ FunctionReturn RunGame()
 	//Last entity Displayed
 	Background[0].Display();
 	DynamicClass <Object_t>::All(&Object_t::Display);
+	DynamicClass <Monster_t>::All(&Monster_t::DisplayAll);
 	Player[0].Sword.Display();
 
 	DynamicClass <Menu_t>::All(&Menu_t::Display);
-	Inventory[0].OpenButton.Display();
+	//Inventory[0].OpenButton.Display();
 
 	DynamicClass <HUD_t>::All(&HUD_t::Display);
 	HUD[0].Selector.Display();
+
+	for (int i = 0; i < Bar.NumberOfObjects(); i++)
+		Bar[i].Display();
 
 	return Continue;
 }
@@ -849,14 +1027,25 @@ extern "C" int SDL_main(int argc, char* argv[])
 {
 	srand(unsigned(time(NULL)));
 
-	if (Window1.Run(SpawnMainMenu, RunMainMenu, DespawnMainMenu) == Error)
-		return 1;
+	while (CurrentScreen != Quit && Window1.IsRunning())
+	{
+		switch (CurrentScreen)
+		{
+			case MainMenu:
+			if (Window1.Run(SpawnMainMenu, RunMainMenu, DespawnMainMenu) == Error)
+				return 1;
+			break;
 
-	if (Window1.Run(SpawnGame, RunGame, DespawnGame) == Error)
-		return 1;
+			case PlayGame:
+			if (Window1.Run(SpawnGame, RunGame, DespawnGame) == Error)
+				return 1;
+			break;
 
-	if (Window1.Run(SpawnMainMenu, RunMainMenu, DespawnMainMenu) == Error)
-		return 1;
+			default:
+			CurrentScreen = PlayGame;
+			break;
+		}
+	}
 
 	return 0;
 }
