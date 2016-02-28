@@ -58,6 +58,43 @@ void DLL_API Image_t::ClearData()
 	WindowHandle = nullptr;
 }
 
+int DLL_API Image_t::Log(std::ofstream &File, std::string Precursor)
+{
+	if (!File.is_open())
+		File.open("Log Data.txt", std::ios::app);
+
+	if (File.is_open())
+	{
+		File << Precursor << "==================== Image_t =====================" << std::endl;
+		File << Precursor << "this: " << "0x" << this << std::endl;
+		File << Precursor << "ID: " << *ID << std::endl;
+		File << Precursor << "WindowHandle: " << "0x" << WindowHandle;
+		File << Precursor << "Software: " << "0x" << Software;
+		File << Precursor << "Hardware: " << "0x" << Hardware;
+
+		File << Precursor << "LoadClip.x: " << LoadClip.x;
+		File << Precursor << "LoadClip.y: " << LoadClip.y;
+		File << Precursor << "LoadClip.w: " << LoadClip.w;
+		File << Precursor << "LoadClip.h: " << LoadClip.h;
+
+		File << Precursor << "DisplayClip.x: " << DisplayClip.x;
+		File << Precursor << "DisplayClip.y: " << DisplayClip.y;
+		File << Precursor << "DisplayClip.w: " << DisplayClip.w;
+		File << Precursor << "DisplayClip.h: " << DisplayClip.h;
+
+		File << Precursor << "Angle: " << Angle;
+		File << Precursor << "Center.x: " << Center.x;
+		File << Precursor << "Center.y: " << Center.y;
+		File << Precursor << "FlipType: " << FlipType;
+
+		File.close();
+	}
+	else
+		return 1;
+
+	return 0;
+}
+
 int DLL_API Image_t::Register(Window_t *in_Window)
 {
 	if (in_Window == nullptr || in_Window->WindowHandle == nullptr || !in_Window->IsRunning())
@@ -135,7 +172,7 @@ const char DLL_API *Image_t::GetID() const
 }
 
 
-int DLL_API Image_t::Load(const std::string in_Filename, SDL_Rect in_Clip, const SDL_Color in_ColorKey)
+int DLL_API Image_t::Load(std::string in_Filename, SDL_Rect in_Clip, SDL_Color in_ColorKey)
 {
 	if (WindowHandle == nullptr || 
 		!WindowHandle->IsRunning() || 
@@ -249,13 +286,12 @@ int DLL_API Image_t::Load(const std::string in_Filename, SDL_Rect in_Clip, const
 	return 0;
 }
 
-int DLL_API Image_t::Load(std::string in_Message, TTF_Font *in_Font, SDL_Color in_TextColor)
+int DLL_API Image_t::Load(std::string in_Message, TTF_Font &in_Font, SDL_Color in_TextColor)
 {
 	if (WindowHandle == nullptr || 
 		!WindowHandle->IsRunning() || 
 		(WindowHandle->HScreen == nullptr && WindowHandle->Screen == nullptr) || 
-		!WindowHandle->IsRunning() ||
-		in_Font == nullptr)
+		&in_Font == nullptr)
 		return 1;
 
 	SDL_Surface *TempSoftware = Software;
@@ -272,7 +308,7 @@ int DLL_API Image_t::Load(std::string in_Message, TTF_Font *in_Font, SDL_Color i
 			SDL_FreeSurface(Software);
 	}
 
-	SDL_Surface* LoadedSurface = TTF_RenderText_Solid(in_Font, in_Message.c_str(), in_TextColor);
+	SDL_Surface* LoadedSurface = TTF_RenderText_Solid(&in_Font, in_Message.c_str(), in_TextColor);
 
 	if (LoadedSurface == nullptr)
 		return 1;
@@ -341,11 +377,11 @@ int DLL_API Image_t::SetClip(int in_X, int in_Y, int in_W, int in_H)
 	if (in_H >= 0)
 		LoadClip.h = in_H;
 
-	//if (!WindowHandle->HardwareAccelerated)
-	//{
+	if (!WindowHandle->HardwareAccelerated)
+	{
 		DisplayClip.w = LoadClip.w;
 		DisplayClip.h = LoadClip.h;
-	//}
+	}
 
 	return 0;
 }
@@ -367,9 +403,9 @@ int DLL_API Image_t::SetSize(int in_W, int in_H)
 
 	if (!WindowHandle->HardwareAccelerated)
 	{
-		//LoadClip.w = DisplayClip.w;
-		//LoadClip.h = DisplayClip.h;
-	}
+		LoadClip.w = DisplayClip.w;
+		LoadClip.h = DisplayClip.h;
+	}  
 
 	return 0;
 }

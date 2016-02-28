@@ -68,6 +68,53 @@ void DLL_API Window_t::ClearData()
 	HardwareAccelerated = false;
 }
 
+int DLL_API Window_t::Log(std::ofstream &File, std::string Precursor)
+{
+	if (!File.is_open())
+		File.open("Log Data.txt", std::ios::app);
+
+	if (File.is_open())
+	{
+		File << Precursor << "==================== Image_t =====================" << std::endl;
+		File << Precursor << "this: " << "0x" << this << std::endl;
+		File << Precursor << "WindowHandle: " << "0x" << WindowHandle;
+		File << Precursor << "HScreen: " << "0x" << HScreen;
+		File << Precursor << "Screen: " << "0x" << Screen;
+		File << Precursor << "Event: " << "0x" << &Event;
+		File << Precursor << "KeyState: " << "0x" << KeyState;
+
+		File << Precursor << "Width: " << Width;
+		File << Precursor << "Height: " << Height;
+		File << Precursor << "BitsPerPixel: " << BitsPerPixel;
+		File << Precursor << "Caption: " << *Caption;
+		File << Precursor << "ID: " << ID;
+
+		File << Precursor << "Shown: " << Shown;
+		File << Precursor << "MouseFocus: " << MouseFocus;
+		File << Precursor << "KeyboardFocus: " << KeyboardFocus;
+		File << Precursor << "Minimized: " << Minimized;
+		File << Precursor << "HardwareAccelerated: " << HardwareAccelerated;
+		File << Precursor << "Running: " << Running;
+
+		File << Precursor << "FRAME_SAMPLE_SIZE: " << TimerHandle.FRAME_SAMPLE_SIZE;
+		File << Precursor << "WiCurrentFPSdth: " << TimerHandle.CurrentFPS;
+
+		for (int i = 0; i < TimerHandle.FRAME_SAMPLE_SIZE; i++)
+			File << Precursor << "LastFPS[" << i << "]: " << TimerHandle.LastFPS[i];
+
+		File << Precursor << "LastFrame in ns: " << duration_cast <nanoseconds> (TimerHandle.LastFrame->time_since_epoch()).count();
+		File << Precursor << "LastFPSDisplay in ns: " << duration_cast <nanoseconds> (TimerHandle.LastFPSDisplay->time_since_epoch()).count();
+		File << Precursor << "LastBench in ns: " << duration_cast <nanoseconds> (TimerHandle.LastBench->time_since_epoch()).count();
+		File << Precursor << "LastIdentifier: " << *(TimerHandle.LastIdentifier);
+
+		File.close();
+	}
+	else
+		return 1;
+
+	return 0;
+}
+
 int DLL_API Window_t::EventHandler()
 {
 	if (Event.type == SDL_KEYDOWN)
@@ -149,6 +196,7 @@ int DLL_API Window_t::EventHandler()
 			//Hide on close
 			case SDL_WINDOWEVENT_CLOSE:
 			SDL_HideWindow(WindowHandle);
+			Running = false;
 			ClearData();
 			break;
 		}
@@ -162,14 +210,111 @@ int DLL_API Window_t::FetchEvents()
 	//char *Event0 = reinterpret_cast <char*> (&Event);
 	//char *Event1 = reinterpret_cast <char*> (&Event);
 
+	for (int i = 0; i < 284; i++)
+		Keyboard.Key[i].WasChanged = false;
+
+	for (int i = 0; i < 5; i++)
+		Mouse.Button[i].WasChanged = false;
+
+	Mouse.Wheel.WasChanged = false;
+
 	while (SDL_PollEvent(&Event))
 	{
 		EventHandler();
 
-		if (Event.type == SDL_TEXTINPUT)
+		if (Event.type == SDL_KEYDOWN)
 		{
-			std::string Text = Event.text.text;;
-			bool hi = true;
+			if (Event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE && Keyboard.CollectTextInput)
+			{
+				if (Keyboard.TextInput->length() > 0)
+					Keyboard.TextInput->pop_back();
+			}
+
+			if (Keyboard.Key[Event.key.keysym.scancode].IsPressed)
+				Keyboard.Key[Event.key.keysym.scancode].WasChanged = false;
+			else
+				Keyboard.Key[Event.key.keysym.scancode].WasChanged = true;
+
+			Keyboard.Key[Event.key.keysym.scancode].IsPressed = true;
+			Keyboard.Key[Event.key.keysym.scancode].TimesRepeated = Event.key.repeat;
+			Keyboard.Key[Event.key.keysym.scancode].TimeAtLastPress = SDL_GetTicks();
+			Keyboard.Key[Event.key.keysym.scancode].MousePosnWhenLastPressed.X = Mouse.GetX();
+			Keyboard.Key[Event.key.keysym.scancode].MousePosnWhenLastPressed.Y = Mouse.GetY();
+		}
+
+		else if (Event.type == SDL_KEYUP)
+		{
+			if (Keyboard.Key[Event.key.keysym.scancode].IsPressed)
+				Keyboard.Key[Event.key.keysym.scancode].WasChanged = true;
+			else
+				Keyboard.Key[Event.key.keysym.scancode].WasChanged = false;
+
+			Keyboard.Key[Event.key.keysym.scancode].IsPressed = false;
+			Keyboard.Key[Event.key.keysym.scancode].TimesRepeated = Event.key.repeat;
+			Keyboard.Key[Event.key.keysym.scancode].TimeAtLastRelease = SDL_GetTicks();
+			Keyboard.Key[Event.key.keysym.scancode].MousePosnWhenLastReleased.X = Mouse.GetX();
+			Keyboard.Key[Event.key.keysym.scancode].MousePosnWhenLastReleased.Y = Mouse.GetY();
+		}
+
+		else if (Event.type == SDL_TEXTINPUT)
+		{
+			if (Keyboard.CollectTextInput)
+				Keyboard.TextInput->append(Event.text.text);
+		}
+
+		else if (Event.type == SDL_MOUSEMOTION)
+		{
+			Mouse.X = Event.motion.x;
+			Mouse.Y = Event.motion.y;
+		}
+
+		else if (Event.type == SDL_MOUSEBUTTONDOWN)
+		{
+			if (Mouse.Button[Event.button.button].IsPressed)
+				Mouse.Button[Event.button.button].WasChanged = false;
+			else
+				Mouse.Button[Event.button.button].WasChanged = true;
+
+			Mouse.Button[Event.button.button].IsPressed = true;
+			Mouse.Button[Event.button.button].NumberOfClicks = Event.button.clicks;
+			Mouse.Button[Event.button.button].TimeAtLastPress = SDL_GetTicks();
+			Mouse.Button[Event.button.button].MousePosnWhenLastPressed.X = Mouse.GetX();
+			Mouse.Button[Event.button.button].MousePosnWhenLastPressed.Y = Mouse.GetY();
+		}
+
+		else if (Event.type == SDL_MOUSEBUTTONUP)
+		{
+			if (Mouse.Button[Event.button.button].IsPressed)
+				Mouse.Button[Event.button.button].WasChanged = true;
+			else
+				Mouse.Button[Event.button.button].WasChanged = false;
+
+			Mouse.Button[Event.button.button].IsPressed = false;
+			Mouse.Button[Event.button.button].NumberOfClicks = Event.button.clicks;
+			Mouse.Button[Event.button.button].TimeAtLastRelease = SDL_GetTicks();
+			Mouse.Button[Event.button.button].MousePosnWhenLastReleased.X = Mouse.GetX();
+			Mouse.Button[Event.button.button].MousePosnWhenLastReleased.Y = Mouse.GetY();
+		}
+
+		else if (Event.type == SDL_MOUSEWHEEL)
+		{
+			if (Event.wheel.y != 0)// || Event.wheel.x != 0)
+				Mouse.Wheel.WasChanged = true;
+
+			Mouse.Wheel.AmountScrolled = Event.wheel.y;
+
+			if (Event.wheel.x > 0)
+			{
+				Mouse.Wheel.TimeAtLastUpScroll = SDL_GetTicks();
+				Mouse.Wheel.MousePosnWhenLastScrolledUp.X = Mouse.GetX();
+				Mouse.Wheel.MousePosnWhenLastScrolledUp.Y = Mouse.GetY();
+			}
+			else if (Event.wheel.x < 0)
+			{
+				Mouse.Wheel.TimeAtLastDownScroll = SDL_GetTicks();
+				Mouse.Wheel.MousePosnWhenLastScrolledDown.X = Mouse.GetX();
+				Mouse.Wheel.MousePosnWhenLastScrolledDown.Y = Mouse.GetY();
+			}
 		}
 	};
 
@@ -348,10 +493,12 @@ int DLL_API Window_t::Init(const int in_Width, const int in_Height, const std::s
 
 int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despawn)
 {
+	FunctionReturn Ret;
+	SDL_Surface *BlackScreen = SDL_CreateRGBSurface(0, 1920, 1080, BitsPerPixel, 0x00000000, 0x00000000, 0x00000000, 0x000000ff);
+
 	if (!Running)
 		return Exit;
 
-	FunctionReturn Ret;
 	Ret = in_Spawn();
 
 	if (Ret != Continue)
@@ -362,6 +509,9 @@ int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despa
 
 	while (IsRunning())
 	{
+		if (!HardwareAccelerated)
+			SDL_BlitSurface(BlackScreen, { NULL }, Screen, { NULL });
+
 		FetchEvents();
 		Ret = in_Loop();
 	
@@ -375,6 +525,13 @@ int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despa
 	}
 
 	return in_Despawn();
+}
+
+void DLL_API Window_t::Close()
+{
+	SDL_HideWindow(WindowHandle);
+	Running = false;
+	ClearData();
 }
 
 #undef DLL_API

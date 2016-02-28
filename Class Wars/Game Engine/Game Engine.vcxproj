@@ -84,6 +84,8 @@
   <ItemGroup>
     <ClCompile Include="DllMaincpp.cpp" />
     <ClCompile Include="Image.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Window.cpp" />

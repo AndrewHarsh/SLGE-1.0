@@ -93,6 +93,11 @@ double DLL_API Window_t::Timer_t::GetFPS()
 	return CurrentFPS;
 }
 
+Uint32 DLL_API Window_t::Timer_t::GetCurrentTick()
+{
+	return SDL_GetTicks();
+}
+
 int DLL_API Window_t::Timer_t::Benchmark(const char in_Identifier[])
 {
 	HRC::time_point ThisBench = HRC::now();

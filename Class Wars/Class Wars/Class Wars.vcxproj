@@ -80,10 +80,36 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Archer.h" />
+    <ClInclude Include="Archway.h" />
+    <ClInclude Include="Bar.h" />
+    <ClInclude Include="Barbarian.h" />
+    <ClInclude Include="Boss.h" />
+    <ClInclude Include="Button.h" />
     <ClInclude Include="Class Definitions.h" />
-    <ClInclude Include="Constant Instantiations.h" />
-    <ClInclude Include="Function Definitions.h" />
-    <ClInclude Include="Object Instantiations.h" />
+    <ClInclude Include="Door.h" />
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="Fencer.h" />
+    <ClInclude Include="Floor.h" />
+    <ClInclude Include="Furniture.h" />
+    <ClInclude Include="Game Options.h" />
+    <ClInclude Include="Grey Button.h" />
+    <ClInclude Include="Health Bar.h" />
+    <ClInclude Include="HUD.h" />
+    <ClInclude Include="In Game.h" />
+    <ClInclude Include="Inanimate.h" />
+    <ClInclude Include="Mage.h" />
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="Menu.h" />
+    <ClInclude Include="Minion.h" />
+    <ClInclude Include="Monster.h" />
+    <ClInclude Include="NPC.h" />
+    <ClInclude Include="Options.h" />
+    <ClInclude Include="Paladin.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Slider Bar.h" />
+    <ClInclude Include="User Interface.h" />
+    <ClInclude Include="Walls.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -13,6 +13,60 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Classes">
+      <UniqueIdentifier>{237edd1e-17c2-47ba-b14b-d7a3863cedac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity">
+      <UniqueIdentifier>{b2c23dc3-305f-4d57-b34c-5075db86497f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\Monster">
+      <UniqueIdentifier>{034568cb-e372-4d3a-bdf5-99de3e6b275a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\Monster\Boss">
+      <UniqueIdentifier>{7c2d40b7-cd81-4b42-b8ec-aa6a1287d468}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\Monster\Inanimate">
+      <UniqueIdentifier>{a8b43a08-31cb-4571-a83e-4c1939a0e260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\Monster\Minion">
+      <UniqueIdentifier>{fc5288ae-5199-44e1-8ba3-97fdf7bebafe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\Player">
+      <UniqueIdentifier>{115cfb67-ac43-40b9-9de2-32f4b25b349f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Entity\NPC">
+      <UniqueIdentifier>{5e6c0663-1ec4-424d-9419-ac5692760cc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Floor">
+      <UniqueIdentifier>{dfebc5a2-6036-49ea-9cde-a921de8770d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\User Interface">
+      <UniqueIdentifier>{c8ff1772-ad85-4617-9ee9-79aa683cfb60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\User Interface\Button">
+      <UniqueIdentifier>{fae3b9bc-dee1-491d-9fe5-b5762ad3adf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\User Interface\HUD">
+      <UniqueIdentifier>{1b24a177-6761-47c8-98c4-cab81f57ad75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\User Interface\Menu">
+      <UniqueIdentifier>{a019e07c-44aa-4426-9b43-a662d58d2203}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\User Interface\Bar">
+      <UniqueIdentifier>{9e823557-b4e1-4694-87f4-8240e5120068}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Walls">
+      <UniqueIdentifier>{0fdbbf86-db93-4dbf-a2a4-0887071ebf3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Walls\Archway">
+      <UniqueIdentifier>{fa7a37ae-d18f-4aaf-bb0d-53d583c85f89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Walls\Furniture">
+      <UniqueIdentifier>{3829db78-4e1e-4858-93ed-6eb596c7b76d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes\Walls\Door">
+      <UniqueIdentifier>{620b9b11-c7f2-4971-82fb-71595b85afd0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -20,17 +74,95 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="User Interface.h">
+      <Filter>Header Files\Classes\User Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Header Files\Classes\Entity\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Header Files\Classes\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Archer.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Barbarian.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Fencer.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Paladin.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Mage.h">
+      <Filter>Header Files\Classes\Entity\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>Header Files\Classes\User Interface\Button</Filter>
+    </ClInclude>
+    <ClInclude Include="HUD.h">
+      <Filter>Header Files\Classes\User Interface\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="Menu.h">
+      <Filter>Header Files\Classes\User Interface\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="Slider Bar.h">
+      <Filter>Header Files\Classes\User Interface\Bar</Filter>
+    </ClInclude>
+    <ClInclude Include="Health Bar.h">
+      <Filter>Header Files\Classes\User Interface\Bar</Filter>
+    </ClInclude>
+    <ClInclude Include="Bar.h">
+      <Filter>Header Files\Classes\User Interface\Bar</Filter>
+    </ClInclude>
+    <ClInclude Include="Boss.h">
+      <Filter>Header Files\Classes\Entity\Monster\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="Inanimate.h">
+      <Filter>Header Files\Classes\Entity\Monster\Inanimate</Filter>
+    </ClInclude>
+    <ClInclude Include="Minion.h">
+      <Filter>Header Files\Classes\Entity\Monster\Minion</Filter>
+    </ClInclude>
+    <ClInclude Include="NPC.h">
+      <Filter>Header Files\Classes\Entity\NPC</Filter>
+    </ClInclude>
+    <ClInclude Include="Floor.h">
+      <Filter>Header Files\Classes\Floor</Filter>
+    </ClInclude>
+    <ClInclude Include="Walls.h">
+      <Filter>Header Files\Classes\Walls</Filter>
+    </ClInclude>
+    <ClInclude Include="Archway.h">
+      <Filter>Header Files\Classes\Walls\Archway</Filter>
+    </ClInclude>
+    <ClInclude Include="Furniture.h">
+      <Filter>Header Files\Classes\Walls\Furniture</Filter>
+    </ClInclude>
+    <ClInclude Include="Door.h">
+      <Filter>Header Files\Classes\Walls\Door</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h">
+      <Filter>Header Files\Classes\User Interface\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="Options.h">
+      <Filter>Header Files\Classes\User Interface\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="In Game.h">
+      <Filter>Header Files\Classes\User Interface\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="Game Options.h">
+      <Filter>Header Files\Classes\User Interface\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="Grey Button.h">
+      <Filter>Header Files\Classes\User Interface\Button</Filter>
+    </ClInclude>
     <ClInclude Include="Class Definitions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Function Definitions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object Instantiations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Constant Instantiations.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Classes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

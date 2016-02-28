@@ -41,13 +41,41 @@ void DLL_API Object_t::ClearData()
 	H = 0;
 }
 
+int DLL_API Object_t::Log(std::ofstream &File, std::string Precursor)
+{
+	if (!File.is_open())
+		File.open("Log Data.txt", std::ios::app);
+
+	if (File.is_open())
+	{
+		File << Precursor << "=================== Object_t =====================" << std::endl;
+		File << Precursor << "this: " << "0x" << this << std::endl;
+		File << Precursor << "ID: " << *ID << std::endl;
+		File << Precursor << "WindowHandle: " << "0x" << WindowHandle;
+
+		for (int i = 0; i < (int) Image->size(); i++)
+			File << Precursor << "Image[" << i << "]: " << "0x" << &(*Image)[i];
+
+		for (int i = 0; i < (int) ImageToDisplay->size(); i++)
+			File << Precursor << "ImageToDisplay[" << i << "]: " << (*ImageToDisplay)[i];
+
+		File << Precursor << "X: " << X << std::endl;
+		File << Precursor << "Y: " << Y << std::endl;
+		File << Precursor << "W: " << W << std::endl;
+		File << Precursor << "H: " << H << std::endl;
+
+		File.close();
+	}
+	else
+		return 1;
+
+	return 0;
+}
+
 void DLL_API Object_t::SetImage(int in_ImageIndex)
 {
 	if (in_ImageIndex >= 0 && in_ImageIndex < (int) Image->size())
-	{
 		(*Image)[in_ImageIndex].SetCoords(X - (*Image)[in_ImageIndex].W() / 2, Y - (*Image)[in_ImageIndex].H() / 2);
-		(*Image)[in_ImageIndex].SetSize((*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
-	}
 }
 
 int DLL_API Object_t::Display()
@@ -250,8 +278,13 @@ int DLL_API Object_t::AddText(std::string in_Message, TTF_Font *in_Font, SDL_Col
 {
 	Image->push_back(Image_t(WindowHandle));
 
-	if ((*Image)[Image->size() - 1].Load(in_Message, in_Font, in_TextColor))
+	if ((*Image)[Image->size() - 1].Load(in_Message, *in_Font, in_TextColor))
 		return 1;
+
+	if (W <= 0)
+		W = (*Image)[Image->size() - 1].W();
+	if (H <= 0)
+		H = (*Image)[Image->size() - 1].H();
 
 	if (ImageToDisplay->size() == 0)
 		return AddLayer(Image->size() - 1);

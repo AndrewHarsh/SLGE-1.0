@@ -92,7 +92,18 @@ namespace SLGE
 	template <typename C, typename ...D>
 	class DynamicClass;
 
+	struct DLL_API Coord_t;
+	struct DLL_API Size_t;
+	struct DLL_API Rect_t;
+
 	class DLL_API Window_t;
 	class DLL_API Image_t;
 	class DLL_API Object_t;
+
+	//typedef Coord_t Coord;
+	//typedef Size_t Size;
+	//typedef Rect_t Rect;
+	//typedef Window_t Window;
+	//typedef Image_t Image;
+	//typedef Object_t Object;
 }

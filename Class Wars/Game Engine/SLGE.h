@@ -4,8 +4,314 @@
 #include "Macro Definitions.h"
 #include "Template Classes.h"
 
+#undef OUT
+#undef DELETE
+
 namespace SLGE
 {
+	namespace WHEEL
+	{
+		enum Wheels
+		{
+			Main = 0
+		};
+	}
+
+	namespace BUTTON
+	{
+		enum Buttons
+		{
+			LEFT = 1,
+			MIDDLE = 2,
+			RIGHT = 3,
+			X1 = 4,
+			X2 = 5
+		};
+	}
+
+	namespace KEY
+	{
+		enum Keys
+		{
+			SDL_SCANCODE_UNKNOWN = 0,
+
+			A = 4,
+			B = 5,
+			C = 6,
+			D = 7,
+			E = 8,
+			F = 9,
+			G = 10,
+			H = 11,
+			I = 12,
+			J = 13,
+			K = 14,
+			L = 15,
+			M = 16,
+			N = 17,
+			O = 18,
+			P = 19,
+			Q = 20,
+			R = 21,
+			S = 22,
+			T = 23,
+			U = 24,
+			V = 25,
+			W = 26,
+			X = 27,
+			Y = 28,
+			Z = 29,
+
+			ONE = 30,
+			TWO = 31,
+			THREE = 32,
+			FOUR = 33,
+			FIVE = 34,
+			SIX = 35,
+			SEVEN = 36,
+			EIGHT = 37,
+			NINE = 38,
+			ZERO = 39,
+
+			RETURN = 40,
+			ESCAPE = 41,
+			BACKSPACE = 42,
+			TAB = 43,
+			SPACE = 44,
+
+			MINUS = 45,
+			EQUALS = 46,
+			LEFTBRACKET = 47,
+			RIGHTBRACKET = 48,
+			BACKSLASH = 49, 
+			NONUSHASH = 50, 
+			SEMICOLON = 51,
+			APOSTROPHE = 52,
+			GRAVE = 53, 
+			COMMA = 54,
+			PERIOD = 55,
+			SLASH = 56,
+
+			CAPSLOCK = 57,
+
+			F1 = 58,
+			F2 = 59,
+			F3 = 60,
+			F4 = 61,
+			F5 = 62,
+			F6 = 63,
+			F7 = 64,
+			F8 = 65,
+			F9 = 66,
+			F10 = 67,
+			F11 = 68,
+			F12 = 69,
+
+			PRINTSCREEN = 70,
+			SCROLLLOCK = 71,
+			PAUSE = 72,
+			INSERT = 73, 
+			HOME = 74,
+			PAGEUP = 75,
+			DELETE = 76,
+			END = 77,
+			PAGEDOWN = 78,
+			RIGHT = 79,
+			LEFT = 80,
+			DOWN = 81,
+			UP = 82,
+
+			NUMLOCKCLEAR = 83, 
+			KP_DIVIDE = 84,
+			KP_MULTIPLY = 85,
+			KP_MINUS = 86,
+			KP_PLUS = 87,
+			KP_ENTER = 88,
+			KP_1 = 89,
+			KP_2 = 90,
+			KP_3 = 91,
+			KP_4 = 92,
+			KP_5 = 93,
+			KP_6 = 94,
+			KP_7 = 95,
+			KP_8 = 96,
+			KP_9 = 97,
+			KP_0 = 98,
+			KP_PERIOD = 99,
+
+			NONUSBACKSLASH = 100, 
+			APPLICATION = 101, 
+			POWER = 102,
+			KP_EQUALS = 103,
+			F13 = 104,
+			F14 = 105,
+			F15 = 106,
+			F16 = 107,
+			F17 = 108,
+			F18 = 109,
+			F19 = 110,
+			F20 = 111,
+			F21 = 112,
+			F22 = 113,
+			F23 = 114,
+			F24 = 115,
+			EXECUTE = 116,
+			HELP = 117,
+			MENU = 118,
+			SELECT = 119,
+			STOP = 120,
+			AGAIN = 121,   
+			UNDO = 122,
+			CUT = 123,
+			COPY = 124,
+			PASTE = 125,
+			FIND = 126,
+			MUTE = 127,
+			VOLUMEUP = 128,
+			VOLUMEDOWN = 129,
+			KP_COMMA = 133,
+			KP_EQUALSAS400 = 134,
+
+			INTERNATIONAL1 = 135, 
+			INTERNATIONAL2 = 136,
+			INTERNATIONAL3 = 137, 
+			INTERNATIONAL4 = 138,
+			INTERNATIONAL5 = 139,
+			INTERNATIONAL6 = 140,
+			INTERNATIONAL7 = 141,
+			INTERNATIONAL8 = 142,
+			INTERNATIONAL9 = 143,
+			LANG1 = 144, 
+			LANG2 = 145, 
+			LANG3 = 146, 
+			LANG4 = 147, 
+			LANG5 = 148, 
+			LANG6 = 149, 
+			LANG7 = 150, 
+			LANG8 = 151, 
+			LANG9 = 152, 
+
+			ALTERASE = 153,
+			SYSREQ = 154,
+			CANCEL = 155,
+			CLEAR = 156,
+			PRIOR = 157,
+			RETURN2 = 158,
+			SEPARATOR = 159,
+			OUT = 160,
+			OPER = 161,
+			CLEARAGAIN = 162,
+			CRSEL = 163,
+			EXSEL = 164,
+
+			KP_00 = 176,
+			KP_000 = 177,
+			THOUSANDSSEPARATOR = 178,
+			DECIMALSEPARATOR = 179,
+			CURRENCYUNIT = 180,
+			CURRENCYSUBUNIT = 181,
+			KP_LEFTPAREN = 182,
+			KP_RIGHTPAREN = 183,
+			KP_LEFTBRACE = 184,
+			KP_RIGHTBRACE = 185,
+			KP_TAB = 186,
+			KP_BACKSPACE = 187,
+			KP_A = 188,
+			KP_B = 189,
+			KP_C = 190,
+			KP_D = 191,
+			KP_E = 192,
+			KP_F = 193,
+			KP_XOR = 194,
+			KP_POWER = 195,
+			KP_PERCENT = 196,
+			KP_LESS = 197,
+			KP_GREATER = 198,
+			KP_AMPERSAND = 199,
+			KP_DBLAMPERSAND = 200,
+			KP_VERTICALBAR = 201,
+			KP_DBLVERTICALBAR = 202,
+			KP_COLON = 203,
+			KP_HASH = 204,
+			KP_SPACE = 205,
+			KP_AT = 206,
+			KP_EXCLAM = 207,
+			KP_MEMSTORE = 208,
+			KP_MEMRECALL = 209,
+			KP_MEMCLEAR = 210,
+			KP_MEMADD = 211,
+			KP_MEMSUBTRACT = 212,
+			KP_MEMMULTIPLY = 213,
+			KP_MEMDIVIDE = 214,
+			KP_PLUSMINUS = 215,
+			KP_CLEAR = 216,
+			KP_CLEARENTRY = 217,
+			KP_BINARY = 218,
+			KP_OCTAL = 219,
+			KP_DECIMAL = 220,
+			KP_HEXADECIMAL = 221,
+
+			LCTRL = 224,
+			LSHIFT = 225,
+			LALT = 226, 
+			LGUI = 227, 
+			RCTRL = 228,
+			RSHIFT = 229,
+			RALT = 230, 
+			RGUI = 231, 
+
+			MODE = 257,   
+
+			AUDIONEXT = 258,
+			AUDIOPREV = 259,
+			AUDIOSTOP = 260,
+			AUDIOPLAY = 261,
+			AUDIOMUTE = 262,
+			MEDIASELECT = 263,
+			WWW = 264,
+			MAIL = 265,
+			CALCULATOR = 266,
+			COMPUTER = 267,
+			AC_SEARCH = 268,
+			AC_HOME = 269,
+			AC_BACK = 270,
+			AC_FORWARD = 271,
+			AC_STOP = 272,
+			AC_REFRESH = 273,
+			AC_BOOKMARKS = 274,
+
+			BRIGHTNESSDOWN = 275,
+			BRIGHTNESSUP = 276,
+			DISPLAYSWITCH = 277, 
+			KBDILLUMTOGGLE = 278,
+			KBDILLUMDOWN = 279,
+			KBDILLUMUP = 280,
+			EJECT = 281,
+			SLEEP = 282,
+
+			APP1 = 283,
+			APP2 = 284,
+		};
+	}
+
+	struct Coord_t
+	{
+		double X;
+		double Y;
+	};
+
+	struct Size_t
+	{
+		double W;
+		double H;
+	};
+
+	struct Rect_t
+	{
+		Coord_t Coord;
+		Size_t Size;
+	};
+
 	//Window_t
 	//	The base class for any window like object	
 	class DLL_API Window_t
@@ -39,6 +345,9 @@ namespace SLGE
 
 		//Clears all data
 		virtual void ClearData();
+
+		//Saves all current data to a file
+		virtual int Log(std::ofstream &File, std::string Precursor);
 
 		//Fills Event with new events
 		int FetchEvents();
@@ -76,6 +385,9 @@ namespace SLGE
 			//Returns the FPS of the window it is nested in
 			double GetFPS(); 
 
+			//Returns the current tick
+			Uint32 GetCurrentTick();
+
 			//Displays the FPS in the console window
 			//	@Delay is the number of milliseconds between displays
 			void DisplayFPS(int Delay);
@@ -89,7 +401,99 @@ namespace SLGE
 			int Benchmark(const char Identifier[]);	
 
 		} TimerHandle;
+
+		//Holds keyboard events
+		class DLL_API Keyboard_t
+		{
+		friend class Window_t;
+		protected:
+
+			struct Key_t
+			{
+				bool IsPressed;
+				bool WasChanged;
+				int TimesRepeated;
+
+				Uint32 TimeAtLastPress;
+				Uint32 TimeAtLastRelease;
+
+				Coord_t MousePosnWhenLastPressed;
+				Coord_t MousePosnWhenLastReleased;
+			} Key[284];
+
+			bool CollectTextInput;
+			std::string* TextInput;
+
+		public:
+
+			Keyboard_t();
+			~Keyboard_t();
+
+			void StartCollectInputText(bool CollectInput);
+			std::string GetInputText(bool ClearData = true);
+
+			const Key_t operator[](KEY::Keys in_Key) const;
+
+		} Keyboard;
+
+		//Holds mouse events
+		class DLL_API Mouse_t
+		{
+		friend class Window_t;
+		protected:
+
+			struct Button_t
+			{
+				bool IsPressed;
+				bool WasChanged;
+				int NumberOfClicks;
+
+				Uint32 TimeAtLastPress;
+				Uint32 TimeAtLastRelease;
+
+				Coord_t MousePosnWhenLastPressed;
+				Coord_t MousePosnWhenLastReleased;
+			} Button[5];
+
+			struct Wheel_t
+			{
+				bool WasChanged;
+				int AmountScrolled;
+
+				Uint32 TimeAtLastUpScroll;
+				Uint32 TimeAtLastDownScroll;
+						
+				Coord_t MousePosnWhenLastScrolledUp;
+				Coord_t MousePosnWhenLastScrolledDown;
+			} Wheel;
+
+			int X;
+			int Y;
+			int LastX;
+			int LastY;
+
+		public:
+
+			int GetX();
+			int GetY();
+			int GetLastX();
+			int GetLastY();
+			int GetRelativeX();
+			int GetRelativeY();
+
+			bool HasMovedHorizontally();
+			bool HasMovedVertically();
+			bool HasMoved();
+			bool IsWithin(SDL_Rect Area);
+			bool IsWithin(Object_t* Object);
+
+			const Button_t operator[](BUTTON::Buttons Button) const;
+
+			const Wheel_t operator[](WHEEL::Wheels Wheel) const;
+
+		} Mouse;
 		
+
 		//Sets up the window and clears internal variables
 		Window_t();
 
@@ -177,6 +581,9 @@ namespace SLGE
 		//	@Loop is a pointer to a function that executes code each frame
 		//	@Despawn is a pointer to a function that cleans up all resources
 		int Run(Function Spawn, Function Loop, Function Despawn);
+
+		//Closes the window
+		void Close();
 	};
 
 
@@ -203,7 +610,10 @@ namespace SLGE
 		SDL_RendererFlip FlipType; //Determines whether to flip horizontally, verticlaly, or not at all
 
 		//Clears all data
-		void ClearData();
+		virtual void ClearData();
+
+		//Saves all current data to a file
+		virtual int Log(std::ofstream &File, std::string Precursor);
 
 	public:
 
@@ -257,7 +667,7 @@ namespace SLGE
 
 		//Registers an image with a window
 		//	MUST BE DONE in order to display any image
-		int Register(Window_t *Window);
+		virtual int Register(Window_t *Window);
 
 
 		//Opens an image from a file 
@@ -272,7 +682,7 @@ namespace SLGE
 		//	@Message is the text to load
 		//	@Font is a handle to the desired font
 		//	@TextColor is an RGB value that determines the text color
-		int Load(std::string Message, TTF_Font *Font, SDL_Color TextColor);
+		int Load(std::string Message, TTF_Font &Font, SDL_Color TextColor);
 
 		//Assigns a character string ID to the image once
 		//	@ID is a character string ID
@@ -311,7 +721,7 @@ namespace SLGE
 
 
 		//Displays the image
-		int Display();
+		virtual int Display();
 	};
 
 
@@ -341,6 +751,9 @@ namespace SLGE
 		//Clears all internal variables
 		virtual void ClearData(); 
 
+		//Saves all current data to a file
+		virtual int Log(std::ofstream &File, std::string Precursor);
+
 		//Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
 		//	@ImageIndex is the position of the image in the image array to set
 		virtual void SetImage(int ImageIndex); 
@@ -360,7 +773,7 @@ namespace SLGE
 
 		//Manual register function for static arrays
 		//	@Window is the window to register the object with
-		int Register(Window_t *Window);
+		virtual int Register(Window_t *Window);
 
 		//Sets the ID for the object
 		//	@ID is the character string ID
@@ -415,19 +828,19 @@ namespace SLGE
 
 		//True if the object overlaps a rectangle
 		//	@Area is the rectangle to check overlapping with
-		bool IsOverlapping(SDL_Rect Area);
+		virtual bool IsOverlapping(SDL_Rect Area);
 
 		//True if the object overlaps an object
 		//	@Object is the Object to check overlapping with
-		bool IsOverlapping(Object_t* Object);	
+		virtual bool IsOverlapping(Object_t* Object);	
 
 		//True if the object is completely inside a rectangle
 		//	@Area is the rectangle to check being inside of
-		bool IsWithin(SDL_Rect Area);
+		virtual bool IsWithin(SDL_Rect Area);
 
 		//True if the object is completely inside an object
 		//	@Object is the object to check being inside of
-		bool IsWithin(Object_t* Object);
+		virtual bool IsWithin(Object_t* Object);
 
 
 	//Actions
@@ -493,7 +906,7 @@ namespace SLGE
 
 
 		//Displays all layered images on the screen
-		int Display();
+		virtual int Display();
 	};
 }
 
