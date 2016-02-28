@@ -352,18 +352,33 @@ int DLL_API Window_t::Init(const int in_Width, const int in_Height, const std::s
 
 int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despawn)
 {
-	in_Spawn();
+	if (!Running)
+		return Exit;
+
+	FunctionReturn Ret;
+	Ret = in_Spawn();
+
+	if (Ret != Continue)
+	{
+		in_Despawn();
+		return Ret;
+	}
 
 	while (IsRunning())
 	{
 		FetchEvents();
-		in_Loop();
+		Ret = in_Loop();
+	
+		if (Ret != Continue)
+		{
+			in_Despawn();
+			return Ret;
+		}
+
 		Refresh();
 	}
 
-	in_Despawn();
-
-	return 0;
+	return in_Despawn();
 }
 
 #undef DLL_API

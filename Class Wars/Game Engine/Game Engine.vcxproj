@@ -83,11 +83,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DllMaincpp.cpp" />
-    <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="NPC.cpp" />
+    <ClCompile Include="Image.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="UI.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>

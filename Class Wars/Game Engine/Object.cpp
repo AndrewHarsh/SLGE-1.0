@@ -7,14 +7,21 @@ using namespace SLGE;
 //Private Methods
 DLL_API Object_t::Object_t()
 {
-	//ObjectID = nullptr;
+	WindowHandle = nullptr;
 
-	Image = nullptr;
-	HImage = nullptr;
-	Clip = nullptr;
-	DisplayClip = nullptr;
+	Image = new std::vector <Image_t>;
+	ImageToDisplay = new std::vector <int>;
 
 	ClearData();
+}
+
+DLL_API Object_t::~Object_t()
+{
+	ClearData();
+
+	WindowHandle = nullptr;
+	delete Image;
+	delete ImageToDisplay;
 }
 
 DLL_API Object_t::Object_t(Window_t *in_WindowHandle) : Object_t()
@@ -22,42 +29,46 @@ DLL_API Object_t::Object_t(Window_t *in_WindowHandle) : Object_t()
 	Register(in_WindowHandle);
 }
 
-void DLL_API Object_t::SetDisplay()
+void DLL_API Object_t::ClearData()
 {
-	DisplayClip[ImageToDisplay].x = (int) (X - W / 2);
-	DisplayClip[ImageToDisplay].y = (int) (Y - H / 2);
-	DisplayClip[ImageToDisplay].w = (int) W;
-	DisplayClip[ImageToDisplay].h = (int) H;
+	X = 0;
+	Y = 0;
+	W = 0;
+	H = 0;
+}
 
-	//ImageCenter[ImageToDisplay].x = (int) X;
-	//ImageCenter[ImageToDisplay].y = (int) Y;
+void DLL_API Object_t::SetDisplay(int in_ImageIndex)
+{
+	if (in_ImageIndex >= 0 && in_ImageIndex < Image->size())
+		(*Image)[in_ImageIndex].SetCoords(X - W / 2, Y - H / 2, W, H);
 }
 
 int DLL_API Object_t::Display()
 {
-	if (WindowHandle == nullptr)
-		return 1;
+	for (int i = 0; i < ImageToDisplay->size(); i++)
+	{
+		SetDisplay((*ImageToDisplay)[i]);
 
-	SetDisplay();
+		if ((*Image)[(*ImageToDisplay)[i]].Display() != 0)
+			return 1;
+	}
 
-	if (WindowHandle->HardwareAccelerated && WindowHandle->HScreen != NULL && HImage[ImageToDisplay] != NULL)
-		return SDL_RenderCopyEx(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &DisplayClip[ImageToDisplay], ImageAngle[ImageToDisplay], &ImageCenter[ImageToDisplay], ImageFlip[ImageToDisplay]);
-	else if (WindowHandle->Screen != NULL && Image[ImageToDisplay] != NULL)
-		return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &DisplayClip[ImageToDisplay]);
-	else 
-		return 1;
+	return 0;
 }
 
 
 //Status Methods
 int DLL_API Object_t::GetNumberOfImages()
 {
-	return NumberOfImages;
+	return Image->size();
 }
 
-int DLL_API Object_t::GetCurrentImage()
+int DLL_API Object_t::GetLayeredImage(int in_Layer)
 {
-	return ImageToDisplay;
+	if (in_Layer >= 0 && in_Layer < ImageToDisplay->size())
+		return (*ImageToDisplay)[in_Layer];
+	else
+		return -1;
 }
 
 double DLL_API Object_t::GetX()
@@ -69,7 +80,7 @@ double DLL_API Object_t::GetY()
 {
 	return Y;
 }
-
+																
 double DLL_API Object_t::GetW()
 {
 	return W;
@@ -128,7 +139,7 @@ bool DLL_API Object_t::IsWithin(Object_t *in_Object)
 //Setting Methods
 int DLL_API Object_t::Register(Window_t *in_Window)
 {
-	if (in_Window->WindowHandle == nullptr || (in_Window->HScreen == nullptr && in_Window->Screen == nullptr))
+	if (in_Window->WindowHandle == nullptr || !in_Window->IsRunning() || (in_Window->HScreen == nullptr && in_Window->Screen == nullptr))
 		return 1;
 
 	WindowHandle = in_Window;
@@ -136,12 +147,7 @@ int DLL_API Object_t::Register(Window_t *in_Window)
 	return 0;
 }
 
-void DLL_API Object_t::Deregister()
-{
-	WindowHandle = nullptr;
-}
-
-void DLL_API Object_t::SetCoords(const double in_X, const double in_Y, const double in_W, const double in_H)
+void DLL_API Object_t::SetCoords(double in_X, double in_Y, double in_W, double in_H)
 {
 	X = in_X;
 	Y = in_Y;
@@ -150,239 +156,97 @@ void DLL_API Object_t::SetCoords(const double in_X, const double in_Y, const dou
 		W = in_W;
 	if (in_H > 0)
 		H = in_H;
-
-	DisplayClip[ImageToDisplay].x = (int) X;
-	DisplayClip[ImageToDisplay].y = (int) Y;
-	DisplayClip[ImageToDisplay].w = Clip[ImageToDisplay].w;
-	DisplayClip[ImageToDisplay].h = Clip[ImageToDisplay].h;
 }
 
 										 
-int DLL_API Object_t::OpenImage(const std::string in_Filename, const SDL_Rect in_Clip, const Color in_ColorKey)
+int DLL_API Object_t::AddImage(std::string in_Filename, SDL_Rect in_Clip, SDL_Color in_ColorKey)
 {
-	if (WindowHandle == nullptr)
+	Image->push_back(Image_t(WindowHandle));
+
+	if ((*Image)[Image->size() - 1].OpenImage(in_Filename, in_Clip, in_ColorKey))
 		return 1;
 
-	if (WindowHandle->HardwareAccelerated)
+	if (!WindowHandle->HardwareAccelerated)
 	{
-		SDL_Texture **TempImageArray = new SDL_Texture*[NumberOfImages + 1];
-		SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages + 1];
-		SDL_Rect *TempDisplayClipArray = new SDL_Rect[NumberOfImages + 1];
-
-		for (int i = 0; i < NumberOfImages; i++)
-		{
-			TempImageArray[i] = HImage[i];
-			TempClipArray[i] = Clip[i];
-			TempDisplayClipArray[i] = DisplayClip[i];
-		}
-
-		delete[] HImage;
-		delete[] Clip;
-		delete[] DisplayClip;
-
-		HImage = TempImageArray;
-		Clip = TempClipArray;
-		DisplayClip = TempDisplayClipArray;
-
-		ImageAngle.push_back(0);
-		ImageCenter.push_back({ X, Y });
-		ImageFlip.push_back(SDL_FLIP_NONE);
-	}
-	else
-	{
-		SDL_Surface **TempImageArray = new SDL_Surface*[NumberOfImages + 1];
-		SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages + 1];
-		SDL_Rect *TempDisplayClipArray = new SDL_Rect[NumberOfImages + 1];
-
-		for (int i = 0; i < NumberOfImages; i++)
-		{
-			TempImageArray[i] = Image[i];
-			TempClipArray[i] = Clip[i];
-			TempDisplayClipArray[i] = DisplayClip[i];
-		}
-
-		delete[] Image;
-		delete[] Clip;
-		delete[] DisplayClip;
-
-		Image = TempImageArray;
-		Clip = TempClipArray;
-		DisplayClip = TempDisplayClipArray;
+		if (W <= 0)
+			W = (*Image)[Image->size() - 1].Software->w;
+		if (H <= 0)
+			H = (*Image)[Image->size() - 1].Software->h;
 	}
 
-	SDL_Surface* LoadedSurface = IMG_Load(in_Filename.c_str());
-
-	if (LoadedSurface == NULL)
-	{
-		printf("Unable to load image %s! SDL_image Error: %s\n", in_Filename.c_str(), IMG_GetError());
-
-		if (in_Clip.w <= 0 || in_Clip.h <= 0)
-			LoadedSurface = SDL_CreateRGBSurface(0, WindowHandle->GetWidth(), WindowHandle->GetHeight(), WindowHandle->GetBPP(), 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-		else
-			LoadedSurface = SDL_CreateRGBSurface(0, in_Clip.w, in_Clip.h, WindowHandle->GetBPP(), 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-
-		if (LoadedSurface == NULL)
-		{
-			printf("Unable to load default image! SDL_image Error: %s\n", IMG_GetError());
-
-			if (WindowHandle->HardwareAccelerated)
-				HImage[NumberOfImages] = NULL;
-			else
-				Image[NumberOfImages] = NULL;
-
-			return EXIT_FAILURE;
-		}
-	}
-
-	if (in_ColorKey.R != NULL || in_ColorKey.G != NULL || in_ColorKey.B != NULL || in_ColorKey.A != NULL)
-	{
-		//Map the color key
-		Uint32 ColorKey = SDL_MapRGB(LoadedSurface->format, in_ColorKey.R, in_ColorKey.G, in_ColorKey.B);
-
-		//Set all pixels of in_Color to be transparent
-		SDL_SetColorKey(LoadedSurface, SDL_TRUE, ColorKey);
-	}
-
-	if (WindowHandle->HardwareAccelerated)
-	{
-		//Convert surface to screen format
-		HImage[NumberOfImages] = SDL_CreateTextureFromSurface(WindowHandle->HScreen, LoadedSurface);
-
-		if (HImage[NumberOfImages] == NULL)
-		{
-			printf("Unable to convert texture %s! SDL Error: %s\n", in_Filename.c_str(), SDL_GetError());
-			SDL_FreeSurface(LoadedSurface);
-			return EXIT_FAILURE;
-		}
-
-	}
-	else
-	{
-		//Convert surface to screen format
-		Image[NumberOfImages] = SDL_ConvertSurface(LoadedSurface, WindowHandle->Screen->format, NULL);
-
-		if (Image[NumberOfImages] == NULL)
-		{
-			printf("Unable to optimize image %s! SDL Error: %s\n", in_Filename.c_str(), SDL_GetError());
-			SDL_FreeSurface(LoadedSurface);
-			return EXIT_FAILURE;
-		}
-	}
-
-
-	Clip[NumberOfImages].x = in_Clip.x;
-	Clip[NumberOfImages].y = in_Clip.y;
-
-	if (in_Clip.w > 0 && in_Clip.x + in_Clip.w <= LoadedSurface->w)
-		Clip[NumberOfImages].w = in_Clip.w;
-	else
-		Clip[NumberOfImages].w = LoadedSurface->w;
-
-	if (in_Clip.h > 0 && in_Clip.y + in_Clip.h <= LoadedSurface->h)
-		Clip[NumberOfImages].h = in_Clip.h;
-	else
-		Clip[NumberOfImages].h = LoadedSurface->h;
-
-	DisplayClip[NumberOfImages].x = static_cast <int> (round(X - Clip[NumberOfImages].w / 2.0));
-	DisplayClip[NumberOfImages].y = static_cast <int> (round(Y + H / 2.0 - Clip[NumberOfImages].h));
-	DisplayClip[NumberOfImages].w = Clip[NumberOfImages].w;
-	DisplayClip[NumberOfImages].h = Clip[NumberOfImages].h;
-
-	ImageToDisplay = NumberOfImages++;
-	SDL_FreeSurface(LoadedSurface);
-
-	return 0;
+	if (ImageToDisplay->size() == 0)
+		return AddLayer(Image->size() - 1);
 }
 
-int DLL_API Object_t::SelectImage(const int in_Position)
-{
-	if (in_Position >= 0 && in_Position < NumberOfImages)
-		ImageToDisplay = in_Position;
-	else
-		return 1;
-
-	return 0;
-}
-
-int DLL_API Object_t::MoveImage(const int in_Position, const int in_NewPosition)
+int DLL_API Object_t::MoveImage(int in_Position, int in_NewPosition)
 {
 	if (in_Position == in_NewPosition || 
-		in_Position < 0 || in_Position > NumberOfImages || 
-		in_NewPosition < 0 || in_NewPosition > NumberOfImages)
-		return 0;
+		in_Position < 0 || in_Position >= Image->size() || 
+		in_NewPosition < 0 || in_NewPosition >= Image->size())
+		return 1;
 
-	if (WindowHandle->HardwareAccelerated)
-	{
-		SDL_Texture *TempTexture = HImage[in_Position];
-		SDL_Rect TempClip = Clip[in_Position];
+	Image->insert(Image->begin() + in_NewPosition, (*Image)[in_Position]);
 
-		if (in_Position < in_NewPosition)
-		{
-			for (int i = in_Position; i < in_NewPosition; i++)
-				HImage[i] = HImage[i + 1];
-		}
-		else
-		{
-			for (int i = in_Position; i > in_NewPosition; i--)
-				HImage[i] = HImage[i - 1];
-		}
-
-		HImage[in_NewPosition] = TempTexture;
-	}
+	if (in_NewPosition > in_Position)
+		Image->erase(Image->begin() + in_Position);
 	else
-	{
-		SDL_Surface *TempSurface = Image[in_Position];
-		SDL_Rect TempClip = Clip[in_Position];
-
-		if (in_Position < in_NewPosition)
-		{
-			for (int i = in_Position; i < in_NewPosition; i++)
-				Image[i] = Image[i + 1];
-		}
-		else
-		{
-			for (int i = in_Position; i > in_NewPosition; i--)
-				Image[i] = Image[i - 1];
-		}
-
-		Image[in_NewPosition] = TempSurface;
-	}
+		Image->erase(Image->begin() + in_Position + 1);
 
 	return 0;
 }
 
-int DLL_API Object_t::DeleteImage(const int in_Position)
+int DLL_API Object_t::DeleteImage(int in_Position)
 {
-	if (in_Position >= 0 && in_Position < NumberOfImages)
-	{
-		SDL_Surface **TempImageArray = new SDL_Surface*[NumberOfImages - 1];
-		SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages - 1];
+	if (in_Position >= 0 && in_Position < Image->size())
+		Image->erase(Image->begin() + in_Position);
+	else
+		return 1;
 
-		for (int i = 0; i < NumberOfImages; i++)
-		{
-			if (i < in_Position)
-			{
-				TempImageArray[i] = Image[i];
-				TempClipArray[i] = Clip[i];
-			}
-			else
-			{
-				TempImageArray[i] = Image[i + 1];
-				TempClipArray[i] = Clip[i + 1];
-			}
-		}
+	return 0;
+}
 
-		SDL_FreeSurface(Image[in_Position]);
-		delete[] Clip;
 
-		Image = TempImageArray;
-		Clip = TempClipArray;
+int DLL_API Object_t::AddLayer(std::string in_Filename, SDL_Rect in_Clip, SDL_Color in_ColorKey)
+{
+	if (AddImage(in_Filename, in_Clip, in_ColorKey))
+		return 1;
 
-		NumberOfImages--;
+	ImageToDisplay->push_back(Image->size() - 1);
 
-		if (ImageToDisplay >= in_Position)
-			ImageToDisplay--;
-	}
+	return 0;
+}
+
+int DLL_API Object_t::AddLayer(int in_ImagePosition)
+{
+	if (in_ImagePosition >= 0 && in_ImagePosition < Image->size())
+		ImageToDisplay->push_back(in_ImagePosition);
+	else
+		return 1;
+
+	return 0;
+}
+
+int DLL_API Object_t::MoveLayer(int in_Position, const int in_NewPosition)
+{
+	if (in_Position == in_NewPosition || 
+		in_Position < 0 || in_Position >= ImageToDisplay->size() || 
+		in_NewPosition < 0 || in_NewPosition >= ImageToDisplay->size())
+		return 1;
+
+	ImageToDisplay->insert(ImageToDisplay->begin() + in_NewPosition, (*ImageToDisplay)[in_Position]);
+
+	if (in_NewPosition > in_Position)
+		ImageToDisplay->erase(ImageToDisplay->begin() + in_Position);
+	else
+		ImageToDisplay->erase(ImageToDisplay->begin() + in_Position + 1);
+
+	return 0;
+}
+
+int DLL_API Object_t::DeleteLayer(int in_Position)
+{
+	if (in_Position >= 0 && in_Position < ImageToDisplay->size())
+		ImageToDisplay->erase(ImageToDisplay->begin() + in_Position);
 	else
 		return 1;
 

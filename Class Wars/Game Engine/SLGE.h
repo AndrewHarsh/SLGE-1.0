@@ -10,6 +10,7 @@
 #include <Windows.h>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -55,18 +56,11 @@ namespace SLGE
 	using std::chrono::microseconds;
 	using std::chrono::duration_cast;
 
-	enum Direction;
 	struct Color;
 
-	//template <class C> class Data_t;
-	//template <typename C, typename ...D> class DynamicClass;
-
 	class Window_t;
+	//class Image_t;
 	class Object_t;
-	class Entity;
-	class NPC;
-	class UI;
-	class Window_t;
 
 
 	SDL_Window DLL_API *SDL_CreateWindowEx(const char* Title, int X, int Y, int W, int H, Uint32 Flags);
@@ -80,16 +74,11 @@ namespace SLGE
 	void DLL_API SDL_DestroyTextureEx(SDL_Texture*);
 
 
-	enum DLL_API Direction
+	enum DLL_API FunctionReturn
 	{
-		Up,
-		UpRight,
-		Right,
-		DownRight,
-		Down,
-		DownLeft,
-		Left,
-		UpLeft
+		Error = -1,
+		Continue = 0,
+		Exit = 1
 	};
 
 	struct DLL_API Color
@@ -137,18 +126,15 @@ namespace SLGE
 	template <typename C, typename ...D>
 	class DynamicClass
 	{
-		typedef bool (C::*bMethod)();
-		typedef void (C::*vMethod)();
-		typedef int (C::*iMethod)();
-		const int NUMBER_OF_TYPE_ARGS = sizeof...(D) + 1;
+		static const int NUMBER_OF_TYPE_ARGS = sizeof...(D) + 1;
 
+		//Temp for debug only
 		const std::vector <C*> *DATA = &(Data_t <C>::Data);
 		const std::vector <Global> *LINK = &(Data_t <C>::Link);
 
 
 		std::vector <C*> Data;
 		std::vector <Local> Link[sizeof...(D) + 1];
-
 
 		template <typename T1>
 		void AddPointer()
@@ -280,8 +266,29 @@ namespace SLGE
 			DeletePointer <T2, Args...>(in_Index);
 		}
 
+		template <typename Type, typename Comparer>
+		int GetTypeIndex(int Count)
+		{
+			if (std::is_same <Type, Comparer>::value)
+				return Count;
+			else
+				return 0;
+		}
+
+		template <typename Type, typename Comparer, typename Comparer2, typename ...Args>
+		int GetTypeIndex(int Count)
+		{
+			if (std::is_same <Type, Comparer>::value)
+				return Count;
+			else
+				return GetTypeIndex<Type, Comparer2, Args...>(Count - 1);
+		}
+
+
+
 	public:
 
+		//Local
 		DynamicClass()
 		{
 		}
@@ -302,93 +309,39 @@ namespace SLGE
 
 		void Despawn()
 		{
-			//Data_t <C>::Data.empty();
-			//Data_t <C>::Link.empty();
-
-			Despawn(0, Data.size() - 1);
+			Despawn(0, Data.size());
 		}
 
 		void Despawn(int in_Index, int in_Amount)
 		{
-			for (int i = in_Index; i < in_Index + in_Amount; i++)
+			if (in_Amount > 0 && Data.size() > 0)
 			{
-				DeletePointer <C, D...>(in_Index);
+				for (int i = in_Index; i < in_Index + in_Amount; i++)
+				{
+					DeletePointer <C, D...>(in_Index);
 
-				delete Data[in_Index];
-				Data.erase(Data.begin() + in_Index);
+					delete Data[in_Index];
+					Data.erase(Data.begin() + in_Index);
+				}
 			}
 		}
 
-		void Swap(int Position, int NewPosition)
+		template <typename T1 = C>
+		int GetPosition(int in_Index = 0)
 		{
-			if (Position >= 0 && NewPosition >= 0 && Position < Data.size() && NewPosition < Data.size())
+			if (in_Index >= 0 && in_Index < Link[0].size())
 			{
-				C* Temp = Data[Position];
-				Local Temp1 = Link[NUMBER_OF_TYPE_ARGS - 1][Position];
-				Global Temp2 = Data_t <C>::Link[Position];
-				C* Temp3 = Data_t <C>::Data[Position]; 
+				int Type = GetTypeIndex <T1, C, D...>(NUMBER_OF_TYPE_ARGS - 1);
 
-				Data[Position] = Data[NewPosition];
-				Data[NewPosition] = Temp;
-
-				Link[NUMBER_OF_TYPE_ARGS - 1][Position] = Link[NUMBER_OF_TYPE_ARGS - 1][NewPosition];
-				Link[NUMBER_OF_TYPE_ARGS - 1][NewPosition] = Temp1;
-
-				Data_t <C>::Link[Position] = Data_t <C>::Link[NewPosition];
-				Data_t <C>::Link[NewPosition] = Temp2;
-
-				Data_t <C>::Data[Position] = Data_t <C>::Data[NewPosition];
-				Data_t <C>::Data[NewPosition] = Temp3;
+				return Link[Type][in_Index].Data;
 			}
-		}
-
-		template <typename T1>
-		static void Swap(int Position, int NewPosition)
-		{
-			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <T1>::Data.size() && NewPosition < Data_t <T1>::Data.size())
-			{
-				Global Temp2 = Data_t <T1>::Link[Position];
-				T1* Temp3 = Data_t <T1>::Data[Position]; 
-
-				Data_t <T1>::Link[Position] = Data_t <T1>::Link[NewPosition];
-				Data_t <T1>::Link[NewPosition] = Temp2;
-
-				Data_t <T1>::Data[Position] = Data_t <T1>::Data[NewPosition];
-				Data_t <T1>::Data[NewPosition] = Temp3;
-			}
-		}
-
-		int GetPosition(int Index, int Type)
-		{
-			return Link[Type][Index].Data;
-		}
-
-		static void All(bMethod Run)
-		{
-			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
-				(Data_t <C>::Data[i]->*Run)();
-		}
-
-		static void All(vMethod Run)
-		{
-			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
-				(Data_t <C>::Data[i]->*Run)();
-		}
-
-		static void All(iMethod Run)
-		{
-			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
-				(Data_t <C>::Data[i]->*Run)();
+			else
+				return -1;
 		}
 
 		int NumberOfObjects()
 		{
 			return Data.size();
-		}
-
-		static int NumberOfAllObjects()
-		{
-			return Data_t <C>::Data.size();
 		}
 
 		C &operator[](unsigned in_Index)
@@ -406,6 +359,52 @@ namespace SLGE
 		
 			return *(Data[0]);
 		}
+
+		//Global
+		static void Swap(int Position, int NewPosition)
+		{
+			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
+			{
+				Global Temp2 = Data_t <C>::Link[Position];
+				C* Temp3 = Data_t <C>::Data[Position]; 
+
+				Data_t <C>::Link[Position] = Data_t <C>::Link[NewPosition];
+				Data_t <C>::Link[NewPosition] = Temp2;
+
+				Data_t <C>::Data[Position] = Data_t <C>::Data[NewPosition];
+				Data_t <C>::Data[NewPosition] = Temp3;
+			}
+		}
+
+		static void Move(int Position, int NewPosition)
+		{
+			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
+			{
+				if (Position > NewPosition)
+				{
+					for (int i = NewPosition; i < Position - 1; i++)
+						Swap(i, i + 1);
+				}
+
+				else if (Position < NewPosition)
+				{
+					for (int i = Position; i < NewPosition - 1; i++)
+						Swap(i, i + 1);
+				}
+			}
+		}
+
+		template <typename F, typename ...A>
+		static void All(F Function, A... Args)
+		{
+			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
+				(Data_t <C>::Data[i]->*Function)(Args...);
+		}
+
+		static int NumberOfAllObjects()
+		{
+			return Data_t <C>::Data.size();
+		}
 	};
 
 	///^^^^^^^^^^^^^^^///
@@ -416,10 +415,13 @@ namespace SLGE
 
 	class DLL_API Window_t
 	{
-		typedef void(*Function)();
+		typedef FunctionReturn(*Function)();
 		friend class Timer_t;
 		friend class Object_t;
+		friend class Image_t;
+
 	protected:
+
 		SDL_Window *WindowHandle;
 		SDL_Renderer *HScreen;
 		SDL_Surface *Screen;
@@ -503,23 +505,56 @@ namespace SLGE
 		int Run(Function Spawn, Function Loop, Function Despawn);
 	};
 
+	class DLL_API Image_t
+	{	
+		friend class Object_t;
+
+	protected:
+
+		Window_t *WindowHandle;
+		bool HardwareAccelerated;
+
+		union
+		{
+			SDL_Surface *Software;
+			SDL_Texture *Hardware;
+		};
+
+		SDL_Rect LoadClip;
+		SDL_Rect DisplayClip;
+
+		double Angle;
+		SDL_Point Center;
+		SDL_RendererFlip FlipType;
+
+		void ClearData();
+		int Display();
+
+	public:
+
+		Image_t();
+		Image_t(Window_t *in_Window);
+		~Image_t();
+
+		int Register(Window_t *Window);
+
+		int OpenImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+		int LoadText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
+
+		int SetCoords(double X, double Y, double W, double H);
+	};
+
 	class DLL_API Object_t
 	{
 		friend class Window_t;
+
 	protected:
 
 		Window_t *WindowHandle;
 
 		//Image
-		SDL_Surface **Image;
-		SDL_Texture **HImage;
-		SDL_Rect *Clip;
-		SDL_Rect *DisplayClip;
-		std::vector <double> ImageAngle;
-		std::vector <SDL_Point> ImageCenter;
-		std::vector <SDL_RendererFlip> ImageFlip;
-		int ImageToDisplay;
-		int NumberOfImages;
+		std::vector <Image_t> *Image;
+		std::vector <int> *ImageToDisplay;
 			
 		//Location
 		double X;
@@ -530,50 +565,8 @@ namespace SLGE
 	public:	
 
 		//Replacable functions
-		virtual void ClearData()
-		{
-			if (Image != nullptr)
-			{
-				for (int i = 0; i < NumberOfImages; i++)
-					SDL_FreeSurface(Image[i]);
-
-				Image = nullptr;
-			}
-
-			if (HImage != nullptr)
-			{
-				for (int i = 0; i < NumberOfImages; i++)
-					SDL_DestroyTexture(HImage[i]);
-
-				HImage = nullptr;
-			}
-
-			if (Clip != nullptr)
-			{
-				delete[] Clip;
-				Clip = nullptr;
-			}
-
-			if (DisplayClip != nullptr)
-			{
-				delete[] DisplayClip;
-				DisplayClip = nullptr;
-			}
-
-			ImageAngle.empty();
-			ImageCenter.empty();
-			ImageCenter.empty();
-			ImageFlip.empty();
-			NumberOfImages = 0;
-			ImageToDisplay = 0;
-
-			X = 0;
-			Y = 0;
-			W = 0;
-			H = 0;
-		}
-
-		virtual void SetDisplay();
+		virtual void ClearData();
+		virtual void SetDisplay(int ImageIndex);
 
 		int Display();
 
@@ -581,12 +574,12 @@ namespace SLGE
 
 		Object_t();
 		Object_t(Window_t *WindowHandle);
+		~Object_t();
 		int Register(Window_t *Window);
-		void Deregister();
 
 		//Status
 		int GetNumberOfImages();
-		int GetCurrentImage();
+		int GetLayeredImage(int Layer);
 		double GetX();
 		double GetY();
 		double GetW();
@@ -598,12 +591,16 @@ namespace SLGE
 		bool IsWithin(Object_t* Object);
 
 		//Actions
-		void SetCoords(const double X, const double Y, const double W = NULL, const double H = NULL);
+		void SetCoords(double X, double Y, double W = NULL, double H = NULL);
 
-		int OpenImage(const std::string Filename, SDL_Rect Clip, const Color ColorKey);
-		int SelectImage(const int Position);
-		int MoveImage(const int Position, const int NewPosition);
-		int DeleteImage(const int Position);
+		int AddImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+		int MoveImage(int Position, const int NewPosition);
+		int DeleteImage(int Position);
+
+		int AddLayer(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+		int AddLayer(int ImagePosition);
+		int MoveLayer(int Position, const int NewPosition);
+		int DeleteLayer(int Position);
 	};
 }
 
