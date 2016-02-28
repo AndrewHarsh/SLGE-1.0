@@ -649,7 +649,7 @@ FunctionReturn SpawnMikeGame()
 	mikePlayer.Spawn(1, &Window1);
 	mikeMonster.Spawn(5, &Window1);
 
-	Room_t newroom;
+	
 	
 
 	//Reference the first item in the mikeWorld object and add an image
@@ -669,10 +669,9 @@ FunctionReturn SpawnMikeGame()
 		mikeMonster[i].SetCoords(100 + 100 * i, 100);
 	}
 
-	if (Window1.GetKeyState(SDL_SCANCODE_0))
-	{
-		
-	}
+	
+
+
 
 	return Continue;
 }
@@ -700,10 +699,52 @@ FunctionReturn RunMikeGame()
 	}
 
 		
-
+	Room_t newroom;
 
 	if (Window1.GetKeyState(SDL_SCANCODE_SLASH))
 	{
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_Q))
+	{
+		newroom.Select_Shape(0);
+		
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_W))
+	{
+		newroom.Select_Shape(1);
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_E))
+	{
+		newroom.Select_Shape(2);
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_R))
+	{
+		newroom.Select_Shape(3);
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_R))
+	{
+		newroom.Select_Shape(4);
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_T))
+	{
+		newroom.Select_Shape(5);
+
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_Y))
+	{
+		newroom.Select_Shape(6);
 
 	}
 

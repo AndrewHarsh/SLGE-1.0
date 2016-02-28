@@ -129,9 +129,8 @@ public:
 		LastX = X;
 		LastY = Y;
 
-		(*Animation)[aAttacking].Active = false;
-		(*Animation)[aIdle].Active = false;
-		(*Animation)[aMoving].Active = false;
+		for (int i = 0; i < (int) Animation->size(); i++)
+			(*Animation)[i].Active = false;
 	}
 
 	virtual int Display()
@@ -140,7 +139,7 @@ public:
 
 		for (int i = 0; i < (int) ImageToDisplay->size(); i++)
 		{
-			//Object_t::Animate(i, Facing);
+			Object_t::Animate(i, 0, Facing);
 			SetImage((*ImageToDisplay)[i]);
 
 			if ((Ret = (*Image)[(*ImageToDisplay)[i]].Display()) != EXIT_SUCCESS)
@@ -155,6 +154,7 @@ public:
 		return Ret;
 	}
 
+	/*
 	virtual void Animate()
 	{
 		if (Attacking.Active)
@@ -194,6 +194,7 @@ public:
 		else
 			(*ImageToDisplay)[AnimationLayer] = Idle.Direction[Facing].StartPosition;
 	}
+	*/
 
 	virtual bool CanAttack(Entity_t *in_Victim)
 	{
@@ -282,8 +283,9 @@ public:
 			break;	   
 		}
 
-		(*Animation)[aMoving].Active = true;
-		//Moving.Active = true;
+		if (Animation->size() > aMoving)
+			(*Animation)[aMoving].Active = true;
+	
 		return 0;
 	}
 
@@ -521,7 +523,8 @@ public:
 
 	void Attack(Entity_t *in_Victim, Attack_t Weapon)
 	{
-		(*Animation)[aAttacking].Active = true;
+		if (Animation->size() > aAttacking)
+			(*Animation)[aAttacking].Active = true;
 
 		in_Victim->TakeDamage(Weapon.Damage / WindowHandle->TimerHandle.GetFPS());
 	}

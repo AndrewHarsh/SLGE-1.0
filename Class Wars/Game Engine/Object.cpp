@@ -21,25 +21,12 @@ DLL_API Object_t::~Object_t()
 {
 	ClearData();
 
-	//Animation = new std::vector <Animation_t>;
-
 	WindowHandle = nullptr;
 
-	Animation->clear();
-
-	if (Image != nullptr)
-		delete Image;
-	if (ImageToDisplay != nullptr)
-		delete ImageToDisplay;
-	if (ID != nullptr)
-		delete ID;
-	if (Animation != nullptr)
-		delete Animation;
-	
-	Animation = nullptr;
-	Image = nullptr;
-	ImageToDisplay = nullptr;
-	ID = nullptr;
+	delete Image;
+	delete ImageToDisplay;
+	delete ID;
+	delete Animation;
 }
 
 DLL_API Object_t::Object_t(Window_t *in_WindowHandle) : Object_t()
@@ -92,24 +79,22 @@ void DLL_API Object_t::SetImage(int in_ImageIndex)
 		(*Image)[in_ImageIndex].SetCoords(X - (*Image)[in_ImageIndex].W() / 2, Y - (*Image)[in_ImageIndex].H() / 2);
 }
 
-void DLL_API Object_t::Animate(int in_Layer, int in_Direction)
+void DLL_API Object_t::Animate(int in_Layer, int in_Type, int in_Direction)
 {
-	if (in_Layer >= 0 && in_Layer < (int) Animation->size() && 
-		in_Direction >= 0 && in_Direction < 16 && 
-		(*Animation)[in_Layer].Active)
+	if (in_Layer >= 0 && in_Layer < (int) Animation->size() && (*Animation)[in_Layer].Active)
 	{
-		(*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+		(*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
 
-		while ((*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed > (*Animation)[in_Layer].Direction[in_Direction].Duration &&
-				(*Animation)[in_Layer].Direction[in_Direction].Duration > 0)
+		while ((*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).TimeDisplayed > (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).Duration &&
+				(*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).Duration > 0)
 		{
-			(*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed -= (*Animation)[in_Layer].Direction[in_Direction].Duration;
+			(*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).TimeDisplayed -= (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).Duration;
 			(*ImageToDisplay)[in_Layer]++;
 
-			if ((*ImageToDisplay)[in_Layer] >= (*Animation)[in_Layer].Direction[in_Direction].StartPosition + (*Animation)[in_Layer].Direction[in_Direction].TotalNumber ||
-				(*ImageToDisplay)[in_Layer] < (*Animation)[in_Layer].Direction[in_Direction].StartPosition)
+			if ((*ImageToDisplay)[in_Layer] >= (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).StartPosition + (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).TotalNumber ||
+				(*ImageToDisplay)[in_Layer] < (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).StartPosition)
 			{
-				(*ImageToDisplay)[in_Layer] = (*Animation)[in_Layer].Direction[in_Direction].StartPosition;
+				(*ImageToDisplay)[in_Layer] = (*Animation)[in_Layer].Type(in_Type).Direction(in_Direction).StartPosition;
 			}
 		}
 	}
@@ -119,7 +104,7 @@ int DLL_API Object_t::Display()
 {
 	for (int i = 0; i < (int) ImageToDisplay->size(); i++)
 	{
-		Animate(i, 0);
+		Animate(i, 0, 0);
 		SetImage((*ImageToDisplay)[i]);
 
 		if ((*Image)[(*ImageToDisplay)[i]].Display() != EXIT_SUCCESS)

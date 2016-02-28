@@ -1,11 +1,12 @@
-﻿  DllMaincpp.cpp
+﻿  Animation.cpp
+  DllMaincpp.cpp
   Image.cpp
   Keyboard.cpp
   Mouse.cpp
   Object.cpp
   Timer.cpp
   Window.cpp
-Window.cpp(279): error C2039: 'clicks' : is not a member of 'SDL_MouseButtonEvent'
-          c:\users\nzbq9t\dropbox\game we are making\sdl2-2.0.1\include\SDL_events.h(235) : see declaration of 'SDL_MouseButtonEvent'
-Window.cpp(293): error C2039: 'clicks' : is not a member of 'SDL_MouseButtonEvent'
-          c:\users\nzbq9t\dropbox\game we are making\sdl2-2.0.1\include\SDL_events.h(235) : see declaration of 'SDL_MouseButtonEvent'
+     Creating library C:\Users\nzbq9t\Documents\Visual Studio 2013\Projects\Game We are Making\Class Wars\Release\SLGE.lib and object C:\Users\nzbq9t\Documents\Visual Studio 2013\Projects\Game We are Making\Class Wars\Release\SLGE.exp
+  Generating code
+  Finished generating code
+  Game Engine.vcxproj -> C:\Users\nzbq9t\Documents\Visual Studio 2013\Projects\Game We are Making\Class Wars\Release\SLGE.dll

@@ -312,41 +312,91 @@ namespace SLGE
 		Size_t Size;
 	};
 
-	struct DLL_API Animation_t
+
+	struct DLL_API AnimateDirection_t
 	{
+	public:
+
+		double TimeDisplayed; //In milliseconds
+		int StartPosition;
+		int TotalNumber;
+		double Duration; //In milliseconds
 		bool Active;
 
-		struct DLL_API AnimateDirection_t
+		AnimateDirection_t();
+		void ClearData();
+	};
+
+	class DLL_API AnimateType_t
+	{
+	protected:
+
+		std::vector <AnimateDirection_t> *direction;
+		std::vector <int> *Map;
+
+	public:
+
+		bool Active;
+
+		AnimateType_t();
+		AnimateType_t(const AnimateType_t &Copy);
+		AnimateType_t &operator=(const AnimateType_t &Copy);
+		~AnimateType_t();
+		void ClearData();
+
+		AnimateDirection_t &Direction(int Direction);
+		int AddDirection(int Direction);
+
+		template <typename ...T>
+		int AddDirection(int Direction, T ...Args)
 		{
-		friend class Object_t;
-		friend struct Animation_t;
+			Map->push_back(in_Direction);
+			direction->push_back(AnimateDirection_t());
+			return AddDirection(Args...);
+		}
 
-			double TimeDisplayed; //In milliseconds
+		int RemoveDirection(int Direction);
 
-			int StartPosition;
-			int TotalNumber;
-			double Duration; //In milliseconds
+		void SetAll(int StartPosition, double Duration, int TotalFrames);
+		void SetTotalFramesAll(int TotalNumber);
+		void SetDurationAll(double Duration);
+		void SetStartPositionAll(int StartPosition);
+	};
 
-			AnimateDirection_t();
-			void ClearData();
+	class DLL_API Animation_t
+	{
+	protected:
 
-			~AnimateDirection_t()
-			{
-				ClearData();
-			}
+		std::vector <AnimateType_t> *type;
+		std::vector <int> *Map;
 
-		} Direction[16];
+	public:
+
+		bool Active;
 
 		Animation_t();
-		~Animation_t()
-		{
-			ClearData();
-		}
+		Animation_t(const Animation_t &Copy);
+		Animation_t &operator=(const Animation_t &Copy);
+		~Animation_t();
 		void ClearData();
-		void SetAll(int in_StartPosition, double in_Duration, int in_TotalFrames);
-		void SetTotalFramesAll(int in_TotalNumber);
-		void SetDurationAll(double in_Duration);
-		void SetStartPositionAll(int in_StartPosition);
+
+		AnimateType_t &Type(int Type);
+		int AddType(int Type);
+
+		template <typename...T>
+		int AddType(int Type, T ...Args)
+		{
+			Map->push_back(in_Type);
+			type->push_back(AnimateType_t());
+			return AddType(Args...);
+		}
+
+		int RemoveType(int Type);
+
+		void SetAll(int StartPosition, double Duration, int TotalFrames);
+		void SetTotalFramesAll(int TotalNumber);
+		void SetDurationAll(double Duration);
+		void SetStartPositionAll(int StartPosition);
 	};
 
 
@@ -795,7 +845,7 @@ namespace SLGE
 		virtual int Log(std::ofstream &File, std::string Precursor);
 
 		//animates the object
-		virtual void Animate(int Layer, int Direction);
+		virtual void Animate(int Layer, int in_Type, int Direction);
 
 		//Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
 		//	@ImageIndex is the position of the image in the image array to set

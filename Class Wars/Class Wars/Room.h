@@ -40,11 +40,11 @@ public:
 	}
 
 	//Limits the selection of shape types available to the Select_Shape Function
-	virtual int Limit_Shape_Selection()
+	int Limit_Shape_Selection()
 	{
 		std::vector <int> Shape_Limitations;
 
-		srand(time(NULL));
+		srand(unsigned(time(NULL)));
 
 		//Select between 0 and 3 random to be excluded from use on the floor
 		for (int f = 0; f < (rand() % 3); f++)
@@ -52,51 +52,91 @@ public:
 			Shape_Limitations.push_back(rand());
 		}
 
-		return 0;
+		Shape_Limitations[1];
 	}
 
 	int Create_L(int a)
 	{
-		std::cout << "Creating L";
+		
+		printf("Creating L");
 		return a;
 	}
 
 	int Create_T(int a)
 	{
+		printf("Creating T");
 		return a;
 	}
 
 	int Create_Hallway(int a)
 	{
+		printf("Creating Hallway");
 		return a;
 	}
 
 	int Create_Courtyard(int a)
 	{
+		printf("Creating Courtyard");
 		return a;
 	}
 
 	int Create_BanquetHall(int a)
 	{
+		printf("Creating BanquetHall");
 		return a;
 	}
 
 	int Create_FigureEight(int a)
 	{
+		printf("Creating Hallway");
 		return a;
 	}
 
 	int Create_BridgeRoom(int a)
 	{
+		printf("Creating BridgeRoom");
 		return a;
 	}
 
+	int Select_Shape(int a)
+	{
+		switch (a)
+		{
+		case 0:
+			Create_L(1);
+			break;
+		case 1:
+			Create_T(1);
+			break;
+		case 2:
+			Create_Hallway(1);
+			break;
+		case 3:
+			Create_Courtyard(1);
+			break;
+		case 4:
+			Create_BanquetHall(1);
+			break;
+		case 5:
+			Create_FigureEight(1);
+			break;
+		case 6:
+			Create_BridgeRoom(1);
+			break;
 
+		}
 
+		return 1;
+	}
+	
 	//Selects room's shape type
-	virtual int Select_Shape()
+	//Doesn't work
+	/*
+	virtual int Select_Shape(int selection)
 	{
 		typedef int (Room_t::*Array_of_Room_Creation_Functions) (int);
+		
+
 
 		Array_of_Room_Creation_Functions List_of_Shape_Functions[] = 
 		{ 
@@ -108,8 +148,13 @@ public:
 			&Room_t::Create_FigureEight, 
 			&Room_t::Create_BridgeRoom 
 		};
-		
-		return 0;
+
+
+
+		List_of_Shape_Functions[selection];
+		printf("PRINT");
+		return 1;
 	}
+	*/
 };
 

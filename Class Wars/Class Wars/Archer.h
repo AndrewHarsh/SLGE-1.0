@@ -40,9 +40,17 @@ public:
 
 
 		//Animations
-		Moving.SetAll(1, 0.075, 8);
-		Attacking.SetAll(33, 0.1, 8);
-		Idle.SetAll(1, 0.1, 8);
+		//Moving.SetAll(1, 0.075, 8);
+		//Attacking.SetAll(33, 0.1, 8);
+		//Idle.SetAll(1, 0.1, 8);
+
+		(*Animation)[1].AddType(Entity_t::aMoving);
+		(*Animation)[1].AddType(Entity_t::aAttacking);
+		(*Animation)[1].AddType(Entity_t::aIdle);
+
+		(*Animation)[1].Type(Entity_t::aMoving).SetAll(1, 0.075, 8);
+		(*Animation)[1].Type(Entity_t::aAttacking).SetAll(33, 0.1, 8);
+		(*Animation)[1].Type(Entity_t::aIdle).SetAll(1, 0.1, 8);
 
 
 		//Images

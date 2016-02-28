@@ -1,3 +1,2 @@
 ﻿  Source.cpp
-c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\room.h(47): warning C4244: 'argument' : conversion from 'time_t' to 'unsigned int', possible loss of data
-  Class Wars.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.exe
+  Class Wars.vcxproj -> C:\Users\nzbq9t\Documents\Visual Studio 2013\Projects\Game We are Making\Class Wars\Debug\Class Wars.exe
