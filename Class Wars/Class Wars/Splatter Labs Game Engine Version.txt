@@ -1,0 +1,10 @@
+Author:
+
+	Andrew Harsh
+	Senior Framework Developer
+	Splatter Labs
+	Feb  3 2015
+
+Version:
+
+	1.0.0
