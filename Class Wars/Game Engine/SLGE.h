@@ -7,7 +7,11 @@
 #include <chrono>
 #include <thread>
 #include <Windows.h>
+
 #include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#include <SDL_mixer.h>
 
 #pragma comment(lib, "SDL2")
 #pragma comment(lib, "SDL2main")
@@ -16,12 +20,17 @@
 #pragma comment(lib, "SDL2_ttf")
 
 
-#define SDL_IMAGE
-#define SDL_TTF
-#define SDL_MIXER
-
 #define Colour Color
 #define colour color
+
+#define SDL_CreateWindow SDL_CreateWindowEx
+#define SDL_DestroyWindow SDL_DestroyWindowEx
+
+//#define IMG_Load IMG_LoadEx
+//#define SDL_ConvertSurface SDL_ConvertSurfaceEx
+//#define SDL_CreateTextureFromSurface SDL_CreateTextureFromSurfaceEx
+//#define SDL_FreeSurface SDL_FreeSurfaceEx
+//#define SDL_DestroyTexture SDL_DestroyTextureEx
 
 
 #ifdef SLGE_EXPORT
@@ -31,22 +40,11 @@
 #endif
 
 
-#ifdef SDL_IMAGE
-#include <SDL_image.h>
-#endif
-
-#ifdef SDL_TTF
-#include <SDL_ttf.h>
-#endif
-
-#ifdef SDL_MIXER
-#include <SDL_mixer.h>
-#endif
-
-
 namespace SLGE
 {
 	const char Version[] = "1.0.0";
+	const int HARDWARE_ACCELERATION = 0x01; //0000 0001
+
 
 	typedef std::chrono::high_resolution_clock HRC;
 	using std::chrono::milliseconds;
@@ -60,6 +58,17 @@ namespace SLGE
 	class Entity;
 	class NPC;
 	class UI;
+
+
+	SDL_Window DLL_API *SDL_CreateWindowEx(const char* Title, int X, int Y, int W, int H, Uint32 Flags);
+	void DLL_API SDL_DestroyWindowEx(SDL_Window* Window);
+
+	SDL_Surface DLL_API *IMG_LoadEx(const char* File);
+	SDL_Surface DLL_API *SDL_ConvertSurfaceEx(SDL_Surface*, SDL_PixelFormat*, Uint32);
+	SDL_Texture DLL_API *SDL_CreateTextureFromSurfaceEx(SDL_Renderer*, SDL_Surface*);
+	void DLL_API SDL_FreeSurfaceEx(SDL_Surface*);
+	void DLL_API SDL_DestroyTextureEx(SDL_Texture*);
+
 
 	enum DLL_API Direction
 	{
@@ -86,19 +95,25 @@ namespace SLGE
 	{
 	friend class Object;
 	protected:
-
 		SDL_Window *WindowHandle;
+		SDL_Renderer *HScreen;
 		SDL_Surface *Screen;
 		SDL_Event Event;
-
-		int Width;
-		int Height;
-		const int BitsPerPixel = 32;
-		char* Caption;
 
 		Object **ScreenObjects;
 		int NumberOfObjects;
 
+		int Width;
+		int Height;
+		const int BitsPerPixel = 32;
+		std::string *Caption;
+		int WindowID;
+
+		bool Shown;
+		bool MouseFocus;
+		bool KeyboardFocus;
+		bool Minimized;
+		bool HardwareAccelerated;
 		bool Running;
 
 		void ClearData();
@@ -132,13 +147,10 @@ namespace SLGE
 
 		Window();
 		Window(const int Width, const int Height);
-		template <int S>
-		Window(const int Width, const int Height, const char(&Caption)[S])
-		{
-			Init(Width, Height, Caption);
-		}
-		~Window();
+		Window(const int Width, const int Height, const std::string Caption);
+		Window(const int Width, const int Height, const std::string Caption, const bool Flags);
 
+		int GetOpenWindows();
 		int GetWidth();
 		int GetHeight();
 		int GetBPP();
@@ -146,27 +158,7 @@ namespace SLGE
 
 		int Init();
 		int Init(const int Width, const int Height);
-		template <int S>
-		int Init(const int in_Width, const int in_Height, const char(&in_Caption)[S])
-		{
-			Width = in_Width;
-			Height = in_Height;
-	
-			if (Caption != nullptr)
-			{
-				delete[] Caption;
-				Caption = nullptr;
-			}
-
-			Caption = new char[S];
-
-			for (int i = 0; i < S; i++)
-				Caption[i] = in_Caption[i];
-
-			Caption[S - 1] = '\0';
-
-			return Init();
-		}
+		int Init(const int in_Width, const int in_Height, const std::string Caption, const bool Flags);
 
 		int AddToScreen(Object *ScreenObject);
 		int ChangeScreenPosition(Object *ScreenObject, const int NewPosition);
@@ -184,6 +176,7 @@ namespace SLGE
 
 		Window *WindowHandle;
 		SDL_Surface **Image;
+		SDL_Texture **HImage;
 		SDL_Rect *Clip;
 		int NumberOfImages;
 		int ImageToDisplay;
@@ -198,7 +191,8 @@ namespace SLGE
 		virtual void EventHandler(SDL_Event* Event);
 		virtual void CollisionDetection();
 		virtual void Animate();
-		virtual void Display();
+
+		void Display();
 
 	public:
 
@@ -221,6 +215,7 @@ namespace SLGE
 		int MoveImage(const int Position, const int NewPosition);
 		int DeleteImage(const int Position);
 	};
+
 
 	//Built-in Classes
 	class DLL_API Entity : public Object

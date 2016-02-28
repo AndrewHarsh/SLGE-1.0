@@ -9,20 +9,49 @@ DLL_API Entity::Entity()
 	ClearData();
 }
 
-DLL_API Entity::Entity(Window *in_WindowHandle)
+DLL_API Entity::Entity(Window *in_WindowHandle) : Entity()
 {
 	Register(in_WindowHandle);
-
-	Entity::Entity();
 }
 
 void DLL_API Entity::ClearData()
 {
+	/*
+	if (Image != nullptr)
+	{
+		for (int i = 0; i < NumberOfImages; i++)
+			SDL_FreeSurface(Image[i]);
+
+		Image = nullptr;
+	}
+
+	if (HImage != nullptr)
+	{
+		for (int i = 0; i < NumberOfImages; i++)
+			SDL_DestroyTexture(HImage[i]);
+
+		HImage = nullptr;
+	}
+
+	if (Clip != nullptr)
+	{
+		delete[] Clip;
+		Clip = nullptr;
+	}
+
+	NumberOfImages = 0;
+	ImageToDisplay = 0;
+
+	X = 0;
+	Y = 0;
+	W = 0;
+	H = 0;
+	*/
+	Object::ClearData();
+
 	Speed = 0;
 	Health = 0;
 	AttackDamage = 0;
-
-	Object::ClearData();
 }
 
 

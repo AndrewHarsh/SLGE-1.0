@@ -39,6 +39,9 @@ int DLL_API Window::Timer::CapFPS()
 	if (ElapsedTime < 1000000 / FPS)
 		std::this_thread::sleep_for(microseconds((1000000 / FPS) - ElapsedTime));
 
+	//if (ElapsedTime < 1000000 / FPS)
+	//	SDL_Delay(1000 / FPS - (ElapsedTime * 1000));
+
 	ThisFrame = HRC::now();
 	ElapsedTime = duration_cast <microseconds> (ThisFrame - *LastFrame).count();
 	CurrentFPS = 1000000 / static_cast <double> (ElapsedTime);
