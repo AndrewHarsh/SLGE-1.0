@@ -26,6 +26,11 @@ extern "C" int SDL_main(int argc, char* argv[])
 				return 1;
 			break;
 
+			case GameMode:
+			if (Window1.Run(SpawnGameMenu, RunGameMenu, DespawnGameMenu) == Error)
+				return 1;
+			break;
+
 			case PlayGame:
 			if (Window1.Run(SpawnGame, RunGame, DespawnGame) == Error)
 				return 1;

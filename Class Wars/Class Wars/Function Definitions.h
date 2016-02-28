@@ -12,9 +12,19 @@ enum GameScreen_t
 	Audio,
 	Video,
 	Quit,
-	PlayGame
+	PlayGame,
+	GameMode
 } CurrentScreen;  //Sets which screen to go to when the loop breaks
 
+enum PlayerType_t
+{
+	Nudist,
+	Fencer,
+	Barbarian,
+	Archer,
+	Paladin,
+	Mage
+} PlayerType;
 
 //===============//
 //   Main Menu   //
@@ -28,7 +38,8 @@ FunctionReturn SpawnMainMenu()
 	Button.Spawn(4, &Window1);
 
 	//Setup backgrouns
-	Background[0].AddImage("Main Menu.png", { 0, 0, 640, 480}, { NULL });
+	Background[0].AddImage("Background.png", { NULL }, { NULL });
+	Background[0].AddLayer("Main Menu.png", { 0, 0, 640, 480}, { NULL });
 	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2);
 
 	//Setup Buttons
@@ -50,10 +61,15 @@ FunctionReturn SpawnMainMenu()
 //Runs all code that must be executed each frame in the Main Menu
 FunctionReturn RunMainMenu()
 {
+	Background[0].SetCoords(Window1.GetWidth() / 2, Window1.GetHeight() / 2);
+
+	for (int i = 0; i < Button.NumberOfObjects(); i++)
+		Button[i].SetCoords(Window1.GetWidth() / 2, Window1.GetHeight() / 2 - (Button.NumberOfObjects() / 2 * 70) + 70 * i + 70);
+
 	//Check if a button was pressed
 	if (Button[0].IsPressed())
 	{
-		CurrentScreen = PlayGame;
+		CurrentScreen = GameMode;
 		return Exit;
 	}
 	if (Button[1].IsPressed())
@@ -63,7 +79,8 @@ FunctionReturn RunMainMenu()
 	}
 	if (Button[2].IsPressed())
 	{
-		CurrentScreen = MainMenu;
+		PlayerType = Nudist;
+		CurrentScreen = PlayGame;
 		return Exit;
 	}
 	if (Button[3].IsPressed())
@@ -90,6 +107,104 @@ FunctionReturn DespawnMainMenu()
 }
 
 
+
+//===============//
+//   Main Menu   //
+//===============//
+
+//Spawns in and initializes the Main Menu objects
+FunctionReturn SpawnGameMenu()
+{
+	//Spawn
+	Background.Spawn(1, &Window1);
+	Button.Spawn(6, &Window1);
+
+	//Setup backgrouns
+	Background[0].AddImage("Background.png", { NULL }, { NULL });
+	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2);
+
+	//Setup Buttons
+	for (int i = 0; i < Button.NumberOfObjects(); i++)
+	{
+		Button[i].AddImage("Main Menu Button.png", { 0, 0, 300, 50 }, { 255, 255, 255 });
+		Button[i].AddImage("Main Menu Button.png", { 300, 0, 300, 50 }, { 255, 255, 255 });
+		Button[i].AddImage("Main Menu Button.png", { 600, 0, 300, 50 }, { 255, 255, 255 });
+		Button[i].SetCoords(WIDTH / 2, HEIGHT / 2 - (Button.NumberOfObjects() / 2 * 70) + 70 * i + 40);
+	}
+
+	Button[0].Init("Fencer");
+	Button[1].Init("Barbarian");
+	Button[2].Init("Archer");
+	Button[3].Init("Paladin");
+	Button[4].Init("Mage");
+	Button[5].Init("Back");
+
+	return Continue;
+}
+
+//Runs all code that must be executed each frame in the Main Menu
+FunctionReturn RunGameMenu()
+{
+	Background[0].SetCoords(Window1.GetWidth() / 2, Window1.GetHeight() / 2);
+
+	for (int i = 0; i < Button.NumberOfObjects(); i++)
+		Button[i].SetCoords(Window1.GetWidth() / 2, Window1.GetHeight() / 2 - (Button.NumberOfObjects() / 2 * 70) + 70 * i + 40);
+
+
+	//Check if a button was pressed
+	if (Button[0].IsPressed())
+	{
+		PlayerType = Fencer;
+		CurrentScreen = PlayGame;
+		return Exit;
+	}
+	if (Button[1].IsPressed())
+	{
+		PlayerType = Barbarian;
+		CurrentScreen = PlayGame;
+		return Exit;
+	}
+	if (Button[2].IsPressed())
+	{
+		PlayerType = Archer;
+		CurrentScreen = PlayGame;
+		return Exit;
+	}
+	if (Button[3].IsPressed())
+	{
+		PlayerType = Paladin;
+		CurrentScreen = PlayGame;
+		return Exit;
+	}
+	if (Button[4].IsPressed())
+	{
+		PlayerType = Mage;
+		CurrentScreen = PlayGame;
+		return Exit;
+	}
+	if (Button[5].IsPressed())
+	{
+		CurrentScreen = MainMenu;
+		return Exit;
+	}
+
+	//Display all
+	All <Object_t> (&Object_t::Display);
+	All <UI_t> (&UI_t::DisplayAll);
+
+	return Continue;
+}
+
+//Despawns all Main Menu objects that need to be despawned
+FunctionReturn DespawnGameMenu()
+{
+	//Despawn all
+	Background.Despawn();
+	Button.Despawn();
+
+	return Continue;
+}
+
 //===============//
 //  Game Screen  //
 //===============//
@@ -100,7 +215,30 @@ FunctionReturn SpawnGame()
 	//Spawn
 	Background.Spawn(1, &Window1);
 	DummyTarget.Spawn(10, &Window1);
-	Player.Spawn(1, &Window1);
+
+	switch (PlayerType)
+	{
+		case Fencer:
+			Player.Spawn<Fencer_t>(1, &Window1);
+			break;
+		case Barbarian:
+			Player.Spawn<Barbarian_t>(1, &Window1);
+			break;
+		case Archer:
+			Player.Spawn<Archer_t>(1, &Window1);
+			break;
+		case Paladin:
+			Player.Spawn<Paladin_t>(1, &Window1);
+			break;
+		case Mage:
+			Player.Spawn<Mage_t>(1, &Window1);
+			break;
+		default:
+			Player.Spawn(1, &Window1);
+
+			break;
+	}
+
 	Inventory.Spawn(1, &Window1);
 	HUD.Spawn(1, &Window1);
 	Bar.Spawn(5, &Window1);
@@ -123,11 +261,6 @@ FunctionReturn SpawnGame()
 	}
 
 	//Setup the player
-	for (int i = 0; i < 20; i++)	
-	{
-		for (int ii = 0; ii < 8; ii++)
-			Player[0].AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
-	}
 	Player[0].Init();
 	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2);
 

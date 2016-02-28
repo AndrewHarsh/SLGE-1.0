@@ -76,6 +76,7 @@ class Button_t : public UI_t
 {
 protected:
 
+	bool ButtonPressed;
 	std::string Message;
 	TTF_Font *Font;
 
@@ -127,12 +128,17 @@ public:
 		{
 			if (WindowHandle->GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
+				ButtonPressed = true;
 				(*ImageToDisplay)[0] = 2;
-				return true;
 			}
+			else if (ButtonPressed)
+				 return true;
 		}
 		else
+		{
 			(*ImageToDisplay)[0] = 0;
+			ButtonPressed = false;
+		}
 
 		return false;
 	}
@@ -228,12 +234,8 @@ public:
 	{
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_TAB) && !Moving)
 		{
-			if (Open)
-				Open = false;
-			else
-				Open = true;
-
-			Moving = true;
+			Open = Open ? false : true;
+			Moving = true;	 
 		}
 
 		if (Moving)
@@ -446,6 +448,7 @@ protected:
 
 	//Animation
 	Direction Facing;
+	int AnimationLayer;
 
 	Animation Idle;
 	Animation Moving;
@@ -467,6 +470,7 @@ protected:
 
 		//Animation
 		Facing = Down;
+		AnimationLayer = 0;
 
 		Idle.ClearData();
 		Moving.ClearData();
@@ -526,11 +530,12 @@ public:
 			while (Attacking.TimeDisplayed > Attacking.Duration)
 			{
 				Attacking.TimeDisplayed -= Attacking.Duration;
+				(*ImageToDisplay)[AnimationLayer]++;
 
-				if (++(*ImageToDisplay)[ImageToDisplay->size() - 1] >= (Facing + Attacking.StartPosition + 1) * Attacking.TotalNumber ||
-					(*ImageToDisplay)[ImageToDisplay->size() - 1] < (Facing + Attacking.StartPosition) * Attacking.TotalNumber)
+				if ((*ImageToDisplay)[AnimationLayer] >= Attacking.StartPosition + (Facing + 1) * Attacking.TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Attacking.StartPosition + Facing * Attacking.TotalNumber)
 				{
-					(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Attacking.StartPosition) * Attacking.TotalNumber + 1;
+					(*ImageToDisplay)[AnimationLayer] = Attacking.StartPosition + (Facing * Attacking.TotalNumber);
 				}
 			}
 		}
@@ -541,16 +546,17 @@ public:
 			while (Moving.TimeDisplayed > Moving.Duration)
 			{
 				Moving.TimeDisplayed -= Moving.Duration;
+				(*ImageToDisplay)[AnimationLayer]++;
 
-				if (++(*ImageToDisplay)[ImageToDisplay->size() - 1] >= (Facing + Moving.StartPosition + 1) * Moving.TotalNumber ||
-					(*ImageToDisplay)[ImageToDisplay->size() - 1] < (Facing + Moving.StartPosition) * Moving.TotalNumber)
+				if ((*ImageToDisplay)[AnimationLayer] >= Moving.StartPosition + (Facing + 1) * Moving.TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Moving.StartPosition + Facing * Moving.TotalNumber)
 				{
-					(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Moving.StartPosition) * Moving.TotalNumber + 1;
+					(*ImageToDisplay)[AnimationLayer] = Moving.StartPosition + (Facing * Moving.TotalNumber);
 				}
 			}
 		}
 		else
-			(*ImageToDisplay)[ImageToDisplay->size() - 1] = (Facing + Idle.StartPosition) * Idle.TotalNumber;
+			(*ImageToDisplay)[AnimationLayer] = Idle.StartPosition + (Facing * Idle.TotalNumber);
 	}
 
 
@@ -953,31 +959,43 @@ public:
 
 	void Init()
 	{
+		W = 16;
+		H = 38;
 		Facing = Down;
-		MainWeapon.Range = 35;
-		MainWeapon.Damage = 200;
 
+
+		//Animations
 		Moving.Duration = 0.1;
-		Moving.StartPosition = 0;
+		Moving.StartPosition = 1;
 		Moving.TotalNumber = 8;
 		
 		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
 		Attacking.TotalNumber = 8;
 
 		Idle.Duration = 0.1;
-		Idle.StartPosition = 0;
+		Idle.StartPosition = 1;
 		Idle.TotalNumber = 8;
 
-		W = 16;
-		H = 38;
-	
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AnimationLayer = 1;				
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
 		Sword.Register(WindowHandle);
 		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
 
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
-		MoveLayer(ImageToDisplay->size() - 1, 0);
 
+		//Healthbar
 		HealthBar.Register(WindowHandle);
 		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
 		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
@@ -1109,6 +1127,7 @@ public:
 
 		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
 		MoveLayer(ImageToDisplay->size() - 1, 0);
+		AnimationLayer++;
 	}
 
 	virtual bool CanAttack(Entity_t *in_Victim)
@@ -1162,3 +1181,393 @@ public:
 			MoveTo((int) DestinationX, (int) DestinationY);
 	}
 };
+
+
+
+
+
+class Fencer_t : public Player_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Player_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	Fencer_t() : Player_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	Fencer_t(Window_t *in_Window) : Fencer_t()
+	{
+		Register(in_Window);
+	}
+
+	void Init()
+	{		
+		W = 16;
+		H = 38;
+		Facing = Down;
+
+
+		//Animations
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 1;
+		Moving.TotalNumber = 8;
+		
+		Attacking.Duration = 0.1;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
+		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 1;
+		Idle.TotalNumber = 8;
+
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AddLayer("Archer Hat.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0 });
+		AnimationLayer = 1;
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
+		Sword.Register(WindowHandle);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+
+		//Healthbar
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
+	}
+
+	void Fence()
+	{
+
+	}
+};
+
+class Barbarian_t : public Player_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Player_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	Barbarian_t() : Player_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	Barbarian_t(Window_t *in_Window) : Barbarian_t()
+	{
+		Register(in_Window);
+	}
+
+	void Init()
+	{		
+		W = 16;
+		H = 38;
+		Facing = Down;
+
+
+		//Animations
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 1;
+		Moving.TotalNumber = 8;
+		
+		Attacking.Duration = 0.1;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
+		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 1;
+		Idle.TotalNumber = 8;
+
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AddLayer("Barb Hat.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0 });
+		AnimationLayer = 1;
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
+		Sword.Register(WindowHandle);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+
+		//Healthbar
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
+	}
+};
+
+class Archer_t : public Player_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Player_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	Archer_t() : Player_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	Archer_t(Window_t *in_Window) : Archer_t()
+	{
+		Register(in_Window);
+	}
+
+	void Init()
+	{		
+		W = 16;
+		H = 38;
+		Facing = Down;
+
+
+		//Animations
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 1;
+		Moving.TotalNumber = 8;
+		
+		Attacking.Duration = 0.1;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
+		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 1;
+		Idle.TotalNumber = 8;
+
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AddLayer("Archer Hat.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0 });
+		AnimationLayer = 1;
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
+		Sword.Register(WindowHandle);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+
+		//Healthbar
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
+	}
+};
+
+class Paladin_t : public Player_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Player_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	Paladin_t() : Player_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	Paladin_t(Window_t *in_Window) : Paladin_t()
+	{
+		Register(in_Window);
+	}
+
+	void Init()
+	{		
+		W = 16;
+		H = 38;
+		Facing = Down;
+
+
+		//Animations
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 1;
+		Moving.TotalNumber = 8;
+		
+		Attacking.Duration = 0.1;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
+		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 1;
+		Idle.TotalNumber = 8;
+
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AddLayer("Paladin Hat.png", { 0, 0, 100, 100 }, { 0xFF, 0xFF, 0xFF, 0 });
+		AnimationLayer = 1;
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
+		Sword.Register(WindowHandle);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+
+		//Healthbar
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
+	}
+};
+
+class Mage_t : public Player_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Player_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	Mage_t() : Player_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	Mage_t(Window_t *in_Window) : Mage_t()
+	{
+		Register(in_Window);
+	}
+
+	void Init()
+	{		
+		W = 16;
+		H = 38;
+		Facing = Down;
+
+
+		//Animations
+		Moving.Duration = 0.1;
+		Moving.StartPosition = 1;
+		Moving.TotalNumber = 8;
+		
+		Attacking.Duration = 0.1;
+		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
+		Attacking.TotalNumber = 8;
+
+		Idle.Duration = 0.1;
+		Idle.StartPosition = 1;
+		Idle.TotalNumber = 8;
+
+
+		//Images
+		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		for (int i = 0; i < 20; i++)	
+		{
+			for (int ii = 0; ii < 8; ii++)
+				AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+		}
+		AddLayer("Mage Hat.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0 });
+		AnimationLayer = 1;
+
+		//Weapon
+		MainWeapon.Range = 35;
+		MainWeapon.Damage = 200;
+
+		Sword.Register(WindowHandle);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF, 0xA0 });
+
+
+		//Healthbar
+		HealthBar.Register(WindowHandle);
+		HealthBar.AddImage("Health.png", { 0, 50, 200, 20 }, { NULL });
+		HealthBar.AddLayer("Health.png", { 0, 100, 200, 20 }, { NULL });
+		HealthBar.SetCoords(HealthBar.GetW() / 2 + 10, HealthBar.GetH() / 2 + 10);
+		HealthBar.Init();
+
+		CurrentHealth = 100;
+		InitialHealth = 100;
+	}
+};
+

@@ -81,7 +81,7 @@ namespace SLGE
 		template <typename T1, typename T2, typename ...Args>
 		void AddPointer()
 		{
-			const int TYPE_NUM = sizeof...(Args) +1;
+			const int TYPE_NUM = sizeof...(Args) + 1;
 			Local TempL;
 			Global TempG;
 
@@ -216,15 +216,16 @@ namespace SLGE
 		//Spawns in the objects
 		//	@Amount is the number of objects to spawn in
 		//	@WindowHandle is the window to spawn them onto
-		//		If NULL the class is not registered with a window. Useful for classes that are not displayed
+		//		If NULL the class is not registered with a window. Useful for classes that are not displayed	  
+		template <class T = C>
 		void Spawn(int Amount, Window_t *WindowHandle = nullptr)
 		{
 			for (int i = 0; i < Amount; i++)
 			{
 				if (WindowHandle == nullptr)
-					Data.push_back(new C());
+					Data.push_back(new T());
 				else
-					Data.push_back(new C(WindowHandle));
+					Data.push_back(new T(WindowHandle));
 
 				//Loop through the remaining class types
 				AddPointer <C, D...>();
@@ -276,7 +277,8 @@ namespace SLGE
 
 		//Returns a modifiable object at the specified index
 		//	@in_Index is the index of the spawned object
-		C &operator[](unsigned in_Index)
+		template <class T = C>
+		T &operator[](unsigned in_Index)
 		{
 			if (in_Index >= 0 && in_Index < Data.size())
 				return *(Data[in_Index]);
@@ -286,7 +288,8 @@ namespace SLGE
 
 		//Returns a non modifiable object at the specified index
 		//	@in_Index is the index of the spawned object
-		const C &operator[](unsigned in_Index) const
+		template <class T = C>
+		const T  &operator[](unsigned in_Index) const
 		{
 			if (in_Index >= 0 && in_Index < Data.size())
 				return *(Data[in_Index]);
