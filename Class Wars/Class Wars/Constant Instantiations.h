@@ -1,7 +1,7 @@
 #pragma once
 
 
-const bool HARDWARE_ACCELERATED = true;		//Runs the program in the GPU instead of CPU
+const bool HARDWARE_ACCELERATED = false;		//Runs the program in the GPU instead of CPU
 int WIDTH = 640;							//Initial width of window
 int HEIGHT = 480;							//Initial height of window
 const double PI = 3.141592653589793238463;	

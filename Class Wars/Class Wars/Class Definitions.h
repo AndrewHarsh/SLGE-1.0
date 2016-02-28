@@ -146,7 +146,7 @@ public:
 
 		if (Font == nullptr)
 		{
-			std::cout << "Could not load Cheeseburger.ttf." << std::endl;
+			std::cout << "Could not load Cheeseburger.ttf. Error: " << TTF_GetError() << std::endl;
 			return;
 		}
 
@@ -296,7 +296,7 @@ public:
 			SetCoords(WindowHandle->GetWidth() + W / 2, Y);
 
 		SDL_Color TextColor = { 0, 0, 0, 0 };
-		KillCounter.GetImageAtIndex(0)->Load("Units Killed: " + std::to_string(UnitsKilled), Font, TextColor);
+		//KillCounter.GetImageAtIndex(0)->Load("Units Killed: " + std::to_string(UnitsKilled), Font, TextColor);
 		KillCounter.SetCoords(X, Y + 100);
 	}
 };

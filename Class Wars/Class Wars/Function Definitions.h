@@ -68,6 +68,12 @@ FunctionReturn SpawnMikeGame()
 //Runs all code that must be executed each frame in the Main Menu
 FunctionReturn RunMikeGame()
 {
+
+	if (Window1.GetKeyState(SDL_SCANCODE_SLASH))
+	{
+
+	}
+
 	//Returns to the main menu when ESC is pressed
 	if (Window1.GetKeyState(SDL_SCANCODE_ESCAPE))
 	{
@@ -185,7 +191,7 @@ FunctionReturn DespawnMainMenu()
 
 
 //===============//
-//   Main Menu   //
+//   Game Menu   //
 //===============//
 
 //Spawns in and initializes the Main Menu objects
@@ -403,6 +409,7 @@ FunctionReturn RunGame()
 		CurrentScreen = MainMenu;
 		return Exit;
 	}
+	//*/
 
 
 	//Spawn/despawn enemies 
@@ -427,6 +434,7 @@ FunctionReturn RunGame()
 		CurrentScreen = MainMenu;
 		return Exit;
 	}
+	//*/
 
 	//Handle killed Monsters
 	int TotalEnemies = DummyTarget.NumberOfObjects();
@@ -436,9 +444,10 @@ FunctionReturn RunGame()
 		{
 			DummyTarget.Despawn(i, 1);
 			i--;
-			Inventory[0].AddToKilledUnits();
+			//Inventory[0].AddToKilledUnits();
 		}
 	}
+	//*/
 
 	//HAIL HYDRA
 	int EnemiesKilled = TotalEnemies - DummyTarget.NumberOfObjects();
@@ -453,6 +462,7 @@ FunctionReturn RunGame()
 
 		DummyTarget[DummyTarget.NumberOfObjects() - 1].Init(rand() % WIDTH, rand() % HEIGHT, 50);
 	}
+	//*/
 
 	
 	//Attack
@@ -471,6 +481,7 @@ FunctionReturn RunGame()
 		if (Get<Monster_t>(i).CanAttack(&Player[0]))
 			Get<Monster_t>(i).Attack(&Player[0], Get<Monster_t>(i).MainWeapon);
 	}
+	//*/
 
 
 	//Scroll screen
@@ -513,6 +524,7 @@ FunctionReturn RunGame()
 		for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
 			DummyTarget[i].SetCoords(DummyTarget[i].GetX(), DummyTarget[i].GetY() + ScrollSpeed);
 	}
+	//*/
 
 	
 	//Make sure the UI is properly positioned
@@ -529,6 +541,7 @@ FunctionReturn RunGame()
 		for (int ii = 0; ii < (int) NumberOfObjects<Entity_t>(); ii++)
 			Get<Entity_t>(ii).HandleCollisionWithE(&Get<Entity_t>(i));
 	}
+	//*/
 
 
 	//Display

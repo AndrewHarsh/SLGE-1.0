@@ -341,11 +341,11 @@ int DLL_API Image_t::SetClip(int in_X, int in_Y, int in_W, int in_H)
 	if (in_H >= 0)
 		LoadClip.h = in_H;
 
-	if (!WindowHandle->HardwareAccelerated)
-	{
+	//if (!WindowHandle->HardwareAccelerated)
+	//{
 		DisplayClip.w = LoadClip.w;
 		DisplayClip.h = LoadClip.h;
-	}
+	//}
 
 	return 0;
 }
@@ -367,8 +367,8 @@ int DLL_API Image_t::SetSize(int in_W, int in_H)
 
 	if (!WindowHandle->HardwareAccelerated)
 	{
-		LoadClip.w = DisplayClip.w;
-		LoadClip.h = DisplayClip.h;
+		//LoadClip.w = DisplayClip.w;
+		//LoadClip.h = DisplayClip.h;
 	}
 
 	return 0;
