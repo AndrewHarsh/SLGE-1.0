@@ -167,6 +167,8 @@ FunctionReturn SpawnGame()
 //Runs all code that must be executed each frame in the Game
 FunctionReturn RunGame()
 {
+	//Window1.TimerHandle.Benchmark("Run Game");
+
 	//Check events for all
 	DynamicClass <Player_t>::All(&Player_t::EventHandler);
 	DynamicClass <Menu_t>::All(&Menu_t::HandleEvents);
@@ -246,6 +248,8 @@ FunctionReturn RunGame()
 			DummyTarget[i].SetCoords(DummyTarget[i].GetX(), DummyTarget[i].GetY() + ScrollSpeed);
 	}
 
+
+	//Window1.TimerHandle.Benchmark("Display"); 
 
 	//Display
 	Player[0].Animate();

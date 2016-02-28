@@ -57,27 +57,30 @@ namespace SLGE
 		friend class Window_t;
 		protected:
 
-			HRC::time_point *LastFrame; 
-			HRC::time_point *LastBench;
-			HRC::time_point *LastFPSDisplay;
-			HRC::time_point *LastBenchDisplay;
-			Uint32 StartTime;
-			double CPUFreq;
-			long double Duration;
-			char *LastIdentifier;
+			//FPS
+			Uint32 StartTime; //Point in time that the last frame set this variable 
+			double CurrentFPS; //Actual FPS
+			HRC::time_point *LastFPSDisplay; //Point in time that the FPS was last displayed
 
-			int FPS;
-			double CurrentFPS;
-
-			void DisplayFPS();
-			int CapFPS();
+			//Benchmarking
+			HRC::time_point *LastBench; //Point in time that the last benchmark set this variable
+			std::string *LastIdentifier; //String of the last identifier string
 
 		public:
 
+			//Sets up the timer and clears internal variables
 			Timer_t();
 
 			//Returns the FPS of the window it is nested in
 			double GetFPS(); 
+
+			//Displays the FPS in the console window
+			//	@Delay is the number of milliseconds between displays
+			void DisplayFPS(int Delay);
+			
+			//Caps the FPS
+			//	@DisplayFPS is the constant FPS that the game will try to stay at
+			int CapFPS(double DesiredFPS);
 
 			//Outputs the time passed since the last call to "Benchmark" to the console window 
 			//	@Identifier is a string identifier placed before the benchmark time in order to keep track of multiple benchmarks
@@ -184,41 +187,92 @@ namespace SLGE
 
 	protected:
 
-		Window_t *WindowHandle;
-		SDL_Surface *Software;
-		SDL_Texture *Hardware;
+		Window_t *WindowHandle;	//Handle to the window
+		SDL_Surface *Software; //Handle to the software pixels
+		SDL_Texture *Hardware; //Handle to the hardware pixels
 
-		SDL_Rect LoadClip;
-		SDL_Rect DisplayClip;
+		SDL_Rect LoadClip; //Clip used to trim the loaded image
+		SDL_Rect DisplayClip; //Clip used to set the images's display coordinates and size. This is the ACTUAL X, Y, W, H of the image on the screen 
 
-		double Angle;
-		SDL_Point Center;
-		SDL_RendererFlip FlipType;
-									  
+		double Angle; //Degrees rotated counter clockwise from loaded position
+		SDL_Point Center; //Center of the rotation
+		SDL_RendererFlip FlipType; //Determines whether to flip horizontally, verticlaly, or not at all
+					
+
+		//Clears all data
 		void ClearData();
-		int Display();
 
 	public:
 
+		//Clears all internal variables
 		Image_t();
-		Image_t(Window_t *in_Window);
+		
+		//Clears all internal variables and registers with a window
+		//	@Window is the window to register to
+		Image_t(Window_t *Window);
+
+		//Cleans up the dynamically allocated images
 		~Image_t();
 
+
+		//Returns the X coordinate
 		int X();
+
+		//Returns the Y coordinate
 		int Y();
+
+		//Returns the image width
 		int W();
+
+		//Returns the image height
 		int H();
+
+		//Returns the rotation of the image
 		double GetAngle();
+
+		//Returns the center of rotation of the image
 		SDL_Point GetCenter();
+
+		//Returns what type of flip has been applied to the image
 		SDL_RendererFlip GetFlipType();							  
 
+
+		//Registers an image with a window
+		//	MUST BE DONE in order to display any image
 		int Register(Window_t *Window);
 
+
+		//Opens an image from a file 
+		//	@Filename is the file to load
+		//	@Clip is rectangle specifying how much of the image to load
+		//		NULL loads the entire image
+		//	@ColorKey is an RGB value that determines what color will become transparent
+		//		NULL specifies no colorkey
 		int OpenImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+
+		//Creates a text image
+		//	@Message is the text to load
+		//	@Font is a handle to the desired font
+		//	@TextColor is an RGB value that determines the text color
 		int LoadText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
 
+
+		//Sets the coordinates of the image
+		//	@X is the X coordinate
+		// 	@Y is the Y coordinate
+		//	@W is the Width
+		//	@H is the Height
 		int SetCoords(double X, double Y, double W, double H);
+
+		//Sets some properties of the Image
+		// @Angle sets the rotation of the image
+		// @Center sets the center of rotation of the image
+		// @FlipType sets the type of flipping to apply to the image (horizontal, vertical, none)
 		int SetImageProp(double Angle, SDL_Point Center, SDL_RendererFlip FlipType);
+
+
+		//Displays the image
+		int Display();
 	};
 
 
@@ -232,53 +286,135 @@ namespace SLGE
 
 		Window_t *WindowHandle;
 
-		//Image
-		std::vector <Image_t> *Image;
-		std::vector <int> *ImageToDisplay;
+	//Image
+		std::vector <Image_t> *Image; //All images that could be displayed by a single object
+		std::vector <int> *ImageToDisplay; //An array of indexes for pointing to which image is to be displayed and in what order
 			
-		//Location
-		double X;
-		double Y;
-		double W;
-		double H;
+	//Location
+		double X; //X coordinate of the object but NOT the image
+		double Y; //Y coordinate of the object but NOT the image
+		double W; //Width of the object	but NOT the image
+		double H; //Height of the object but NOT the image
 
-		//Replacable functions
-		virtual void ClearData();
-		virtual void SetDisplay(int ImageIndex);
+	//Replacable functions
+		virtual void ClearData(); //Clears all internal variables
+		virtual void SetDisplay(int ImageIndex); //Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
 
 	public:
 
+	//Init
+		//Clears the object
 		Object_t();
+
+		//Clears the object and registers it with a window
+		//	@WindowHandle is the window to register to
 		Object_t(Window_t *WindowHandle);
+
+		//Cleans up the dynamically allocated variables
 		~Object_t();
+
+		//Manual register function for static arrays
 		int Register(Window_t *Window);
 
-		//Status
+
+	//Status
+		//Returns the total number of images inside the object 
 		int GetNumberOfImages();
+
+		//Returns the index of a layered image
+		//	@Layer is the layer that the image will be displayed at
 		int GetLayeredImage(int Layer);
+
+		//Returns the object's X coordinate
 		double GetX();
+		
+		//Returns the object's Y coordinate
 		double GetY();
+		
+		//Returns the object's width
 		double GetW();
+		
+		//Returns the object's height
 		double GetH();
 
+
+		//True if the object overlaps a rectangle
+		//	@Area is the rectangle to check overlapping with
 		bool IsOverlapping(SDL_Rect Area);
-		bool IsOverlapping(Object_t* Object);		   
+
+		//True if the object overlaps an object
+		//	@Object is the Object to check overlapping with
+		bool IsOverlapping(Object_t* Object);	
+
+		//True if the object is completely inside a rectangle
+		//	@Area is the rectangle to check being inside of
 		bool IsWithin(SDL_Rect Area);
+
+		//True if the object is completely inside an object
+		//	@Object is the object to check being inside of
 		bool IsWithin(Object_t* Object);
 
-		//Actions
+
+	//Actions
+		//Sets the X, Y, Width and Height
+		//	@X sets the X coordinate
+		//	@Y sets the Y coordinate
+		//	@W sets the width
+		//		If NULL the width remains unchanged
+		//	@H sets the height
+		//		If NULL the height remains unchanged
 		void SetCoords(double X, double Y, double W = NULL, double H = NULL);
 
+
+		//Opens an image from a file 
+		//	@Filename is the file to load
+		//	@Clip is rectangle specifying how much of the image to load
+		//		NULL loads the entire image
+		//	@ColorKey is an RGB value that determines what color will become transparent
+		//		NULL specifies no colorkey
 		int AddImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+
+		//Creates a text image
+		//	@Message is the text to load
+		//	@Font is a handle to the desired font
+		//	@TextColor is an RGB value that determines the text color
 		int AddText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
+
+		//Moves an image from one position in the array to another position
+		//	@Position is the position of the image to move
+		//	@NewPosition is the position to move the image to
 		int MoveImage(int Position, const int NewPosition);
+
+		//Deletes an image from the image array
+		//	@Position is the location of the image to delete
 		int DeleteImage(int Position);
 
+
+		//Opens an image from a file to layer on top of the current images
+		//	@Filename is the file to load
+		//	@Clip is rectangle specifying how much of the image to load
+		//		NULL loads the entire image
+		//	@ColorKey is an RGB value that determines what color will become transparent
+		//		NULL specifies no colorkey
 		int AddLayer(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+
+		//Creates a text image to layer on top of the current images
+		//	@Message is the text to load
+		//	@Font is a handle to the desired font
+		//	@TextColor is an RGB value that determines the text color
 		int AddLayer(int ImagePosition);
+
+		//Moves a layered image from one layer to another
+		//	@Position is the layer of the image to move
+		//	@NewPosition is the layer to move the image to
 		int MoveLayer(int Position, const int NewPosition);
+
+		//Deletes an layer from the layers displayed
+		//	@Position is the location of the layer to delete
 		int DeleteLayer(int Position);
 
+
+		//Displays all layered images on the screen
 		int Display();
 	};
 }

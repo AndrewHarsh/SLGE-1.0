@@ -214,6 +214,15 @@ int DLL_API Object_t::DeleteImage(int in_Position)
 	else
 		return 1;
 
+	for (int i = 0; i < (int) ImageToDisplay->size(); i++)
+	{
+		if (in_Position < (*ImageToDisplay)[i])
+			(*ImageToDisplay)[i]--;
+
+		if (in_Position == (*ImageToDisplay)[i])
+			ImageToDisplay->erase(ImageToDisplay->begin() + i);
+	}
+
 	return 0;
 }
 

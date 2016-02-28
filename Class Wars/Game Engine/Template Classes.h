@@ -33,7 +33,12 @@ namespace SLGE
 	std::vector <Global> Data_t <C>::Link;
 
 
-
+	//Used to spawn in all freestanding objects
+	//	Usage: 
+	//			DynamicClass <ObjectType, ParentClass, ParentClass, ParentClass, etc> ObjectName;
+	//
+	//	The first class is the class that the object will become, while the following classes are parent classes of the first class
+	//	Not all parent classes of the first class must be included
 	template <typename C, typename ...D>
 	class DynamicClass
 	{
@@ -44,8 +49,8 @@ namespace SLGE
 		const std::vector <Global> *LINK = &(Data_t <C>::Link);
 
 
-		std::vector <C*> Data;
-		std::vector <Local> Link[sizeof...(D) +1];
+		std::vector <C*> Data;	//Pointers to the actual objects
+		std::vector <Local> Link[sizeof...(D) +1]; //Link information to corresponding data in the global array
 
 		template <typename T1>
 		void AddPointer()
@@ -196,14 +201,22 @@ namespace SLGE
 		}
 
 
-
 	public:
 
-		//Local
+	//Local
+		//Clears the internal variables
 		DynamicClass()
 		{
+			Data.empty();
+
+			for (int i = 0; i < NUMBER_OF_TYPE_ARGS; i++)
+				Link[i].empty();
 		}
 
+		//Spawns in the objects
+		//	@Amount is the number of objects to spawn in
+		//	@WindowHandle is the window to spawn them onto
+		//		If NULL the class is not registered with a window. Useful for classes that are not displayed
 		void Spawn(int Amount, Window_t *WindowHandle = nullptr)
 		{
 			for (int i = 0; i < Amount; i++)
@@ -218,11 +231,15 @@ namespace SLGE
 			}
 		}
 
+		//Despawns all objects
 		void Despawn()
 		{
 			Despawn(0, Data.size());
 		}
 
+		//Despawns a specified number of objects
+		//	@in_Index is the index of the first object to despawn
+		//	@in_Amount is the total number of objects to despawn
 		void Despawn(int in_Index, int in_Amount)
 		{
 			if (in_Amount > 0 && Data.size() > 0)
@@ -237,6 +254,13 @@ namespace SLGE
 			}
 		}
 
+		//Returns the number of objects spawned
+		int NumberOfObjects()
+		{
+			return Data.size();
+		}
+
+		//Gets the position of the object in the global array
 		template <typename T1 = C>
 		int GetPosition(int in_Index = 0)
 		{
@@ -250,11 +274,8 @@ namespace SLGE
 				return -1;
 		}
 
-		int NumberOfObjects()
-		{
-			return Data.size();
-		}
-
+		//Returns a modifiable object at the specified index
+		//	@in_Index is the index of the spawned object
 		C &operator[](unsigned in_Index)
 		{
 			if (in_Index >= 0 && in_Index < Data.size())
@@ -263,6 +284,8 @@ namespace SLGE
 			return *(Data[0]);
 		}
 
+		//Returns a non modifiable object at the specified index
+		//	@in_Index is the index of the spawned object
 		const C &operator[](unsigned in_Index) const
 		{
 			if (in_Index >= 0 && in_Index < Data.size())
@@ -271,7 +294,10 @@ namespace SLGE
 			return *(Data[0]);
 		}
 
-		//Global
+	//Global
+		//Swaps the position of two objects in the global array
+		//	@Position is the location of the first object
+		//	@NewPosition is the location of the second object
 		static void Swap(int Position, int NewPosition)
 		{
 			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
@@ -287,6 +313,9 @@ namespace SLGE
 			}
 		}
 
+		//Moves an object to a new position in the global array
+		//	@Position is the position of the object to move
+		//	@NewPosition is the position to move the object to
 		static void Move(int Position, int NewPosition)
 		{
 			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <C>::Data.size() && NewPosition < Data_t <C>::Data.size())
@@ -305,6 +334,12 @@ namespace SLGE
 			}
 		}
 
+		//Executes a method for all objects in the global array
+		//	@Function is a pointer to a method to be called on all objects
+		//	@...Args is a variadic argument for the arguments in the method
+		//	
+		//	Usage:
+		//			DynamicClass <Class>::All(&Class::Method(), Arg1, Arg2, etc);
 		template <typename F, typename ...A>
 		static void All(F Function, A... Args)
 		{
@@ -312,6 +347,7 @@ namespace SLGE
 				(Data_t <C>::Data[i]->*Function)(Args...);
 		}
 
+		//Retuns the number of objects in the global array
 		static int NumberOfAllObjects()
 		{
 			return Data_t <C>::Data.size();
@@ -324,3 +360,4 @@ namespace SLGE
 }
 
 
+			

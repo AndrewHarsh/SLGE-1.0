@@ -7,63 +7,49 @@ using namespace SLGE;
 
 DLL_API Window_t::Timer_t::Timer_t()
 {
-	LastFrame = new HRC::time_point;
-	LastBench = new HRC::time_point;
 	LastFPSDisplay = new HRC::time_point;
-	LastBenchDisplay = new HRC::time_point;
+	LastBench = new HRC::time_point;
+	LastIdentifier = new std::string;
 
-	*LastFrame = HRC::now();
-	*LastBench = HRC::now();
 	*LastFPSDisplay = HRC::now();
-	*LastBenchDisplay = HRC::now();
-
-	FPS = 60;	
-
-	LARGE_INTEGER Li;
-	QueryPerformanceFrequency(&Li);
-
-	CPUFreq = double(Li.QuadPart)/1000.0;
-
-	LastIdentifier = nullptr;
-}
-
-void DLL_API Window_t::Timer_t::DisplayFPS()
-{
-	HRC::time_point Now = HRC::now();
-
-	if (duration_cast<milliseconds>(Now - *LastFPSDisplay).count() > 1000)
-	{
-		*LastFPSDisplay = HRC::now();
-		
-		//SDL_SetWindowTitle(Handle, std::to_string(CurrentFPS).c_str());
-		std::cout << Duration << std::endl;
-	}
-}
-
-int DLL_API Window_t::Timer_t::CapFPS()
-{
-	std::fstream File;
-
-	Uint32 EndTime = SDL_GetTicks();
-
-	Uint32 Elapsed = EndTime - StartTime;
-	Duration = (double) Elapsed;
-	 
-	if (Duration < 1000 / FPS)
-		SDL_Delay((Uint32)(1000 / FPS - Duration));
-
-	EndTime = SDL_GetTicks();
-	Duration = EndTime - StartTime;
-
-	if (Duration <= 0)
-		Duration = 1;
-
-	CurrentFPS = 1000 / (Duration);
+	*LastBench = HRC::now();
 
 	StartTime = SDL_GetTicks();
 
+	system("IF EXIST Benchmark_Results.csv DEL Benchmark_Results.csv");
+}
+
+void DLL_API Window_t::Timer_t::DisplayFPS(int in_Delay)
+{
+	HRC::time_point Now = HRC::now();
+
+	if (duration_cast<milliseconds>(Now - *LastFPSDisplay).count() > in_Delay)
+	{
+		*LastFPSDisplay = HRC::now();
+		
+		std::cout << CurrentFPS << std::endl;
+	}
+}
+
+int DLL_API Window_t::Timer_t::CapFPS(double in_DesiredFPS)
+{
+	Uint32 EndTime = SDL_GetTicks();
+	Uint32 Elapsed = EndTime - StartTime;
+	 
+	if ((double)Elapsed < 1000.0 / in_DesiredFPS)
+		SDL_Delay((Uint32)(1000.0 / (in_DesiredFPS - (double) Elapsed)));
+
+	Elapsed = SDL_GetTicks() - StartTime;
+
+	if (Elapsed <= 0)
+		Elapsed = 1;
+
+	CurrentFPS = 1000.0 / (double) Elapsed;
+
 	if (CurrentFPS <= 0)
 		CurrentFPS = 1;
+
+	StartTime = SDL_GetTicks();
 
 	return 0;
 }
@@ -77,34 +63,21 @@ double DLL_API Window_t::Timer_t::GetFPS()
 int DLL_API Window_t::Timer_t::Benchmark(const char in_Identifier[])
 {
 	HRC::time_point ThisBench = HRC::now();
-	long long ElapsedTime = duration_cast <microseconds> (ThisBench - *LastBench).count();
+	long double ElapsedTime = duration_cast <microseconds> (ThisBench - *LastBench).count() / 1000.0;
+	std::fstream Benchmark;
 
+	Benchmark.open("Benchmark_Results.csv", std::ios::app);
 
-	if (duration_cast<milliseconds>(ThisBench - *LastBenchDisplay).count() > 5000)
+	if (Benchmark.is_open())
 	{
-		if (LastIdentifier == nullptr)
-		{
-			int temp = strlen(in_Identifier);
+		Benchmark << (*LastIdentifier) << " to " << in_Identifier << ",";
+		Benchmark << ElapsedTime << ",";
+		Benchmark << ElapsedTime / (1000.0 / CurrentFPS) * 100.0 << "%," << std::endl;
 
-			LastIdentifier = new char[strlen(in_Identifier) + 1];
-			strcpy_s(LastIdentifier, strlen(in_Identifier) + 1, in_Identifier);
-
-			std::cout << "	" << in_Identifier << ":	" << static_cast <double> (ElapsedTime) / 1000.0 << "ms";
-			std::cout << "			" << (static_cast <double> (ElapsedTime) / 1000.0) / (1000.0 / CurrentFPS) * 100.0 << "%" << std::endl;
-		}
-		else if (!strcmp(LastIdentifier, in_Identifier))
-		{
-			delete[] LastIdentifier;
-			LastIdentifier = nullptr;
-			*LastBenchDisplay = HRC::now();
-		}
-		else
-		{
-			std::cout << "	" << in_Identifier << ":	" << static_cast <double> (ElapsedTime) / 1000.0 << "ms";
-			std::cout << "			" << (static_cast <double> (ElapsedTime) / 1000.0) / (1000.0 / CurrentFPS) * 100.0 << "%" << std::endl;
-		}
+		Benchmark.close();
 	}
 
+	*LastIdentifier = in_Identifier;
 	*LastBench = HRC::now();
 
 	return 0;
