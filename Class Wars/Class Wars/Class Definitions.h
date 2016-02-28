@@ -32,6 +32,41 @@ public:
 };
 
 
+
+//======================================//
+//		        World					//
+//======================================//
+
+class World_t : public Object_t
+{
+protected:
+
+	//Used to clear ALL data from a class (use wisely)
+	void ClearData()
+	{
+		//Todo: Add code to clear all attributes of the class
+		Object_t::ClearData();
+	}
+
+public:
+
+	//Calls all the constructors that need to be called
+	World_t() : Object_t()
+	{
+		ClearData();
+	}
+
+	//Associates the object with a window for later use. MUST be done either in a constructor (below) or by directly calling the "Register()" method
+	World_t(Window_t *in_Window) : World_t()
+	{
+		Register(in_Window);
+	}
+};
+
+
+
+
+
 //======================================//
 //		          UI					//
 //======================================//
@@ -388,7 +423,7 @@ class Entity_t : public Object_t
 {
 protected:
 
-	enum Direction
+	enum Direction_t
 	{
 		Down,
 		Right,
@@ -398,10 +433,17 @@ protected:
 		DownRight,
 		DownLeft,
 		UpRight,
-		UpLeft,
+		UpLeft
 	};
 
-	struct Attack
+	enum AnimateType_t
+	{
+		aIdle,
+		aMoving,
+		aAttacking
+	};
+
+	struct Attack_t
 	{
 		double Damage;
 		double Speed;
@@ -417,21 +459,83 @@ protected:
 		}
 	};
 
-	struct Animation
+	class Animation_t
 	{
-		int StartPosition;
-		int TotalNumber;
-		double Duration; //In milliseconds
-		double TimeDisplayed; //In milliseconds
+	protected:
+
+		struct AnimateDirection_t
+		{
+			int StartPosition;
+			int TotalNumber;
+			double Duration; //In milliseconds
+			double TimeDisplayed; //In milliseconds
+
+			void ClearData()
+			{
+				StartPosition = 0;
+				TotalNumber = 0;
+				Duration = 0;
+				TimeDisplayed = 0;
+			}
+
+		} Direction[8];
+
+	public:
+
 		bool Active;
 
 		void ClearData()
 		{
-			StartPosition = 0;
-			TotalNumber = 0;
-			Duration = 0;
-			TimeDisplayed = 0;
-			Active = 0;
+			for (int i = 0; i < 8; i++)
+				Direction[i].ClearData();
+
+			Active = false;
+		}
+
+		AnimateDirection_t &operator[](Direction_t in_Direction)
+		{
+			if (in_Direction >= 0 && in_Direction < 8)
+				return Direction[in_Direction];
+
+			return Direction[0];
+		}
+
+		const AnimateDirection_t  &operator[](Direction_t in_Direction) const
+		{
+			if (in_Direction >= 0 && in_Direction < 8)
+				return Direction[in_Direction];
+
+			return Direction[0];
+		}
+
+		void SetAll(int in_StartPosition, double in_Duration, int in_TotalFrames)
+		{
+			SetTotalFramesAll(in_TotalFrames);
+			SetDurationAll(in_Duration);
+			SetStartPositionAll(in_StartPosition);
+		}
+
+		void SetTotalFramesAll(int in_TotalNumber)
+		{
+			for (int i = 0; i < 8; i++)
+				Direction[i].TotalNumber = in_TotalNumber;
+		}
+
+		void SetDurationAll(double in_Duration)
+		{
+			for (int i = 0; i < 8; i++)
+				Direction[i].Duration = in_Duration;
+		}
+
+		void SetStartPositionAll(int in_StartPosition)
+		{
+			int StartOffset = 0;
+
+			for (int i = 0; i < 8; i++)
+			{
+				Direction[i].StartPosition = in_StartPosition + StartOffset;
+				StartOffset += Direction[i].TotalNumber;
+			}
 		}
 	};
 
@@ -447,13 +551,13 @@ protected:
 	double InitialHealth;
 
 	//Animation
-	Direction Facing;
+	Direction_t Facing;
 	int AnimationLayer;
 
-	Animation Idle;
-	Animation Moving;
-	Animation Attacking;
-	Animation TakingDamage;
+	Animation_t Idle;
+	Animation_t Moving;
+	Animation_t Attacking;
+	Animation_t TakingDamage;
 
 	void ClearData()
 	{
@@ -481,8 +585,8 @@ protected:
 	}
 
 public:
-
-	Attack MainWeapon;
+																
+	Attack_t MainWeapon;
 	Bar_t HealthBar;
 
 	Entity_t() : Object_t()
@@ -525,38 +629,40 @@ public:
 
 		if (Attacking.Active)
 		{
-			Attacking.TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+			Attacking[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
 
-			while (Attacking.TimeDisplayed > Attacking.Duration)
+			while (Attacking[Facing].TimeDisplayed > Attacking[Facing].Duration &&
+				   Attacking[Facing].Duration > 0)
 			{
-				Attacking.TimeDisplayed -= Attacking.Duration;
+				Attacking[Facing].TimeDisplayed -= Attacking[Facing].Duration;
 				(*ImageToDisplay)[AnimationLayer]++;
 
-				if ((*ImageToDisplay)[AnimationLayer] >= Attacking.StartPosition + (Facing + 1) * Attacking.TotalNumber ||
-					(*ImageToDisplay)[AnimationLayer] < Attacking.StartPosition + Facing * Attacking.TotalNumber)
+				if ((*ImageToDisplay)[AnimationLayer] >= Attacking[Facing].StartPosition +  Attacking[Facing].TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Attacking[Facing].StartPosition)
 				{
-					(*ImageToDisplay)[AnimationLayer] = Attacking.StartPosition + (Facing * Attacking.TotalNumber);
+					(*ImageToDisplay)[AnimationLayer] = Attacking[Facing].StartPosition;
 				}
 			}
 		}
 		else if (Moving.Active)
 		{
-			Moving.TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+			Moving[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
 
-			while (Moving.TimeDisplayed > Moving.Duration)
+			while (Moving[Facing].TimeDisplayed > Moving[Facing].Duration &&
+				   Moving[Facing].Duration > 0)
 			{
-				Moving.TimeDisplayed -= Moving.Duration;
+				Moving[Facing].TimeDisplayed -= Moving[Facing].Duration;
 				(*ImageToDisplay)[AnimationLayer]++;
 
-				if ((*ImageToDisplay)[AnimationLayer] >= Moving.StartPosition + (Facing + 1) * Moving.TotalNumber ||
-					(*ImageToDisplay)[AnimationLayer] < Moving.StartPosition + Facing * Moving.TotalNumber)
+				if ((*ImageToDisplay)[AnimationLayer] >= Moving[Facing].StartPosition + Moving[Facing].TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Moving[Facing].StartPosition)
 				{
-					(*ImageToDisplay)[AnimationLayer] = Moving.StartPosition + (Facing * Moving.TotalNumber);
+					(*ImageToDisplay)[AnimationLayer] = Moving[Facing].StartPosition;
 				}
 			}
 		}
 		else
-			(*ImageToDisplay)[AnimationLayer] = Idle.StartPosition + (Facing * Idle.TotalNumber);
+			(*ImageToDisplay)[AnimationLayer] = Idle[Facing].StartPosition;
 	}
 
 
@@ -569,7 +675,12 @@ public:
 			return false;
 	}
 
-	int Move(Direction in_Direction)
+	double GetSpeed()
+	{
+		return MoveSpeed;
+	}
+
+	int Move(Direction_t in_Direction)
 	{
 		if (WindowHandle->TimerHandle.GetFPS() <= 0)
 			return 1;
@@ -880,7 +991,7 @@ public:
 			return false;
 	}
 
-	void Attack(Entity_t *in_Victim, Attack Weapon)
+	void Attack(Entity_t *in_Victim, Attack_t Weapon)
 	{
 		in_Victim->TakeDamage(Weapon.Damage / WindowHandle->TimerHandle.GetFPS());
 	}
@@ -962,24 +1073,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 100;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.1, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)
@@ -1012,25 +1116,25 @@ public:
 
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
 		{
-			Y -= 100 / WindowHandle->TimerHandle.GetFPS();
+			Y -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
 			//Looking = 3;
 			Moving.Active = true;
 		}
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
 		{
-			Y += 100 / WindowHandle->TimerHandle.GetFPS();
+			Y += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
 			//Looking = 0;
 			Moving.Active = true;
 		}
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
 		{
-			X -= 100 / WindowHandle->TimerHandle.GetFPS();
+			X -= MoveSpeed / WindowHandle->TimerHandle.GetFPS();
 			//Looking = 2;
 			Moving.Active = true;
 		}
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
 		{
-			X += 100 / WindowHandle->TimerHandle.GetFPS();
+			X += MoveSpeed / WindowHandle->TimerHandle.GetFPS();
 			//Looking = 1;
 			Moving.Active = true;
 		}
@@ -1112,9 +1216,7 @@ public:
 		InitialHealth = 100;
 		CurrentHealth = 100;
 
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 0;
-		Moving.TotalNumber = 10;
+		Moving.SetAll(0, 0.1, 10);
 
 		MainWeapon.Range = 5;
 		MainWeapon.Damage = 5;
@@ -1125,7 +1227,7 @@ public:
 		HealthBar.AddLayer("Health.png", { 0, 100, 50, 5 }, { NULL });
 		HealthBar.Init();
 
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		MoveLayer(ImageToDisplay->size() - 1, 0);
 		AnimationLayer++;
 	}
@@ -1216,24 +1318,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 200;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.05, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)
@@ -1297,24 +1392,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 100;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.1, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)
@@ -1373,24 +1461,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 150;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.075, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)
@@ -1449,24 +1530,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 50;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.2, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);	
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)
@@ -1525,24 +1599,17 @@ public:
 		W = 16;
 		H = 38;
 		Facing = Down;
+		MoveSpeed = 100;
 
 
 		//Animations
-		Moving.Duration = 0.1;
-		Moving.StartPosition = 1;
-		Moving.TotalNumber = 8;
-		
-		Attacking.Duration = 0.1;
-		Attacking.StartPosition = 4 * Moving.TotalNumber + Moving.StartPosition;
-		Attacking.TotalNumber = 8;
-
-		Idle.Duration = 0.1;
-		Idle.StartPosition = 1;
-		Idle.TotalNumber = 8;
+		Moving.SetAll(1, 0.1, 8);
+		Attacking.SetAll(33, 0.1, 8);
+		Idle.SetAll(1, 0.1, 8);
 
 
 		//Images
-		AddLayer("Collision Box.png", { 0, 0, W, H }, { 255, 0, 153, 0 });
+		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
 		for (int i = 0; i < 20; i++)	
 		{
 			for (int ii = 0; ii < 8; ii++)

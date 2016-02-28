@@ -38,7 +38,7 @@ namespace SLGE
 
 
 		//Clears all data
-		void ClearData();
+		virtual void ClearData();
 
 		//Fills Event with new events
 		int FetchEvents();

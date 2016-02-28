@@ -36,6 +36,11 @@ extern "C" int SDL_main(int argc, char* argv[])
 				return 1;
 			break;
 
+			case MikeGame:
+			if (Window1.Run(SpawnMikeGame, RunMikeGame, DespawnMikeGame) == Error)
+				return 1;
+			break;
+
 			default:
 			CurrentScreen = PlayGame;
 			break;

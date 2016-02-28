@@ -13,7 +13,8 @@ enum GameScreen_t
 	Video,
 	Quit,
 	PlayGame,
-	GameMode
+	GameMode,
+	MikeGame
 } CurrentScreen;  //Sets which screen to go to when the loop breaks
 
 enum PlayerType_t
@@ -25,6 +26,80 @@ enum PlayerType_t
 	Paladin,
 	Mage
 } PlayerType;
+
+
+
+
+//================================================= Mike's Sandbox =========================================================================================
+
+
+DynamicClass <World_t, Object_t> mikeWorld;			//The level
+DynamicClass <Player_t, Entity_t> mikePlayer;		//A dynamic array of players
+DynamicClass <Monster_t, Entity_t> mikeMonster;		//A dynamic array of monsters
+
+//Spawns in and initializes the Main Menu objects
+FunctionReturn SpawnMikeGame()
+{				
+	//MUST spawn in ANY DynamicClass object in order for it to be used
+	//You can specify the amount to spawn, as well as which window they will appear on
+	mikeWorld.Spawn(1, &Window1);
+	mikePlayer.Spawn(1, &Window1);
+	mikeMonster.Spawn(5, &Window1);
+
+	//Reference the first item in the mikeWorld object and add an image
+	//No clipping or colorkeying has been set
+	mikeWorld[0].AddImage("Mike Background.png", { NULL }, { NULL });
+	
+	//Add a player image, cropping out a single frame and removing all white
+	mikePlayer[0].AddImage("Player.png", { 1, 1, 98, 98 }, { 255, 255, 255 });
+	mikePlayer[0].SetCoords(200, 300);
+
+	//mikeMonster.NumberOfObjects() returns all mikeMonster objects that have been spawned
+	//This includes mikeMonster objects spawned in other loops
+	for (int i = 0; i < mikeMonster.NumberOfObjects(); i++)
+	{
+		mikeMonster[i].AddImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		mikeMonster[i].SetCoords(100 + 100 * i, 100);
+	}
+
+	return Continue;
+}
+
+//Runs all code that must be executed each frame in the Main Menu
+FunctionReturn RunMikeGame()
+{
+	//Returns to the main menu when ESC is pressed
+	if (Window1.GetKeyState(SDL_SCANCODE_ESCAPE))
+	{
+		CurrentScreen = MainMenu;
+		return Exit;
+	}
+
+	//Displays to the screen
+	All<Object_t>(&Object_t::Display);
+	All<Entity_t>(&Entity_t::Display);
+
+	//"All<class>(method)" works by calling "method" on "All" "class" objects. 
+	//Methods with parameters can be inputted by following the method name with the arguments:
+	//	All<Object_t>(&Object::Move, X, Y);
+
+	return Continue;
+}
+
+//Despawns all Main Menu objects that need to be despawned
+FunctionReturn DespawnMikeGame()
+{
+	mikeWorld.Despawn();
+	mikePlayer.Despawn();
+	mikeMonster.Despawn();
+
+	return Continue;
+}
+
+//=====================================================================================================================================================
+
+
+
 
 //===============//
 //   Main Menu   //
@@ -53,6 +128,7 @@ FunctionReturn SpawnMainMenu()
 
 	Button[0].Init("Play");
 	Button[1].Init("Options");
+	Button[2].Init("Mike's Game");
 	Button[3].Init("Exit Game");
 
 	return Continue;
@@ -79,8 +155,8 @@ FunctionReturn RunMainMenu()
 	}
 	if (Button[2].IsPressed())
 	{
-		PlayerType = Nudist;
-		CurrentScreen = PlayGame;
+		//PlayerType = Nudist;
+		CurrentScreen = MikeGame;
 		return Exit;
 	}
 	if (Button[3].IsPressed())
@@ -307,8 +383,6 @@ FunctionReturn SpawnGame()
 //Runs all code that must be executed each frame in the Game
 FunctionReturn RunGame()
 {
-	///*
-
 	WIDTH = Window1.GetWidth();
 	HEIGHT = Window1.GetHeight();
 
@@ -320,9 +394,9 @@ FunctionReturn RunGame()
 		
 	//Move enemies
 	//Window1.TimerHandle.Benchmark("Move Enemies");
-	//SDL_Rect Temp = { WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT }; //Cant pass an initialization list into a variadic template function
+	SDL_Rect Temp = { WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT }; //Cant pass an initialization list into a variadic template function
 	//All <Monster_t> (&Monster_t::Wander, Temp, NULL);
-	All<Monster_t>(&Monster_t::MoveTo, Player[0].GetX(), Player[0].GetY());
+	All<Monster_t>(&Monster_t::MoveTo, (int)Player[0].GetX(), (int)Player[0].GetY());
 
 	if (Player[0].IsDead())
 	{
@@ -354,6 +428,7 @@ FunctionReturn RunGame()
 		return Exit;
 	}
 
+	//Handle killed Monsters
 	int TotalEnemies = DummyTarget.NumberOfObjects();
 	for (int i = 0; i < DummyTarget.NumberOfObjects(); i++)
 	{
@@ -364,8 +439,9 @@ FunctionReturn RunGame()
 			Inventory[0].AddToKilledUnits();
 		}
 	}
-	int EnemiesKilled = TotalEnemies - DummyTarget.NumberOfObjects();
 
+	//HAIL HYDRA
+	int EnemiesKilled = TotalEnemies - DummyTarget.NumberOfObjects();
 	for (int i = 0; i < EnemiesKilled * 2; i++)
 	{
 	   DummyTarget.Spawn(1, &Window1);
@@ -399,7 +475,7 @@ FunctionReturn RunGame()
 
 	//Scroll screen
 	//Window1.TimerHandle.Benchmark("Scroll Screen");
-	double ScrollSpeed = (double) (100 / Window1.TimerHandle.GetFPS()); //Speed at which the screen scrolls
+	double ScrollSpeed = (double) (Player[0].GetSpeed() / Window1.TimerHandle.GetFPS()); //Speed at which the screen scrolls
 	int BoxSize = 50; //Size from center to edge of box that player can freely walk in without moving the screen
 
 	if (Player[0].GetX() > WIDTH / 2 + BoxSize)
@@ -439,6 +515,7 @@ FunctionReturn RunGame()
 	}
 
 	
+	//Make sure the UI is properly positioned
 	Bar[2].SetCoords(Window1.GetWidth() / 2 + 200, Window1.GetHeight() - Bar[2].GetH() / 2 - 10);
 	Bar[3].SetCoords(Window1.GetWidth() / 2 + 280, Window1.GetHeight() - Bar[3].GetH() / 2 - 10);
 	Bar[4].SetCoords((Window1.GetWidth() - HUD[0].GetW() + Bar[4].GetW()) / 2 + 10, Window1.GetHeight() - HUD[0].GetH() - 20);
@@ -453,21 +530,14 @@ FunctionReturn RunGame()
 			Get<Entity_t>(ii).HandleCollisionWithE(&Get<Entity_t>(i));
 	}
 
-	//Window1.TimerHandle.Benchmark("Display All"); 
 
 	//Display
+	//Window1.TimerHandle.Benchmark("Display All"); 
 	All <Entity_t> (&Entity_t::Animate);
 
-	//*/
-
-
-	///*
 	All <Object_t> (&Object_t::Display);
 	All <Entity_t> (&Entity_t::DisplayAll);
 	All <UI_t> (&UI_t::DisplayAll);
-	//*/
-
-	//Window1.TimerHandle.Benchmark("Refresh loop");
 
 	return Continue;
 }

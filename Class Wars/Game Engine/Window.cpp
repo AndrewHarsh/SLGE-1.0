@@ -214,9 +214,6 @@ int DLL_API Window_t::Refresh()
 	else
 		return SDL_UpdateWindowSurface(WindowHandle);
 
-	//ZeroMemory(&Event[0], sizeof(Event[0]));
-	//ZeroMemory(&Event[1], sizeof(Event[1]));
-
 	return 0;
 }
 
