@@ -163,7 +163,7 @@ namespace SLGE
 		Window(const int Width, const int Height, const std::string Caption, const bool Flags);
 
 		// Status
-		int GetOpenWindows();
+		int GetOpenWindows();	//Not working
 		int GetWidth();
 		int GetHeight();
 		int GetBPP();
@@ -189,16 +189,16 @@ namespace SLGE
 		int RemoveFromScreen(const int Position);
 
 		int Refresh();
-		int RunLoop(void (&Loop)(void));
+		int Run(void (&Loop)(void));
 	};
 
 	class DLL_API Object
 	{
 	friend class Window;
-	typedef void (*PassiveFunction)();
 	protected:
 
 		Window *WindowHandle;
+		//std::string *ObjectID;
 
 		//Image
 		SDL_Surface **Image;
@@ -213,35 +213,89 @@ namespace SLGE
 		double Y;
 		double W;
 		double H;
-		double LastX;
-		double LastY;
-		double LastW;
-		double LastH;
 
 		//Attributes
-		bool DoResetLoopVariables;		//Resets variables that are changed every loop
-		bool DoHandleEvents;			//Handles events for the object
-		bool DoDetectCollisions;		//Object can collide with other objects 
-		bool DoAnimate;					//Object is animated
-		bool DoSetImage;				//Object's display X and Y are changed from the location X and Y
-		bool DoHandleSound;				//Handles sound for the object
-		bool DoDisplay;					//Object is displayed
 		bool DoDynamicDepth;			//Object's z-layer can be dynamically changed 
 
-		//Replacable functions
-		virtual void ClearData();
-		virtual int ResetLoopVariables();
-		virtual int HandleEvents(SDL_Event* Event);
-		virtual int DetectCollisions(Object* Object);
-		virtual int Animate();
-		virtual int SetImage();
-		virtual int HandleSound();
+	public:	
 
-		virtual int PerFrameLoop();
+		//Replacable functions
+		virtual void ClearData()
+		{
+			if (Image != nullptr)
+			{
+				for (int i = 0; i < NumberOfImages; i++)
+					SDL_FreeSurface(Image[i]);
+
+				Image = nullptr;
+			}
+
+			if (HImage != nullptr)
+			{
+				for (int i = 0; i < NumberOfImages; i++)
+					SDL_DestroyTexture(HImage[i]);
+
+				HImage = nullptr;
+			}
+
+			if (Clip != nullptr)
+			{
+				delete[] Clip;
+				Clip = nullptr;
+			}
+
+			if (DisplayClip != nullptr)
+			{
+				delete[] DisplayClip;
+				DisplayClip = nullptr;
+			}
+
+			NumberOfImages = 0;
+			ImageToDisplay = 0;
+
+			X = 0;
+			Y = 0;
+			W = 0;
+			H = 0;
+
+			DoDynamicDepth = false;
+		}
+		virtual int ResetLoopVariables()
+		{
+			return 0;
+		}
+		virtual int HandleEvents(SDL_Event* in_Event)
+		{
+			return 0;
+		}
+		virtual int Animate()
+		{
+			if (++ImageToDisplay >= NumberOfImages)
+				ImageToDisplay = 0;
+
+			return 0;
+		}
+		virtual int SetImage()
+		{
+			DisplayClip[ImageToDisplay].x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
+			DisplayClip[ImageToDisplay].y = static_cast <int> (round(Y + H / 2.0 - Clip[ImageToDisplay].h));
+			DisplayClip[ImageToDisplay].w = Clip[ImageToDisplay].w;
+			DisplayClip[ImageToDisplay].h = Clip[ImageToDisplay].h;
+
+			return 0;
+		}
+		virtual int PerFrameLoop()
+		{
+			Animate();
+			SetImage();
+			Display();
+
+			return 0;
+		}
 
 		int Display();
 
-	public:
+	//public:
 
 		Object();
 		Object(Window *WindowHandle);
@@ -254,12 +308,8 @@ namespace SLGE
 		double GetW();
 		double GetH();
 
-		bool DoesDisplay();
-		bool DoesDetectCollisions();
-		bool DoesDynamicDepth();
-
 		bool IsOverlapping(SDL_Rect Area);
-		bool IsOverlapping(Object* Object);
+		bool IsOverlapping(Object* Object);		   
 		bool IsWithin(SDL_Rect Area);
 		bool IsWithin(Object* Object);
 
@@ -299,14 +349,61 @@ namespace SLGE
 		bool Attacking;
 		bool BeingHit;
 
-		//Internal Functions
-		void ClearData();		
-		int ResetLoopVariables();
-		int HandleEvents(SDL_Event *Event);
-		int DetectCollisions(Object *Object);
-		int Animate();
-
 	public:
+
+		//Internal Functions
+		void ClearData()
+		{
+			Object::ClearData();
+
+			Speed = 0;
+			CurrentHealth = 0;
+			MaxHealth = 0;
+			AttackDamage = 0;
+			AnimateSpeed = 0;
+			AnimateFrame = 0;
+		}
+		int ResetLoopVariables()
+		{
+			LastX = X;
+			LastY = Y;
+
+			Moving = false;
+
+			return 0;
+		}
+		int Animate()
+		{
+			AnimateFrame += 1000 / WindowHandle->TimerHandle.GetFPS(); //milliseconds per frame
+
+			if (AnimateSpeed && static_cast <int> (AnimateFrame) >= AnimateSpeed)
+			{
+				//ImageToDisplay += abs(AnimateFrame / AnimateSpeed);
+
+				AnimateFrame = 0;
+
+				if (++ImageToDisplay >= NumberOfImages)
+					ImageToDisplay = 0;
+			}
+
+			return 0;
+		}
+		int PerFrameLoop()
+		{
+			//for (int i = 0; i < WindowHandle->GetNumberOfObjects(); i++)
+			//{
+			//	DetectCollisions(WindowHandle->GetScreenObject(i));
+			//}
+
+			Animate();
+			SetImage();
+			Display();
+
+			ResetLoopVariables();
+			return 0;
+		}
+
+	//public:
 
 		Entity();
 		Entity(Window *WindowHandle);
@@ -317,11 +414,11 @@ namespace SLGE
 		bool IsMoving();
 		bool IsAttacking();
 		bool IsBeingHit();
-		bool IsOverlapping(Object *Object);
-		bool IsWithin(Object *Object);
 		bool IsWithinAttackRange(Object *Object);
 		bool IsFacing(Object *Object);
 		bool IsCollidingWith(Object *Object);
+
+		int DetectCollisions(Object *Object);
 
 		int SetTraits(const double Speed, const double Health, const double AttackDamage);
 		int SetAnimation(const double Speed);
@@ -335,11 +432,11 @@ namespace SLGE
 
 	class DLL_API NPC : public Entity
 	{
-	protected:
+	public:
 
 		void ClearData();
 
-	public:
+	//public:
 
 		NPC();
 		NPC(Window *WindowHandle);
@@ -366,10 +463,12 @@ namespace SLGE
 		bool LeftMouseUp;
 		bool RightMouseUp;
 
+	public:
+
 		void ClearData();
 		int EventHandler(SDL_Event *Event);
 
-	public:
+	//public:
 
 		UI();
 		UI(Window *WindowHandle);

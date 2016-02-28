@@ -159,7 +159,12 @@ int DLL_API Window::EventHandler()
 
 	return 0;
 }
+											  
 
+int DLL_API Window::GetOpenWindows()
+{
+	return 1;
+}
 
 int DLL_API Window::GetWidth()
 {
@@ -176,7 +181,7 @@ int DLL_API Window::GetBPP()
 	return BitsPerPixel;
 }
 
-Object* DLL_API Window::GetScreenObject(const int in_Index)
+Object DLL_API *Window::GetScreenObject(const int in_Index)
 {
 	return ScreenObjects[in_Index];
 }
@@ -303,9 +308,6 @@ int DLL_API Window::AddToScreen(Object *in_Object)
 
 	ScreenObjects = TempArray;
 
-	//Makes sure loop variables are reset before the first loop.
-	ScreenObjects[NumberOfObjects - 1]->ResetLoopVariables();
-
 	return 0;
 }
 
@@ -357,7 +359,14 @@ int DLL_API Window::RemoveFromScreen(Object *in_Object)
 	if (in_Object == NULL)
 		return 1;
 
-	Object **TempArray = new Object*[NumberOfObjects - 1];
+	Object **TempArray;
+	
+	if (NumberOfObjects > 1)
+		TempArray = new Object*[NumberOfObjects - 1];
+	else
+		TempArray = new Object*[NumberOfObjects];
+
+
 	int Offset = 0;
 
 	for (int i = 0; i < NumberOfObjects - 1; i++)
@@ -411,9 +420,6 @@ int DLL_API Window::RemoveFromScreen(const int in_Position)
 
 int DLL_API Window::Refresh()
 {
-	TimerHandle.DisplayFPS();
-	TimerHandle.CapFPS();
-
 	/*
 	if (HardwareAccelerated)
 	{
@@ -421,60 +427,6 @@ int DLL_API Window::Refresh()
 		SDL_RenderSetViewport(HScreen, &Test1);
 	}
 	*/
-
-	//Handles events
-	while (SDL_PollEvent(&Event))
-	{
-		for (int i = 0; i < NumberOfObjects; i++)
-		{
-			if (ScreenObjects[i]->DoHandleEvents)
-				ScreenObjects[i]->HandleEvents(&Event);
-		}
-
-		EventHandler();
-    }	   
-
-	//Changes the z-depth of the images based on y position
-	for (int i = 0; i < NumberOfObjects; i++)
-	{
-		for (int ii = 0; ii < NumberOfObjects; ii++)
-		{
-			if (i == ii || !ScreenObjects[i]->DoDynamicDepth || !ScreenObjects[ii]->DoDynamicDepth)
-				continue;
-
-			if (ScreenObjects[i]->GetY() < ScreenObjects[ii]->GetY())
-				ChangeScreenPosition(i, ii);
-		}
-	}
-
-	//Goes through the default functions
-	for (int i = 0; i < NumberOfObjects; i++)
-	{
-		ScreenObjects[i]->PerFrameLoop();
-
-		for (int ii = 0; ii < NumberOfObjects; ii++)
-		{
-			if (i == ii || !ScreenObjects[i]->DoDetectCollisions || !ScreenObjects[ii]->DoDetectCollisions)
-				continue;
-
-			ScreenObjects[i]->DetectCollisions(ScreenObjects[ii]);
-		}
-
-		if (ScreenObjects[i]->DoHandleSound)
-			ScreenObjects[i]->HandleSound();
-
-		if (ScreenObjects[i]->DoAnimate)
-			ScreenObjects[i]->Animate();
-
-		if (ScreenObjects[i]->DoSetImage)
-			ScreenObjects[i]->SetImage();
-
-		if (ScreenObjects[i]->DoDisplay)
-			ScreenObjects[i]->Display();
-
-		if (ScreenObjects[i]->DoResetLoopVariables)
-			ScreenObjects[i]->ResetLoopVariables();
-	}
 
 	//Screen title is FPS
 	SDL_SetWindowTitle(WindowHandle, std::to_string((int)TimerHandle.CurrentFPS).c_str());
@@ -498,9 +450,45 @@ int DLL_API Window::Refresh()
 	return 0;
 }
 
-int DLL_API Window::RunLoop(void (&in_Loop)(void))
+int DLL_API Window::Run(void (&in_Loop)(void))
 {
+	TimerHandle.DisplayFPS();
+	TimerHandle.CapFPS();
+
+	for (int i = 0; i < NumberOfObjects; i++)
+		ScreenObjects[i]->ResetLoopVariables();
+
+	//Handles events
+	while (SDL_PollEvent(&Event))
+	{
+		for (int i = 0; i < NumberOfObjects; i++)
+			ScreenObjects[i]->HandleEvents(&Event);
+
+		EventHandler();
+    }	   
+
+	//Runs the actual game loop
 	in_Loop();
+
+	//Goes through the default functions
+	for (int i = 0; i < NumberOfObjects; i++)
+		ScreenObjects[i]->PerFrameLoop();
+
+	//Changes the z-depth of the images based on y position
+	for (int i = 0; i < NumberOfObjects; i++)
+	{
+		for (int ii = 0; ii < NumberOfObjects; ii++)
+		{
+			if (i == ii || !ScreenObjects[i]->DoDynamicDepth || !ScreenObjects[ii]->DoDynamicDepth)
+				continue;
+
+			if (ScreenObjects[i]->GetY() < ScreenObjects[ii]->GetY())
+				ChangeScreenPosition(i, ii);
+		}
+	}
+
+	//Refresh the screen
+	Refresh();
 
 	return 0;
 }

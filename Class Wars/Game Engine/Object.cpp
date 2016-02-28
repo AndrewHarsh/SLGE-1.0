@@ -7,6 +7,8 @@ using namespace SLGE;
 //Private Methods
 DLL_API Object::Object()
 {
+	//ObjectID = nullptr;
+
 	Image = nullptr;
 	HImage = nullptr;
 	Clip = nullptr;
@@ -20,136 +22,11 @@ DLL_API Object::Object(Window *in_WindowHandle) : Object()
 	Register(in_WindowHandle);
 }
 
-void DLL_API Object::ClearData()
-{
-	if (Image != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_FreeSurface(Image[i]);
-
-		Image = nullptr;
-	}
-
-	if (HImage != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_DestroyTexture(HImage[i]);
-
-		HImage = nullptr;
-	}
-
-	if (Clip != nullptr)
-	{
-		delete[] Clip;
-		Clip = nullptr;
-	}
-
-	if (DisplayClip != nullptr)
-	{
-		delete[] DisplayClip;
-		DisplayClip = nullptr;
-	}
-
-	NumberOfImages = 0;
-	ImageToDisplay = 0;
-
-	X = 0;
-	Y = 0;
-	W = 0;
-	H = 0;
-
-	DoResetLoopVariables = true;
-	DoHandleEvents = true;
-	DoDetectCollisions = true;
-	DoAnimate = true;
-	DoSetImage = true;
-	DoHandleSound = true;
-	DoDisplay = true;
-	DoDynamicDepth = true;
-}
-
-int DLL_API Object::ResetLoopVariables()
-{
-	DoResetLoopVariables = false;
-	return 0;
-}
-
-int DLL_API Object::HandleEvents(SDL_Event* in_Event)
-{
-	DoHandleEvents = false;
-	return 0;
-}
-
-int DLL_API Object::DetectCollisions(Object* in_Object)
-{
-	DoDetectCollisions = false;
-	/*
-	if (IsCollidingWith(in_Object))
-	{
-		if (	LastX < in_Object->GetX() && 
-				LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
-				LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
-			SetCoords(in_Object->GetX() - in_Object->GetW() / 2 - W / 2, Y);
-
-		else if (LastX > in_Object->GetX() && 
-				LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
-				LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
-			SetCoords(in_Object->GetX() + in_Object->GetW() / 2 + W / 2, Y);
-
-		else if (LastY < in_Object->GetY() && 
-				 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
-				 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
-			SetCoords(X, in_Object->GetY() - in_Object->GetH() / 2 - H / 2);
-
-		else if (LastY > in_Object->GetY() && 
-				 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
-				 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
-			SetCoords(X, in_Object->GetY() + in_Object->GetH() / 2 + H / 2);
-
-		return 0;
-	}
-
-	else
-		return 0;
-		*/
-
-	return 0;
-}
-
-int DLL_API Object::Animate()
-{
-	if (++ImageToDisplay >= NumberOfImages)
-		ImageToDisplay = 0;
-
-	return 0;
-}
-
-int DLL_API Object::SetImage()
-{
-	DisplayClip[ImageToDisplay].x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
-	DisplayClip[ImageToDisplay].y = static_cast <int> (round(Y + H / 2.0 - Clip[ImageToDisplay].h));
-	DisplayClip[ImageToDisplay].w = Clip[ImageToDisplay].w;
-	DisplayClip[ImageToDisplay].h = Clip[ImageToDisplay].h;
-
-	return 0;
-}
-
-int DLL_API Object::HandleSound()
-{
-	DoHandleSound = false;
-	return 0;
-}
-
-int DLL_API Object::PerFrameLoop()
-{
-	return 0;
-}
-
 int DLL_API Object::Display()
 {
 	if (WindowHandle == nullptr)
 		return 1;
-	
+
 	if (WindowHandle->HardwareAccelerated && HImage[ImageToDisplay] != NULL)
 		return SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &DisplayClip[ImageToDisplay]);
 	else if (Image[ImageToDisplay] != NULL)
@@ -190,19 +67,48 @@ double DLL_API Object::GetH()
 	return H;
 }
 
-bool DLL_API Object::DoesDisplay()
+bool DLL_API Object::IsOverlapping(SDL_Rect in_Rect)
 {
-	return DoDisplay;
+	if (X + W / 2 >= in_Rect.x - in_Rect.w / 2 && 
+		X - W / 2 <= in_Rect.x + in_Rect.w / 2 && 
+		Y + H / 2 >= in_Rect.y - in_Rect.h / 2 && 
+		Y - H / 2 <= in_Rect.y + in_Rect.h / 2)
+		return true;
+	else
+		return false;
 }
 
-bool DLL_API Object::DoesDetectCollisions()
+bool DLL_API Object::IsOverlapping(Object *in_Object)
 {
-	return DoDetectCollisions;
+	if (X + W / 2 >= in_Object->GetX() - in_Object->GetW() / 2 && 
+		X - W / 2 <= in_Object->GetX() + in_Object->GetW() / 2 && 
+		Y + H / 2 >= in_Object->GetY() - in_Object->GetH() / 2 && 
+		Y - H / 2 <= in_Object->GetY() + in_Object->GetH() / 2)
+		return true;
+	else
+		return false;
 }
 
-bool DLL_API Object::DoesDynamicDepth()
+bool DLL_API Object::IsWithin(SDL_Rect in_Rect)
 {
-	return DoDynamicDepth;
+	if (X - W / 2 >= in_Rect.x - in_Rect.w / 2 && 
+		X + W / 2 <= in_Rect.x + in_Rect.w / 2 && 
+		Y - H / 2 >= in_Rect.y - in_Rect.h / 2 && 
+		Y + H / 2 <= in_Rect.y + in_Rect.h / 2)
+		return true;
+	else
+		return false;
+}
+
+bool DLL_API Object::IsWithin(Object *in_Object)
+{
+	if (X - W / 2 >= in_Object->GetX() - in_Object->GetW() / 2 && 
+		X + W / 2 <= in_Object->GetX() + in_Object->GetW() / 2 && 
+		Y - H / 2 >= in_Object->GetY() - in_Object->GetH() / 2 && 
+		Y + H / 2 <= in_Object->GetY() + in_Object->GetH() / 2)
+		return true;
+	else
+		return false;
 }
 
 
@@ -212,12 +118,7 @@ int DLL_API Object::Register(Window *in_Window)
 	if (in_Window->WindowHandle == nullptr || (in_Window->HScreen == nullptr && in_Window->Screen == nullptr))
 		return 1;
 
-	WindowHandle = in_Window;
-	WindowHandle->AddToScreen(this);
-
-	DoDisplay = true;
-	DoDetectCollisions = false;
-	DoDynamicDepth = false;
+	in_Window->AddToScreen(this);
 
 	return 0;
 }
@@ -225,10 +126,6 @@ int DLL_API Object::Register(Window *in_Window)
 void DLL_API Object::Deregister()
 {
 	WindowHandle = nullptr;
-
-	DoDisplay = false;
-	DoDetectCollisions = false;
-	DoDynamicDepth = false;
 }
 
 void DLL_API Object::SetCoords(const double in_X, const double in_Y, const double in_W, const double in_H)
@@ -315,7 +212,7 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 		}
 	}
 
-	if (in_ColorKey.R != NULL && in_ColorKey.G != NULL && in_ColorKey.B != NULL && in_ColorKey.A != NULL)
+	if (in_ColorKey.R != NULL || in_ColorKey.G != NULL || in_ColorKey.B != NULL || in_ColorKey.A != NULL)
 	{
 		//Map the color key
 		Uint32 ColorKey = SDL_MapRGB(LoadedSurface->format, in_ColorKey.R, in_ColorKey.G, in_ColorKey.B);

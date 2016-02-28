@@ -1,8 +1,15 @@
-﻿Build started 1/25/2015 10:16:19 AM.
+﻿Build started 1/29/2015 9:24:24 PM.
      1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
          Source.cpp
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(27): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(28): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(69): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(161): warning C4060: switch statement contains no 'case' or 'default' labels
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(243): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(244): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(448): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.exe" /INCREMENTAL /NOLOGO SLGE.lib SDL2.lib SDL2main.lib SDL2_image.lib SDL2_mixer.lib SDL2_ttf.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.lib" /MACHINE:X86 Debug\Source.obj
          Class Wars.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.exe
@@ -10,4 +17,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.07
+Time Elapsed 00:00:01.19

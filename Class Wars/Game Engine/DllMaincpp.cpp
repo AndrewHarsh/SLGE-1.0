@@ -448,7 +448,9 @@ SDL_Surface DLL_API *SLGE::IMG_LoadEx(const char* in_File)
 		if (NewSurface == nullptr)
 			return nullptr;
 
-		AllImages.Add({ NewSurface, nullptr, nullptr, in_File, nullptr, nullptr });
+		// Must use TEMP in order to prevent heap corruption (not sure why)
+		Image TEMP = { NewSurface, nullptr, nullptr, in_File, nullptr, nullptr };
+		AllImages.Add(TEMP);//{ NewSurface, nullptr, nullptr, std::string(in_File), nullptr, nullptr });
 
 		return NewSurface;
 	}

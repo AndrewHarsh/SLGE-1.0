@@ -15,66 +15,6 @@ DLL_API Entity::Entity(Window *in_WindowHandle) : Entity()
 	Register(in_WindowHandle);
 }
 
-void DLL_API Entity::ClearData()
-{
-	/*
-	if (Image != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_FreeSurface(Image[i]);
-
-		Image = nullptr;
-	}
-
-	if (HImage != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_DestroyTexture(HImage[i]);
-
-		HImage = nullptr;
-	}
-
-	if (Clip != nullptr)
-	{
-		delete[] Clip;
-		Clip = nullptr;
-	}
-
-	NumberOfImages = 0;
-	ImageToDisplay = 0;
-
-	X = 0;
-	Y = 0;
-	W = 0;
-	H = 0;
-	*/
-	Object::ClearData();
-
-	Speed = 0;
-	CurrentHealth = 0;
-	MaxHealth = 0;
-	AttackDamage = 0;
-	AnimateSpeed = 0;
-	AnimateFrame = 0;
-
-	DoDetectCollisions = true;
-}
-
-int DLL_API Entity::ResetLoopVariables()
-{
-	LastX = X;
-	LastY = Y;
-
-	Moving = false;
-
-	return 0;
-}
-
-int DLL_API Entity::HandleEvents(SDL_Event *in_Event)
-{
-	return 0;
-}
-
 int DLL_API Entity::DetectCollisions(Object* in_Object)
 {
 	if (IsCollidingWith(in_Object))
@@ -106,22 +46,6 @@ int DLL_API Entity::DetectCollisions(Object* in_Object)
 		return 0;
 }
 
-int DLL_API Entity::Animate()
-{
-	AnimateFrame += 1000 / WindowHandle->TimerHandle.GetFPS(); //milliseconds per frame
-
-	if (AnimateSpeed && static_cast <int> (AnimateFrame) >= AnimateSpeed)
-	{
-		//ImageToDisplay += abs(AnimateFrame / AnimateSpeed);
-
-		AnimateFrame = 0;
-
-		if (++ImageToDisplay >= NumberOfImages)
-			ImageToDisplay = 0;
-	}
-
-	return 0;
-}
 
 
 //Status Methods
@@ -156,28 +80,6 @@ bool DLL_API Entity::IsBeingHit()
 }
 
 //Collision detection
-bool DLL_API Entity::IsOverlapping(Object *in_Object)
-{
-	if (X + W / 2 >= in_Object->GetX() - in_Object->GetW() / 2 && 
-		X - W / 2 <= in_Object->GetX() + in_Object->GetW() / 2 && 
-		Y + H / 2 >= in_Object->GetY() - in_Object->GetH() / 2 && 
-		Y - H / 2 <= in_Object->GetY() + in_Object->GetH() / 2)
-		return true;
-	else
-		return false;
-}
-
-bool DLL_API Entity::IsWithin(Object *in_Object)
-{
-	if (X - W / 2 >= in_Object->GetX() - in_Object->GetW() / 2 && 
-		X + W / 2 <= in_Object->GetX() + in_Object->GetW() / 2 && 
-		Y - H / 2 >= in_Object->GetY() - in_Object->GetH() / 2 && 
-		Y + H / 2 <= in_Object->GetY() + in_Object->GetH() / 2)
-		return true;
-	else
-		return false;
-}
-
 bool DLL_API Entity::IsWithinAttackRange(Object *in_Object)
 {
 	if (X + W / 2 + AttackDistance >= in_Object->GetX() - in_Object->GetW() / 2 && 
@@ -191,13 +93,13 @@ bool DLL_API Entity::IsWithinAttackRange(Object *in_Object)
 
 bool DLL_API Entity::IsFacing(Object *in_Object)
 {
-	if (in_Object->GetX() < X && Facing == 2)
+	if (in_Object->GetX() < X && Facing == Left)
 		return true;
-	if (in_Object->GetX() > X && Facing == 1)
+	if (in_Object->GetX() > X && Facing == Right)
 		return true;
-	if (in_Object->GetY() < Y && Facing == 3)
+	if (in_Object->GetY() < Y && Facing == Up)
 		return true;
-	if (in_Object->GetY() > Y && Facing == 0)
+	if (in_Object->GetY() > Y && Facing == Down)
 		return true;
 	else
 		return false;
@@ -220,7 +122,6 @@ int DLL_API Entity::SetTraits(const double in_Speed, const double in_Health, con
 	CurrentHealth = in_Health;
 	AttackDamage = in_AttackDamage;
 
-	DoDetectCollisions = true;
 	DoDynamicDepth = true;
 	return 0;
 }
@@ -279,7 +180,7 @@ int DLL_API Entity::Move(const Direction in_Direction)
 		break;
 
 		case UpLeft:
-		X += Speed / WindowHandle->TimerHandle.GetFPS();
+		X -= Speed / WindowHandle->TimerHandle.GetFPS();
 		Y -= Speed / WindowHandle->TimerHandle.GetFPS();
 		Facing = UpLeft;
 		break;	   
@@ -330,21 +231,108 @@ int DLL_API Entity::MoveTo(const double in_X, const double in_Y)
 	}
 	*/
 
-	double Rise = in_Y - Y;
-	double Run = in_X - X;
 
-	//double Hypotenuse = sqrt(Rise * Rise + Run * Run);
+	double DistanceX = in_X - X;
+	double DistanceY = in_Y - Y;
 
-	double Slope = Rise / Run;
+	if (DistanceX == 0)
+		return 0;
 
-	//X *= Slope;
+	double SpeedX = Speed * cos(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
+	double SpeedY = Speed * sin(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
+
+	if (IsOverlapping({ in_X, in_Y, Speed / WindowHandle->TimerHandle.GetFPS(), Speed / WindowHandle->TimerHandle.GetFPS() }))
+	{
+		SetCoords(in_X, in_Y);
+		Moving = false;
+		return 0;
+	}
+
+	if (DistanceX < 0)
+		SetCoords(X - SpeedX, Y - SpeedY);
+	else
+		SetCoords(X + SpeedX, Y + SpeedY);
+
+	// Moving Left
+	if (DistanceX < 0)
+	{		
+		// Moving Up
+		if (DistanceY < 0)
+		{
+			// More Up than Left
+			if (abs(DistanceX * 2) < abs(DistanceY))
+				ImageToDisplay = 2;
+
+			// More	Left than Up
+			else if (abs(DistanceY * 2) < abs(DistanceX))
+				ImageToDisplay = 0;
+
+			// Both Up and Left
+			else
+				ImageToDisplay = 4;
+		}
+		
+		// Moving Down
+		else
+		{
+			// More Down than Left
+			if (abs(DistanceX * 2) < abs(DistanceY))
+				ImageToDisplay = 3;
+
+			// More	Left than Down
+			else if (abs(DistanceY * 2) < abs(DistanceX))
+				ImageToDisplay = 0;
+
+			// Both Down and Left
+			else
+				ImageToDisplay = 7;
+		}
+	}
+
+	// Moving Right
+	else
+	{
+		// Moving Up
+		if (DistanceY < 0)
+		{
+			// More Up than Right
+			if (abs(DistanceX * 2) < abs(DistanceY))
+				ImageToDisplay = 2;
+
+			// More	Right than Up
+			else if (abs(DistanceY * 2) < abs(DistanceX))
+				ImageToDisplay = 1;
+
+			// Both Up and Right
+			else
+				ImageToDisplay = 5;
+		}
+		
+		// Moving Down
+		else
+		{
+			// More Down than Right
+			if (abs(DistanceX * 2) < abs(DistanceY))
+				ImageToDisplay = 3;
+
+			// More	Right than Down
+			else if (abs(DistanceY * 2) < abs(DistanceX))
+				ImageToDisplay = 1;
+
+			// Both Down and Right
+			else
+				ImageToDisplay = 6;
+		}
+	}
+
+	Moving = true;
 
 	return 0;
 }
 
 int DLL_API Entity::TakeDamage(const double in_AttackDamage)
 {
-	CurrentHealth = -in_AttackDamage;
+	CurrentHealth -= in_AttackDamage / WindowHandle->TimerHandle.GetFPS();
 
 	if (CurrentHealth <= 0)
 		CurrentHealth = 0;

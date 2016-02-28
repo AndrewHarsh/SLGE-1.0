@@ -33,37 +33,7 @@ void DLL_API UI::ClearData()
 		Font = nullptr;
 	}
 
-	/*
-	if (Image != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_FreeSurface(Image[i]);
-
-		Image = nullptr;
-	}
-
-	if (HImage != nullptr)
-	{
-		for (int i = 0; i < NumberOfImages; i++)
-			SDL_DestroyTexture(HImage[i]);
-
-		HImage = nullptr;
-	}
-
-	if (Clip != nullptr)
-	{
-		delete[] Clip;
-		Clip = nullptr;
-	}
-
-	NumberOfImages = 0;
-	ImageToDisplay = 0;
-
-	X = 0;
-	Y = 0;
-	W = 0;
-	H = 0;
-	*/
+	Object::ClearData();
 
 	FontColor = { NULL };
 	MouseX = 0;
