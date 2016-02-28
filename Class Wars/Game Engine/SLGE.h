@@ -512,7 +512,6 @@ namespace SLGE
 	protected:
 
 		Window_t *WindowHandle;
-		bool HardwareAccelerated;
 
 		union
 		{
@@ -526,7 +525,7 @@ namespace SLGE
 		double Angle;
 		SDL_Point Center;
 		SDL_RendererFlip FlipType;
-
+									  
 		void ClearData();
 		int Display();
 
@@ -536,12 +535,21 @@ namespace SLGE
 		Image_t(Window_t *in_Window);
 		~Image_t();
 
+		int X();
+		int Y();
+		int W();
+		int H();
+		double GetAngle();
+		SDL_Point GetCenter();
+		SDL_RendererFlip GetFlipType();
+
 		int Register(Window_t *Window);
 
 		int OpenImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
 		int LoadText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
 
 		int SetCoords(double X, double Y, double W, double H);
+		int SetImageProp(double Angle, SDL_Point Center, SDL_RendererFlip FlipType);
 	};
 
 	class DLL_API Object_t
@@ -594,6 +602,7 @@ namespace SLGE
 		void SetCoords(double X, double Y, double W = NULL, double H = NULL);
 
 		int AddImage(std::string Filename, SDL_Rect Clip, SDL_Color ColorKey);
+		int AddText(std::string Message, TTF_Font *Font, SDL_Color TextColor);
 		int MoveImage(int Position, const int NewPosition);
 		int DeleteImage(int Position);
 

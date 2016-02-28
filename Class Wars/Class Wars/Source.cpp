@@ -2,9 +2,12 @@
 
 
 using namespace SLGE;
+const bool HARDWARE_ACCELERATED = true;
 const int WIDTH = 640;
 const int HEIGHT = 480;
 const int ARRAY_SIZE = 10;
+const double PI = 3.141592653589793238463;
+const double RADIANS_TO_DEGREES = 180 / PI;
 
 
 
@@ -233,14 +236,50 @@ public:
 
 class Player_t : public Entity_t
 {
-	friend class DynamicClass <Player_t>;
-
 	int Looking;
 	double ImagesPerSecond;
 	double AnimateCounter;
 	bool Moving;
 
 public:
+
+	class Sword_t : public Object_t
+	{
+	protected:
+
+		void ClearData()
+		{
+			//Todo: Add code to clear all attributes of the class
+		}
+
+	public:
+
+		Sword_t() : Object_t()
+		{
+			ClearData();
+		}
+
+		Sword_t(Window_t *in_Window) : Sword_t()
+		{
+			Register(in_Window);
+		}
+
+		void EventHandler()
+		{
+			int MouseX, MouseY;
+			WindowHandle->GetMouseState(MouseX, MouseY);
+
+			double Angle = atan((MouseY - Y) / (MouseX - X)) * RADIANS_TO_DEGREES;
+
+			if (MouseX > X)
+				Angle -= 180;
+
+			(*Image)[0].SetImageProp(Angle - 90, { (*Image)[0].W() / 2, (*Image)[0].H() + 30 }, SDL_FLIP_NONE);
+		}
+
+	} Sword;
+
+	friend class Sword_t;
 
 	Player_t()
 	{
@@ -254,6 +293,9 @@ public:
 		ImagesPerSecond = 0.1;
 		AnimateCounter = 0;
 		Moving = false;
+
+		Sword.Register(in_Window);
+		Sword.AddImage("Sword Arc.png", { NULL }, { 0xFF, 0xFF, 0xFF });
 	}
 
 	void EventHandler()
@@ -284,6 +326,9 @@ public:
 			Looking = 1;
 			Moving = true;
 		}
+
+		Sword.SetCoords(X, Y - 30);//- 15);
+		Sword.EventHandler();
 	}
 
 	void Animate()
@@ -354,8 +399,8 @@ public:
 
 		if (IsWithin({ TargetX, TargetY, MoveSpeed, MoveSpeed }))
 		{
-			TargetX = rand() % in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2);//sets random x
-			TargetY = rand() % in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2);//sets random y
+			TargetX = rand() % (in_WanderArea.w + (in_WanderArea.x - in_WanderArea.w / 2));//sets random x
+			TargetY = rand() % (in_WanderArea.h + (in_WanderArea.y - in_WanderArea.h / 2));//sets random y
 		}
 		else
 			Move(TargetX, TargetY);
@@ -424,10 +469,21 @@ public:
 
 class Button_t : public UI_t
 {
+protected:
 
 	std::string Message;
-	SDL_Texture *Image;
 	TTF_Font *Font;
+
+	void ClearData()
+	{
+		if (Font != nullptr)
+		{
+			TTF_CloseFont(Font);
+			Font = nullptr;
+		}
+
+		Message.empty();
+	}
 
 public:
 
@@ -444,11 +500,15 @@ public:
 	{
 		Font = TTF_OpenFont("Cheeseburger.ttf", 29);
 
-		AddImage("button.png", { 150, 0, 150, 20 }, { NULL });
-		AddImage("button.png", { 0, 0, 150, 20 }, { NULL });
-		AddImage("button.png", { 300, 0, 150, 20 }, { NULL });
+		if (Font == nullptr)
+		{
+			std::cout << "Could not load Cheeseburger.ttf." << std::endl;
+			return;
+		}
 
-		SetCoords(WIDTH / 2, HEIGHT / 2, 150, 30);
+		AddText(in_Message, Font, { 0x01, 0x01, 0x01 });
+		(*Image)[Image->size() - 1].SetCoords(X, Y, 0, 0);
+		AddLayer(Image->size() - 1);
 	}
 };
 
@@ -580,7 +640,7 @@ public:
 //
 
 
-Window_t Window1(WIDTH, HEIGHT, "Dungeon!", true);
+Window_t Window1(WIDTH, HEIGHT, "Dungeon!", HARDWARE_ACCELERATED);
 
 DynamicClass <Object_t> Background;
 DynamicClass <Monster_t, Entity_t, Object_t> DummyTarget;
@@ -601,16 +661,20 @@ FunctionReturn SpawnMainMenu()
 	Background.Spawn(1, &Window1);
 	Button.Spawn(4, &Window1);
 
-	Background[0].AddImage("Main Menu.png", { 0, 0, 640, 480 }, { NULL });
-	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT);
+	Background[0].AddImage("Main Menu.png", { 0, 0, 640, 480}, { NULL });
+	Background[0].SetCoords(WIDTH / 2, HEIGHT / 2, 0, 0);
 
 	for (int i = 0; i < Button.NumberOfObjects(); i++)
 	{
 		Button[i].AddImage("Main Menu Button.png", { 0, 0, 300, 50 }, { 255, 255, 255 });
 		Button[i].AddImage("Main Menu Button.png", { 300, 0, 300, 50 }, { 255, 255, 255 });
 		Button[i].AddImage("Main Menu Button.png", { 600, 0, 300, 50 }, { 255, 255, 255 });
-		Button[i].SetCoords(WIDTH / 2, HEIGHT / 2 - (Button.NumberOfObjects() / 2 * 70) + 70 * i + 70, 300, 50);
+		Button[i].SetCoords(WIDTH / 2, HEIGHT / 2 - (Button.NumberOfObjects() / 2 * 70) + 70 * i + 70);
 	}
+
+	Button[0].Init("Play");
+	Button[1].Init("Options");
+	Button[3].Init("Exit Game");
 
 	return Continue;
 }
@@ -667,7 +731,7 @@ FunctionReturn SpawnGame()
 		for (int ii = 0; ii < 8; ii++)
 			Player[0].AddImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
 	}
-	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2, 32, 32);
+	Player[0].SetCoords(WIDTH / 2, HEIGHT / 2, 0, 0);
 
 	Inventory[0].AddImage("Menu.png", { NULL }, { NULL });
 	Inventory[0].SetCoords(-212, HEIGHT / 2);
@@ -752,6 +816,7 @@ FunctionReturn RunGame()
 	//Last entity Displayed
 	Background[0].Display();
 	DynamicClass <Object_t>::All(&Object_t::Display);
+	Player[0].Sword.Display();
 
 	DynamicClass <Menu_t>::All(&Menu_t::Display);
 	Inventory[0].OpenButton.Display();
@@ -783,8 +848,6 @@ FunctionReturn DespawnGame()
 extern "C" int SDL_main(int argc, char* argv[])
 {
 	srand(unsigned(time(NULL)));
-
-	int TargetX = rand() % 640;
 
 	if (Window1.Run(SpawnMainMenu, RunMainMenu, DespawnMainMenu) == Error)
 		return 1;

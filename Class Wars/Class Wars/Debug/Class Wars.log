@@ -1,1 +1,18 @@
-﻿  Class Wars.vcxproj -> C:\Users\nzbq9t\Documents\From Old HDD\Class Wars Backup\Game We are Making 2-14-15\Class Wars\Debug\Class Wars.exe
+﻿Build started 2/15/2015 5:33:11 PM.
+     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
+         Source.cpp
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(206): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(400): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(406): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(610): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\nzbq9t\dropbox\game we are making\class wars\class wars\source.cpp(766): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.exe" /INCREMENTAL /NOLOGO SLGE.lib SDL2.lib SDL2main.lib SDL2_image.lib SDL2_mixer.lib SDL2_ttf.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.lib" /MACHINE:X86 Debug\Source.obj
+         Class Wars.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Debug\Class Wars.exe
+     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.17

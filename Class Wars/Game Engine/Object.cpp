@@ -40,7 +40,7 @@ void DLL_API Object_t::ClearData()
 void DLL_API Object_t::SetDisplay(int in_ImageIndex)
 {
 	if (in_ImageIndex >= 0 && in_ImageIndex < Image->size())
-		(*Image)[in_ImageIndex].SetCoords(X - W / 2, Y - H / 2, W, H);
+		(*Image)[in_ImageIndex].SetCoords(X - (*Image)[in_ImageIndex].W() / 2, Y - (*Image)[in_ImageIndex].H() / 2, (*Image)[in_ImageIndex].W(), (*Image)[in_ImageIndex].H());
 }
 
 int DLL_API Object_t::Display()
@@ -166,16 +166,28 @@ int DLL_API Object_t::AddImage(std::string in_Filename, SDL_Rect in_Clip, SDL_Co
 	if ((*Image)[Image->size() - 1].OpenImage(in_Filename, in_Clip, in_ColorKey))
 		return 1;
 
-	if (!WindowHandle->HardwareAccelerated)
-	{
-		if (W <= 0)
-			W = (*Image)[Image->size() - 1].Software->w;
-		if (H <= 0)
-			H = (*Image)[Image->size() - 1].Software->h;
-	}
+	if (W <= 0)
+		W = (*Image)[Image->size() - 1].W();
+	if (H <= 0)
+		H = (*Image)[Image->size() - 1].H();
 
 	if (ImageToDisplay->size() == 0)
 		return AddLayer(Image->size() - 1);
+
+	return 0;
+}
+
+int DLL_API Object_t::AddText(std::string in_Message, TTF_Font *in_Font, SDL_Color in_TextColor)
+{
+	Image->push_back(Image_t(WindowHandle));
+
+	if ((*Image)[Image->size() - 1].LoadText(in_Message, in_Font, in_TextColor))
+		return 1;
+
+	if (ImageToDisplay->size() == 0)
+		return AddLayer(Image->size() - 1);
+
+	return 0;
 }
 
 int DLL_API Object_t::MoveImage(int in_Position, int in_NewPosition)

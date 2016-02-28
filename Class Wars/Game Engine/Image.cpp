@@ -25,34 +25,36 @@ DLL_API Image_t::~Image_t()
 
 void DLL_API Image_t::ClearData()
 {
-	WindowHandle = nullptr;
-
-	if (HardwareAccelerated)
-	{ 
-		if (Hardware != nullptr)
-		{
-			SDL_DestroyTexture(Hardware);
-			Hardware = nullptr;
-		}
-	}
-	else
+	if (WindowHandle != nullptr)
 	{
-		if (Software != nullptr)
+		if (WindowHandle->HardwareAccelerated)
 		{
-			SDL_FreeSurface(Software);
-			Software = nullptr;
+			if (Hardware != nullptr)
+			{
+				SDL_DestroyTexture(Hardware);
+				Hardware = nullptr;
+			}
+		}
+		else
+		{
+			if (Software != nullptr)
+			{
+				SDL_FreeSurface(Software);
+				Software = nullptr;
+			}
 		}
 	}
 
-	HardwareAccelerated = false;
 	LoadClip = { 0, 0, 0, 0 };
 	DisplayClip = { 0, 0, 0, 0 };
 	Angle = 0;
 	Center = { 0, 0 };
 	FlipType = SDL_FLIP_NONE;
+
+	WindowHandle = nullptr;
 }
 
-int Image_t::Register(Window_t *in_Window)
+int DLL_API Image_t::Register(Window_t *in_Window)
 {
 	if (in_Window->WindowHandle == nullptr || !in_Window->IsRunning())
 		return 1;
@@ -68,6 +70,41 @@ int Image_t::Register(Window_t *in_Window)
 }
 
 
+int DLL_API Image_t::X()
+{
+	return DisplayClip.x;
+}
+
+int DLL_API Image_t::Y()
+{
+	return DisplayClip.y;
+}
+
+int DLL_API Image_t::W()
+{
+	return LoadClip.w;
+}
+
+int DLL_API Image_t::H()
+{
+	return LoadClip.h;
+}
+
+double DLL_API Image_t::GetAngle()
+{
+	return Angle;
+}
+
+SDL_Point DLL_API Image_t::GetCenter()
+{
+	return Center;
+}
+
+SDL_RendererFlip DLL_API Image_t::GetFlipType()
+{
+	return FlipType;
+}
+
 int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, const SDL_Color in_ColorKey)
 {
 	if (WindowHandle == nullptr || 
@@ -76,7 +113,7 @@ int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, 
 		!WindowHandle->IsRunning())
 		return 1;
 
-	if (HardwareAccelerated)
+	if (WindowHandle->HardwareAccelerated)
 	{
 		if (Hardware != nullptr)
 			SDL_DestroyTexture(Hardware);
@@ -173,39 +210,69 @@ int DLL_API Image_t::OpenImage(const std::string in_Filename, SDL_Rect in_Clip, 
 
 int DLL_API Image_t::LoadText(std::string in_Message, TTF_Font *in_Font, SDL_Color in_TextColor)
 {
+	if (WindowHandle == nullptr || 
+		!WindowHandle->IsRunning() || 
+		(WindowHandle->HScreen == nullptr && WindowHandle->Screen == nullptr) || 
+		!WindowHandle->IsRunning() ||
+		in_Font == nullptr)
+		return 1;
+
+	SDL_Surface *TempSoftware = Software;
+	SDL_Texture *TempHardware = Hardware;
+
+	if (WindowHandle->HardwareAccelerated)
+	{
+		if (Hardware != nullptr)
+			SDL_DestroyTexture(Hardware);
+	}
+	else
+	{
+		if (Software != nullptr)
+			SDL_FreeSurface(Software);
+	}
+
 	SDL_Surface* LoadedSurface = TTF_RenderText_Solid(in_Font, in_Message.c_str(), in_TextColor);
 
 	if (LoadedSurface == nullptr)
 		return 1;
 
-	if (HardwareAccelerated)
+	if (WindowHandle->HardwareAccelerated)
 	{
-		SDL_Texture *Temp = Hardware;
 		Hardware = SDL_CreateTextureFromSurface(WindowHandle->HScreen, LoadedSurface);
 
 		if (Hardware == nullptr)
 		{
-			Hardware = Temp;
+			Hardware = TempHardware;
 			SDL_FreeSurface(LoadedSurface);
 			return 1;
 		}
 		else
-			SDL_DestroyTexture(Hardware);
+			SDL_DestroyTexture(TempHardware);
 	}
 	else
 	{
-		SDL_Surface *Temp = Software;
 		Software = SDL_ConvertSurface(LoadedSurface, WindowHandle->Screen->format, NULL);
 
 		if (Software == nullptr)
 		{
-			Software = Temp;
+			Software = TempSoftware;
 			SDL_FreeSurface(LoadedSurface);
 			return 1;
 		}
 		else
-			SDL_FreeSurface(Software);
+			SDL_FreeSurface(TempSoftware);
 	}
+
+	LoadClip.x = 0;
+	LoadClip.y = 0;
+	LoadClip.w = LoadedSurface->w;
+	LoadClip.h = LoadedSurface->h;
+
+	//Position defaults
+	DisplayClip.x = 0;
+	DisplayClip.y = 0;
+	DisplayClip.w = LoadedSurface->w;
+	DisplayClip.h = LoadedSurface->h;
 
 	SDL_FreeSurface(LoadedSurface);
 
@@ -222,6 +289,16 @@ int DLL_API Image_t::SetCoords(double in_X, double in_Y, double in_W, double in_
 		DisplayClip.w = static_cast <int> (in_W);
 	if (in_H > 0)
 		DisplayClip.h = static_cast <int> (in_H);
+
+	return 0;
+}
+
+int DLL_API Image_t::SetImageProp(double in_Angle, SDL_Point in_Center, SDL_RendererFlip in_FlipType)
+{
+	Angle = in_Angle;
+	Center.x = in_Center.x;
+	Center.y = in_Center.y;
+	FlipType = in_FlipType;
 
 	return 0;
 }
