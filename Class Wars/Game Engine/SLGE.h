@@ -316,6 +316,50 @@ namespace SLGE
 			}
 		}
 
+		void Swap(int Position, int NewPosition)
+		{
+			if (Position >= 0 && NewPosition >= 0 && Position < Data.size() && NewPosition < Data.size())
+			{
+				C* Temp = Data[Position];
+				Local Temp1 = Link[NUMBER_OF_TYPE_ARGS - 1][Position];
+				Global Temp2 = Data_t <C>::Link[Position];
+				C* Temp3 = Data_t <C>::Data[Position]; 
+
+				Data[Position] = Data[NewPosition];
+				Data[NewPosition] = Temp;
+
+				Link[NUMBER_OF_TYPE_ARGS - 1][Position] = Link[NUMBER_OF_TYPE_ARGS - 1][NewPosition];
+				Link[NUMBER_OF_TYPE_ARGS - 1][NewPosition] = Temp1;
+
+				Data_t <C>::Link[Position] = Data_t <C>::Link[NewPosition];
+				Data_t <C>::Link[NewPosition] = Temp2;
+
+				Data_t <C>::Data[Position] = Data_t <C>::Data[NewPosition];
+				Data_t <C>::Data[NewPosition] = Temp3;
+			}
+		}
+
+		template <typename T1>
+		static void Swap(int Position, int NewPosition)
+		{
+			if (Position >= 0 && NewPosition >= 0 && Position < Data_t <T1>::Data.size() && NewPosition < Data_t <T1>::Data.size())
+			{
+				Global Temp2 = Data_t <T1>::Link[Position];
+				T1* Temp3 = Data_t <T1>::Data[Position]; 
+
+				Data_t <T1>::Link[Position] = Data_t <T1>::Link[NewPosition];
+				Data_t <T1>::Link[NewPosition] = Temp2;
+
+				Data_t <T1>::Data[Position] = Data_t <T1>::Data[NewPosition];
+				Data_t <T1>::Data[NewPosition] = Temp3;
+			}
+		}
+
+		int GetPosition(int Index, int Type)
+		{
+			return Link[Type][Index].Data;
+		}
+
 		static void All(bMethod Run)
 		{
 			for (int i = 0; i < (int) Data_t <C>::Data.size(); i++)
@@ -338,6 +382,11 @@ namespace SLGE
 		{
 			return Data.size();
 		}
+
+		//static int NumberOfAllObjects()
+		//{
+		//	return Data_t <C>::Data.size();
+		//}
 
 		C &operator[](unsigned in_Index)
 		{

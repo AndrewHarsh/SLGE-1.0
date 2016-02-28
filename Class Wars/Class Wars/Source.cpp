@@ -6,6 +6,23 @@ const int ARRAY_SIZE = 10;
 
 
 //
+//	Declare your classes and window (Can be in separate header or dll but must come after classes are defined)
+//
+
+class AI_t;
+class Player_t;
+class Other_t;
+
+
+Window_t Window1(640, 480, "Cooler Program", false);
+
+DynamicClass <Object_t> Background;
+DynamicClass <AI_t, Object_t> Array;
+DynamicClass <Player_t, Object_t> Player;
+DynamicClass <Other_t, Player_t, Object_t> Other;
+
+
+//
 //  Define your classes	(Can be in separate header or dll)
 //
 
@@ -48,9 +65,19 @@ public:
 	void EventHandler()
 	{
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
+		{
 			DisplayClip[ImageToDisplay].y -= 1;
+			
+			if (Array.NumberOfObjects() > 5)
+				Array.Despawn(0, 1);
+		}
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
+		{
 			DisplayClip[ImageToDisplay].y += 1;
+			Array.Spawn(1, &Window1);
+			Array[Array.NumberOfObjects() - 1].OpenImage("1.png", { 0, 0, 32, 32 }, { NULL });
+			Array[Array.NumberOfObjects() - 1].SetCoords(rand() % Window1.GetWidth(), rand() % Window1.GetHeight(), 32, 32);
+		}
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
 			DisplayClip[ImageToDisplay].x -= 1;
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
@@ -81,17 +108,6 @@ public:
 
 
 //
-//	Declare your classes and window (Can be in separate header or dll but must come after classes are defined)
-//
-
-Window_t Window1(640, 480, "Cooler Program", false);
-
-DynamicClass <Object_t> Background;
-DynamicClass <AI_t, Object_t> Array;
-DynamicClass <Player_t, Object_t> Player;
-DynamicClass <Other_t, Player_t, Object_t> Other;
-
-//
 //  Declare the game init, loop, and despawn code (Can be in separate header or dll but must come after classes are initialized)
 //
 
@@ -102,6 +118,20 @@ void SpawnGame()
 	Array.Spawn(10, &Window1);
 	Player.Spawn(2, &Window1);
 	Other.Spawn(5, &Window1);
+
+	Array.Despawn(0, 5);
+	Player.Despawn(0, 1);
+	Array.Spawn(5, &Window1);
+	Player.Spawn(5, &Window1);
+	Other.Despawn(0, 3);
+
+	Background.Spawn(1, &Window1);	//1 total (19 objects)
+	Array.Spawn(1, &Window1);		//10 total (10 AI)
+	Player.Spawn(1, &Window1);		//6 total (8 players)
+	Other.Spawn(1, &Window1);		//2 total (2 other)
+
+	Player.Despawn(0, 5);
+	Background.Despawn(0, 1);
 
 	//Set the objects in their place
 	Background[0].OpenImage("Image.png", { NULL }, { NULL });
@@ -121,11 +151,25 @@ void RunGame()
 {
 	DynamicClass <Player_t>::All(&Player_t::EventHandler);
 
+//	for (int i = 0; i < Array.NumberOfObjects(); i++)
+//	{
+		//for (int ii = 0; ii < Array.NumberOfObjects(); ii++)
+		//{
+		//	if (Array[ii].GetY() > Array[i].GetY())
+		//		DynamicClass <Object_t>::Swap <Object_t>(Array.GetPosition(i, 1), Array.GetPosition(ii, 1) + 1);
+		//}
+
+		//if (Player[0].GetY() < Array[i].GetY())
+		//	DynamicClass <Object_t>::Swap <Object_t>(Player.GetPosition(0, 1), Array.GetPosition(i, 1));
+//	}
+
 	DynamicClass <Object_t>::All(&Object_t::Display);
 }
 
 void DespawnGame()
 {
+	std::cout << "Number of Objects on Screen: " << Array.NumberOfObjects() << std::endl;
+
 	Background.Despawn();
 	Array.Despawn();
 	Player.Despawn();
@@ -143,6 +187,8 @@ extern "C" int SDL_main(int argc, char* argv[])
 
 	//Do Window1.Run(init, loop, despawn) on any new screen
 	Window1.Run(SpawnGame, RunGame, DespawnGame);
+
+	system("PAUSE");
 
 	return 0;
 }
