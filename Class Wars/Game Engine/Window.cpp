@@ -71,6 +71,95 @@ void DLL_API Window::ClearData()
 	HardwareAccelerated = false;
 }
 
+int DLL_API Window::EventHandler()
+{
+	if (Event.type == SDL_KEYDOWN)
+	{
+		if (Event.key.keysym.sym == SDLK_ESCAPE)
+		{
+			SDL_HideWindow(WindowHandle);
+			ClearData();
+		}
+	}
+
+	if (Event.type == SDL_WINDOWEVENT && Event.window.windowID == WindowID)
+	{
+		switch (Event.window.event)
+		{
+			//Window appeared
+			case SDL_WINDOWEVENT_SHOWN:
+			Shown = true;
+			break;
+
+			//Window disappeared
+			case SDL_WINDOWEVENT_HIDDEN:
+			Shown = false;
+			break;
+
+			//Get new dimensions and repaint
+			case SDL_WINDOWEVENT_SIZE_CHANGED:
+			Width = Event.window.data1;
+			Height = Event.window.data2;
+			if (HardwareAccelerated)
+				SDL_RenderPresent(HScreen);
+			else
+				SDL_UpdateWindowSurface(WindowHandle);
+			break;
+
+			//Repaint on expose
+			case SDL_WINDOWEVENT_EXPOSED:
+			if (HardwareAccelerated)
+				SDL_RenderPresent(HScreen);
+			else
+				SDL_UpdateWindowSurface(WindowHandle);
+			break;
+
+			//Mouse enter
+			case SDL_WINDOWEVENT_ENTER:
+			MouseFocus = true;
+			break;
+
+			//Mouse exit
+			case SDL_WINDOWEVENT_LEAVE:
+			MouseFocus = false;
+			break;
+
+			//Keyboard focus gained
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+			KeyboardFocus = true;
+			break;
+
+			//Keyboard focus lost
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+			KeyboardFocus = false;
+			break;
+
+			//Window minimized
+			case SDL_WINDOWEVENT_MINIMIZED:
+			Minimized = true;
+			break;
+
+			//Window maxized
+			case SDL_WINDOWEVENT_MAXIMIZED:
+			Minimized = false;
+			break;
+
+			//Window restored
+			case SDL_WINDOWEVENT_RESTORED:
+			Minimized = false;
+			break;
+
+			//Hide on close
+			case SDL_WINDOWEVENT_CLOSE:
+			SDL_HideWindow(WindowHandle);
+			ClearData();
+			break;
+		}
+	}
+
+	return 0;
+}
+
 
 int DLL_API Window::GetWidth()
 {
@@ -160,6 +249,9 @@ int DLL_API Window::Init(const int in_Width, const int in_Height, const std::str
 
 int DLL_API Window::AddToScreen(Object *in_Object)
 {
+	if (in_Object == NULL)
+		return 1;
+
 	in_Object->WindowHandle = this;
 
 	Object **TempArray = new Object*[NumberOfObjects + 1];
@@ -179,16 +271,52 @@ int DLL_API Window::AddToScreen(Object *in_Object)
 
 int DLL_API Window::ChangeScreenPosition(Object *in_Object, const int in_NewPosition)
 {
-	return 0;
-}
+	if (in_Object == NULL || in_NewPosition < 0 || in_NewPosition >= NumberOfObjects)
+		return 1;
+
+	int OldPosition = -1;
+
+	for (int i = 0; i < NumberOfObjects; i++)
+	{
+		if (ScreenObjects[i] == in_Object)
+			OldPosition = i;
+	}
+
+	if (OldPosition == -1)
+		return 1;
+
+	return ChangeScreenPosition(OldPosition, in_NewPosition);
+}	 
 
 int DLL_API Window::ChangeScreenPosition(const int in_OldPosition, const int in_NewPosition)
 {
+	if (in_OldPosition < 0 || in_OldPosition >= NumberOfObjects || 
+		in_NewPosition < 0 || in_NewPosition >= NumberOfObjects)
+		return 1;
+
+	Object *TempObject = ScreenObjects[in_OldPosition];
+
+	if (in_OldPosition < in_NewPosition)
+	{
+		for (int i = in_OldPosition; i < in_NewPosition; i++)
+			ScreenObjects[i] = ScreenObjects[i + 1];
+	}
+	else
+	{
+		for (int i = in_OldPosition; i > in_NewPosition; i--)
+			ScreenObjects[i] = ScreenObjects[i - 1];
+	}
+
+	ScreenObjects[in_NewPosition] = TempObject;
+
 	return 0;
 }
 
 int DLL_API Window::RemoveFromScreen(Object *in_Object)
 {
+	if (in_Object == NULL)
+		return 1;
+
 	Object **TempArray = new Object*[NumberOfObjects - 1];
 	int Offset = 0;
 
@@ -243,120 +371,66 @@ int DLL_API Window::RemoveFromScreen(const int in_Position)
 
 int DLL_API Window::Refresh()
 {
+	TimerHandle.DisplayFPS();
+	TimerHandle.CapFPS();
+
+	/*
 	if (HardwareAccelerated)
 	{
 		SDL_Rect Test1 = { 0, 0, Width, Height / 2 };
-		//SDL_RenderSetViewport(HScreen, &Test1);
+		SDL_RenderSetViewport(HScreen, &Test1);
 	}
+	*/
 
 	while (SDL_PollEvent(&Event))
 	{
 		for (int i = 0; i < NumberOfObjects; i++)
 			ScreenObjects[i]->EventHandler(&Event);
 
-		    //If an event was detected for this window
-		if (Event.type == SDL_WINDOWEVENT && Event.window.windowID == WindowID)
-		{
-			switch (Event.window.event)
-			{
-				//Window appeared
-				case SDL_WINDOWEVENT_SHOWN:
-				Shown = true;
-				break;
+		EventHandler();
+    }	   
 
-				//Window disappeared
-				case SDL_WINDOWEVENT_HIDDEN:
-				Shown = false;
-				break;
-
-				//Get new dimensions and repaint
-				case SDL_WINDOWEVENT_SIZE_CHANGED:
-				Width = Event.window.data1;
-				Height = Event.window.data2;
-				if (HardwareAccelerated)
-					SDL_RenderPresent(HScreen);
-				else
-					SDL_UpdateWindowSurface(WindowHandle);
-				break;
-
-				//Repaint on expose
-				case SDL_WINDOWEVENT_EXPOSED:
-				if (HardwareAccelerated)
-					SDL_RenderPresent(HScreen);
-				else
-					SDL_UpdateWindowSurface(WindowHandle);
-				break;
-
-				//Mouse enter
-				case SDL_WINDOWEVENT_ENTER:
-				MouseFocus = true;
-				break;
-
-				//Mouse exit
-				case SDL_WINDOWEVENT_LEAVE:
-				MouseFocus = false;
-				break;
-
-				//Keyboard focus gained
-				case SDL_WINDOWEVENT_FOCUS_GAINED:
-				KeyboardFocus = true;
-				break;
-
-				//Keyboard focus lost
-				case SDL_WINDOWEVENT_FOCUS_LOST:
-				KeyboardFocus = false;
-				break;
-
-				//Window minimized
-				case SDL_WINDOWEVENT_MINIMIZED:
-				Minimized = true;
-				break;
-
-				//Window maxized
-				case SDL_WINDOWEVENT_MAXIMIZED:
-				Minimized = false;
-				break;
-
-				//Window restored
-				case SDL_WINDOWEVENT_RESTORED:
-				Minimized = false;
-				break;
-
-				//Hide on close
-				case SDL_WINDOWEVENT_CLOSE:
-				SDL_HideWindow(WindowHandle);
-				ClearData();
-				break;
-			}
-		}
-    }
-
-	//TimerHandle.Benchmark("To ObjectEvent");
-
+	//Changes the z-depth of the images based on y position
 	for (int i = 0; i < NumberOfObjects; i++)
 	{
-		//std::string ID = "Object";
-		//ID.append(std::to_string(i + 1));
+		for (int ii = 0; ii < NumberOfObjects; ii++)
+		{
+			if (i == ii || !ScreenObjects[i]->DoesDynamicDepth() || !ScreenObjects[ii]->DoesDynamicDepth())
+				continue;
 
-		ScreenObjects[i]->PerFrameActions();
-		ScreenObjects[i]->CollisionDetection();
-		ScreenObjects[i]->Animate();
-		ScreenObjects[i]->Display();
-		//TimerHandle.Benchmark(ID.c_str());
+			if (ScreenObjects[i]->GetY() < ScreenObjects[ii]->GetY())
+				ChangeScreenPosition(i, ii);
+		}
 	}
 
-	//TimerHandle.Benchmark("To ObjectDisp");
+	//Does collision detection
+	for (int i = 0; i < NumberOfObjects; i++)
+	{
+		for (int ii = 0; ii < NumberOfObjects; ii++)
+		{
+			if (i == ii || !ScreenObjects[i]->DoesCollisionDetection() || !ScreenObjects[ii]->DoesCollisionDetection())
+				continue;
 
-	TimerHandle.DisplayFPS();
-	TimerHandle.CapFPS();
+			ScreenObjects[i]->CollisionDetection(ScreenObjects[ii]);
+		}
+
+		ScreenObjects[i]->Animate();
+		ScreenObjects[i]->Display();
+		ScreenObjects[i]->PerFrameActions();
+	}
+
+	//Screen title is FPS
+	SDL_SetWindowTitle(WindowHandle, std::to_string((int)TimerHandle.CurrentFPS).c_str());
 
 	if (HardwareAccelerated)
 	{
-		//SDL_Rect Test = { 0, Height / 2, Width, Height / 2 };
-		//SDL_RenderSetViewport(HScreen, &Test);
+		/*
+		SDL_Rect Test = { 0, Height / 2, Width, Height / 2 };
+		SDL_RenderSetViewport(HScreen, &Test);
 
-		//for (int i = 0; i < NumberOfObjects; i++)
-		//	ScreenObjects[i]->Display();
+		for (int i = 0; i < NumberOfObjects; i++)
+			ScreenObjects[i]->Display();
+		*/
 
 		SDL_RenderPresent(HScreen);
 		SDL_RenderClear(HScreen);

@@ -4,6 +4,7 @@
 using namespace SLGE;
 
 
+//Private Methods
 DLL_API Object::Object()
 {
 	Image = nullptr;
@@ -49,43 +50,53 @@ void DLL_API Object::ClearData()
 	Y = 0;
 	W = 0;
 	H = 0;
+
+	DoDisplay = false;
+	DoCollisionDetection = false;
+	DoDynamicDepth = false;
 }
 
-void DLL_API Object::PerFrameActions()
+int DLL_API Object::PerFrameActions()
 {
+	return 0;
 }
 
-void DLL_API Object::EventHandler(SDL_Event* in_Event)
+int DLL_API Object::EventHandler(SDL_Event* in_Event)
 {
+	return 0;
 }
 
-void DLL_API Object::CollisionDetection()
+int DLL_API Object::CollisionDetection(Object* in_Object)
 {
+	return 0;
 }
 
-void DLL_API Object::Animate()
+int DLL_API Object::Animate()
 {
+	return 0;
 }
 
-void DLL_API Object::Display()
+int DLL_API Object::Display()
 {
-	if (WindowHandle == nullptr || ((Image == nullptr || Image[ImageToDisplay] == NULL) && (HImage == nullptr || HImage[ImageToDisplay] == NULL)))
-		return;
+	if (!DoDisplay || WindowHandle == nullptr || ((Image == nullptr || Image[ImageToDisplay] == NULL) && (HImage == nullptr || HImage[ImageToDisplay] == NULL)))
+		return 1;
 
 	SDL_Rect Offset;
 
 	Offset.x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
-	Offset.y = static_cast <int> (round(Y - Clip[ImageToDisplay].h / 2.0));
+	//Offset.y = static_cast <int> (round(Y - Clip[ImageToDisplay].h / 2.0));
+	Offset.y = static_cast <int> (round(Y + H / 2.0 - Clip[ImageToDisplay].h));
 	Offset.w = Clip[ImageToDisplay].w;
 	Offset.h = Clip[ImageToDisplay].h;
-
+	
 	if (WindowHandle->HardwareAccelerated)
-		SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &Offset);
+		return SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &Offset);
 	else
-		SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
+		return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
 }
 
 
+//Status Methods
 int DLL_API Object::GetNumberOfImages()
 {
 	return NumberOfImages;
@@ -93,7 +104,7 @@ int DLL_API Object::GetNumberOfImages()
 
 int DLL_API Object::GetCurrentImage()
 {
-	return NumberOfImages;
+	return ImageToDisplay;
 }
 
 double DLL_API Object::GetX()
@@ -116,7 +127,23 @@ double DLL_API Object::GetH()
 	return H;
 }
 
+bool DLL_API Object::DoesDisplay()
+{
+	return DoDisplay;
+}
 
+bool DLL_API Object::DoesCollisionDetection()
+{
+	return DoCollisionDetection;
+}
+
+bool DLL_API Object::DoesDynamicDepth()
+{
+	return DoDynamicDepth;
+}
+
+
+//Setting Methods
 int DLL_API Object::Register(Window *in_Window)
 {
 	if (in_Window->WindowHandle == nullptr || (in_Window->HScreen == nullptr && in_Window->Screen == nullptr))
@@ -125,12 +152,20 @@ int DLL_API Object::Register(Window *in_Window)
 	WindowHandle = in_Window;
 	WindowHandle->AddToScreen(this);
 
+	DoDisplay = true;
+	DoCollisionDetection = false;
+	DoDynamicDepth = false;
+
 	return 0;
 }
 
 void DLL_API Object::Deregister()
 {
 	WindowHandle = nullptr;
+
+	DoDisplay = false;
+	DoCollisionDetection = false;
+	DoDynamicDepth = false;
 }
 
 void DLL_API Object::SetCoords(const double in_X, const double in_Y, const double in_W, const double in_H)
@@ -209,11 +244,14 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 		}
 	}
 
-	//Map the color key
-	Uint32 ColorKey = SDL_MapRGB(LoadedSurface->format, in_ColorKey.R, in_ColorKey.G, in_ColorKey.B);
+	if (in_ColorKey.R != NULL && in_ColorKey.G != NULL && in_ColorKey.B != NULL && in_ColorKey.A != NULL)
+	{
+		//Map the color key
+		Uint32 ColorKey = SDL_MapRGB(LoadedSurface->format, in_ColorKey.R, in_ColorKey.G, in_ColorKey.B);
 
-	//Set all pixels of in_Color to be transparent
-	SDL_SetColorKey(LoadedSurface, SDL_TRUE, ColorKey);
+		//Set all pixels of in_Color to be transparent
+		SDL_SetColorKey(LoadedSurface, SDL_TRUE, ColorKey);
+	}
 
 	if (WindowHandle->HardwareAccelerated)
 	{
@@ -268,6 +306,53 @@ int DLL_API Object::SelectImage(const int in_Position)
 		ImageToDisplay = in_Position;
 	else
 		return 1;
+
+	return 0;
+}
+
+int DLL_API Object::MoveImage(const int in_Position, const int in_NewPosition)
+{
+	if (in_Position == in_NewPosition || 
+		in_Position < 0 || in_Position > NumberOfImages || 
+		in_NewPosition < 0 || in_NewPosition > NumberOfImages)
+		return 0;
+
+	if (WindowHandle->HardwareAccelerated)
+	{
+		SDL_Texture *TempTexture = HImage[in_Position];
+		SDL_Rect TempClip = Clip[in_Position];
+
+		if (in_Position < in_NewPosition)
+		{
+			for (int i = in_Position; i < in_NewPosition; i++)
+				HImage[i] = HImage[i + 1];
+		}
+		else
+		{
+			for (int i = in_Position; i > in_NewPosition; i--)
+				HImage[i] = HImage[i - 1];
+		}
+
+		HImage[in_NewPosition] = TempTexture;
+	}
+	else
+	{
+		SDL_Surface *TempSurface = Image[in_Position];
+		SDL_Rect TempClip = Clip[in_Position];
+
+		if (in_Position < in_NewPosition)
+		{
+			for (int i = in_Position; i < in_NewPosition; i++)
+				Image[i] = Image[i + 1];
+		}
+		else
+		{
+			for (int i = in_Position; i > in_NewPosition; i--)
+				Image[i] = Image[i - 1];
+		}
+
+		Image[in_NewPosition] = TempSurface;
+	}
 
 	return 0;
 }

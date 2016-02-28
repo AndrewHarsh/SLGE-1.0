@@ -75,7 +75,7 @@ void DLL_API UI::ClearData()
 }
 
 
-void DLL_API UI::EventHandler(SDL_Event *in_Event)
+int DLL_API UI::EventHandler(SDL_Event *in_Event)
 {
 	if (in_Event->type == SDL_MOUSEMOTION)
 		SDL_GetMouseState(&MouseX, &MouseY);
@@ -100,6 +100,8 @@ void DLL_API UI::EventHandler(SDL_Event *in_Event)
 
 	if (in_Event->type == SDL_TEXTINPUT)
 		*InputText = in_Event->text.text;
+
+	return 0;
 }
 
 bool DLL_API UI::HoveringOver()

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <math.h>
 #include <chrono>
 #include <thread>
 #include <Windows.h>
@@ -96,6 +97,7 @@ namespace SLGE
 	class DLL_API Window
 	{
 	friend class Object;
+	friend class Timer;
 	protected:
 		SDL_Window *WindowHandle;
 		SDL_Renderer *HScreen;
@@ -119,6 +121,7 @@ namespace SLGE
 		bool Running;
 
 		void ClearData();
+		int EventHandler();
 
 	public:
 
@@ -131,6 +134,11 @@ namespace SLGE
 			HRC::time_point *LastBench;
 			HRC::time_point *LastFPSDisplay;
 			HRC::time_point *LastBenchDisplay;
+			Uint32 StartTime;
+			double CPUFreq;
+			LARGE_INTEGER Start;
+			LARGE_INTEGER End;
+			long double Duration;
 			char *LastIdentifier;
 
 			int FPS;
@@ -142,6 +150,8 @@ namespace SLGE
 		public:
 
 			Timer();
+
+			double GetFPS();
 
 			int Benchmark(const char Identifier[]);
 
@@ -188,13 +198,17 @@ namespace SLGE
 		double W;
 		double H;
 
-		virtual void ClearData();
-		virtual void PerFrameActions();
-		virtual void EventHandler(SDL_Event* Event);
-		virtual void CollisionDetection();
-		virtual void Animate();
+		bool DoDisplay;					//Object is displayed
+		bool DoCollisionDetection;		//Object collides with other objects
+		bool DoDynamicDepth;			//Object's z-layer can be dynamically changed 
 
-		void Display();
+		virtual void ClearData();
+		virtual int PerFrameActions();
+		virtual int EventHandler(SDL_Event* Event);
+		virtual int CollisionDetection(Object* Object);
+		virtual int Animate();
+
+		int Display();
 
 	public:
 
@@ -207,10 +221,13 @@ namespace SLGE
 		double GetY();
 		double GetW();
 		double GetH();
+		bool DoesDisplay();
+		bool DoesCollisionDetection();
+		bool DoesDynamicDepth();
 
 		int Register(Window *Window);
 		void Deregister();
-		void SetCoords(const double X, const double Y, const double W, const double H);
+		void SetCoords(const double X, const double Y, const double W = NULL, const double H = NULL);
 
 		int OpenImage(const std::string Filename, SDL_Rect Clip, const Color ColorKey);
 		int SelectImage(const int Position);
@@ -224,11 +241,30 @@ namespace SLGE
 	{
 	protected:
 
+		double LastX;
+		double LastY;
 		double Speed;
-		double Health;
-		double AttackDamage;
+		Direction Facing;
 
+		double CurrentHealth;
+		double MaxHealth;
+
+		double AttackDamage;
+		double AnimateSpeed;
+		double AttackDistance;
+		double AnimateFrame;
+
+		//Status
+		bool Moving;
+		bool Attacking;
+		bool BeingHit;
+
+		//Internal Functions
 		void ClearData();
+		int PerFrameActions();
+		int EventHandler(SDL_Event *Event);
+		int CollisionDetection(Object *Object);
+		int Animate();
 
 	public:
 
@@ -238,8 +274,17 @@ namespace SLGE
 		double GetSpeed();
 		double GetHealth();
 		double GetAttackDamage();
+		bool IsMoving();
+		bool IsAttacking();
+		bool IsBeingHit();
+		bool IsOverlapping(Object *Object);
+		bool IsWithin(Object *Object);
+		bool IsWithinAttackRange(Object *Object);
+		bool IsFacing(Object *Object);
+		bool IsCollidingWith(Object *Object);
 
 		int SetTraits(const double Speed, const double Health, const double AttackDamage);
+		int SetAnimation(const double Speed);
 
 		int Move(const Direction);
 		int MoveTo(const double X, const double Y);
@@ -260,7 +305,7 @@ namespace SLGE
 		NPC(Window *WindowHandle);
 
 		int Wander(const SDL_Rect WanderArea, const double RestTime);
-		int Follow(const Object *Leader, const double Distance);
+		int Follow(Object *Leader, const double Distance);
 	};
 
 	class DLL_API UI : public Object
@@ -282,7 +327,7 @@ namespace SLGE
 		bool RightMouseUp;
 
 		void ClearData();
-		void EventHandler(SDL_Event *Event);
+		int EventHandler(SDL_Event *Event);
 
 	public:
 

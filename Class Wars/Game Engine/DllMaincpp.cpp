@@ -18,31 +18,87 @@ using namespace SLGE;
 
 struct Image
 {
+	SDL_Surface* LoadData;
 	SDL_Surface* Data;
 	SDL_Texture* HData;
 	std::string Name;
-	int SurfaceCount;
-	int TextureCount;
+	SDL_PixelFormat* Format;
+	SDL_Renderer* Renderer;
 };
 
+
+//==============================================================//
+//  THIS CLASS WORKS BUT SHOULD BE REDONE TO BE MORE EFFICIENT  //
+//==============================================================//
 static class ImageTable
 {
 private:
+	//Table 1
 	std::map <std::string, int> NameMap;
 	std::map <SDL_Surface*, int> SurfaceMap;
 	std::map <SDL_Texture*, int> TextureMap;
+	//Table 2
+	std::map <SDL_PixelFormat*, int> FormatMap;
+	std::map <SDL_Renderer*, int> RenderMap;
+	//Table 3
 	std::vector <Image> Data;
+
+	void ShiftBack(int Position)
+	{
+		auto NameIter = --NameMap.begin();
+		auto SurfaceIter = --SurfaceMap.begin();
+		auto TextureIter = --TextureMap.begin();
+		Data.erase(Data.begin() + Position);
+
+		//Shift all of the indexes back one to make up for the erased key
+		for (auto Iter = NameMap.begin(); Iter != NameMap.end() && NameMap.size() > 0; Iter++)
+		{
+			if (Iter->second > Position)
+				Iter->second--;
+			if (Iter->second == Position)
+				NameIter = Iter;//NameMap.erase(Iter);
+		}
+
+		for (auto Iter = SurfaceMap.begin(); Iter != SurfaceMap.end() && SurfaceMap.size() > 0; Iter++)
+		{
+			if (Iter->second > Position)
+				Iter->second--;
+			if (Iter->second == Position)
+				SurfaceIter = Iter;//SurfaceMap.erase(Iter);
+		}
+
+		for (auto Iter = TextureMap.begin(); Iter != TextureMap.end() && TextureMap.size() > 0; Iter++)
+		{
+			if (Iter->second > Position)
+				Iter->second--;
+			if (Iter->second == Position)
+				TextureIter = Iter; TextureMap.erase(Iter);
+		}
+
+		if (NameIter != --NameMap.begin())
+			NameMap.erase(NameIter);
+		if (SurfaceIter != --SurfaceMap.begin())
+			SurfaceMap.erase(SurfaceIter);
+		if (TextureIter != --TextureMap.begin())
+			TextureMap.erase(TextureIter);
+	}
 
 public:
 
 	int Add(Image in_Data)
 	{
 		//Make sure data is valid
-		if (in_Data.Data == nullptr && in_Data.HData == nullptr)
+		if (in_Data.LoadData == nullptr && in_Data.Data == nullptr && in_Data.HData == nullptr)
 			return 1;
 
 
-		bool NoName, NoSurface, NoTexture;
+		int Position = -1;
+		bool NoName = false;
+		bool NoLoad = false;
+		bool NoSurface = false;
+		bool NoTexture = false;
+		bool NoFormat = false;
+		bool NoRenderer = false;
 
 		//Verify and check data
 		if (in_Data.Name == "")
@@ -52,7 +108,17 @@ public:
 			if (NameMap.find(in_Data.Name) == NameMap.end())
 				NoName = true;
 			else
-				NoName = false;
+				Position = NameMap[in_Data.Name];
+		}
+
+		if (in_Data.LoadData == nullptr)
+			NoLoad = true;
+		else
+		{
+			if (SurfaceMap.find(in_Data.LoadData) == SurfaceMap.end())
+				NoLoad = true;
+			else
+				Position = SurfaceMap[in_Data.LoadData];
 		}
 
 		if (in_Data.Data == nullptr)
@@ -62,7 +128,7 @@ public:
 			if (SurfaceMap.find(in_Data.Data) == SurfaceMap.end())
 				NoSurface = true;
 			else
-				NoSurface = false;
+				Position = SurfaceMap[in_Data.Data];
 		}
 
 		if (in_Data.HData == nullptr)
@@ -72,21 +138,45 @@ public:
 			if (TextureMap.find(in_Data.HData) == TextureMap.end())
 				NoTexture = true;
 			else
-				NoTexture = false;
+				Position = TextureMap[in_Data.HData];
+		}
+
+		if (in_Data.Format == nullptr)
+			NoFormat = true;
+		else
+		{
+			if (FormatMap.find(in_Data.Format) == FormatMap.end())
+				NoFormat = true;
+			else
+				Position = FormatMap[in_Data.Format];
+		}
+
+		if (in_Data.Renderer == nullptr)
+			NoRenderer = true;
+		else
+		{
+			if (RenderMap.find(in_Data.Renderer) == RenderMap.end())
+				NoRenderer = true;
+			else
+				Position = RenderMap[in_Data.Renderer];
 		}
 
 
 		//Create new data if none exists
 		if (NoName &&
-			NoSurface&&
+			NoLoad &&
+			NoSurface &&
 			NoTexture)
 		{
 			//Allocate space
-			Data.push_back({in_Data.Data, in_Data.HData, in_Data.Name, 0, 0});
+			Data.push_back(in_Data);
 
 			//Add link between maps and data if possible
 			if (in_Data.Name != "")
 				NameMap[in_Data.Name] = Data.size() - 1;
+
+			if (in_Data.LoadData != nullptr)
+				SurfaceMap[in_Data.LoadData] = Data.size() - 1;
 
 			if (in_Data.Data != nullptr)
 				SurfaceMap[in_Data.Data] = Data.size() - 1;
@@ -94,16 +184,56 @@ public:
 			if (in_Data.HData != nullptr)
 				TextureMap[in_Data.HData] = Data.size() - 1;
 		}
+
+		//Add
+		//else if (NoFormat && NoRenderer)//((Data[Position].Format != in_Data.Format && in_Data.Format != nullptr) && 
+				//(Data[Position].Renderer != in_Data.Renderer && in_Data.Renderer != nullptr))
+		//{		 
+			//Data.push_back(in_Data);
+
+			//if (in)
+		//}
+
 		//Add refence to current table if already exists
 		else  
 		{
+			//Update Table
 			if (in_Data.Data != nullptr)
-				Data[SurfaceMap[in_Data.Data]].SurfaceCount++;
+			{		 
+				SurfaceMap[in_Data.Data] = Position;
+				Data[Position].Data = in_Data.Data;
+			}
 			if (in_Data.HData != nullptr)
-				Data[TextureMap[in_Data.HData]].TextureCount++;
+			{
+				TextureMap[in_Data.HData] = Position;
+				Data[Position].HData = in_Data.HData;
+			}
+			if (in_Data.LoadData != nullptr)
+			{
+				SurfaceMap[in_Data.LoadData] = Position;
+				Data[Position].LoadData = in_Data.LoadData;
+			}
+			if (in_Data.Name != "")
+			{
+				NameMap[in_Data.Name] = Position;
+				Data[Position].Name = in_Data.Name;
+			}
 		}
 
 		return 0;
+	}
+
+	int Size()
+	{
+		return Data.size();
+	}
+
+	Image* Pull(unsigned in_Key)
+	{
+		if (in_Key < 0 || in_Key >= Data.size())
+			return nullptr;
+
+		return &Data[in_Key];
 	}
 
 	Image* Pull(std::string in_Key)
@@ -143,33 +273,7 @@ public:
 		if (NameMap.find(in_Key) == NameMap.end())
 			return 1;
 		
-		int Position = NameMap[in_Key];
-		Data.erase(Data.begin() + Position);
-
-		//Shift all of the indexes back one to make up for the erased key
-		for (auto Iter = NameMap.begin(); Iter != NameMap.end() && NameMap.size() > 0; Iter++)
-		{
-			if (Iter->second > Position)
-				Iter->second--;
-			if (Iter->second == Position)
-				NameMap.erase(Iter);
-		}
-
-		for (auto Iter = SurfaceMap.begin(); Iter != SurfaceMap.end() && SurfaceMap.size() > 0; Iter++)
-		{
-			if (Iter->second > Position)
-				Iter->second--;
-			if (Iter->second == Position)
-				SurfaceMap.erase(Iter);
-		}
-
-		for (auto Iter = TextureMap.begin(); Iter != TextureMap.end() && TextureMap.size() > 0; Iter++)
-		{
-			if (Iter->second > Position)
-				Iter->second--;
-			if (Iter->second == Position)
-				TextureMap.erase(Iter);
-		}
+		ShiftBack(NameMap[in_Key]);
 
 		return 0;
 	}
@@ -182,46 +286,8 @@ public:
 		if (SurfaceMap.find(in_Key) == SurfaceMap.end())
 			return 1;
 
-		if (--Data[SurfaceMap[in_Key]].SurfaceCount <= 0)
-		{
-			int Position = SurfaceMap[in_Key];
-			auto NameIter = --NameMap.begin();
-			auto SurfaceIter = --SurfaceMap.begin();
-			auto TextureIter = --TextureMap.begin();
-			Data.erase(Data.begin() + Position);
-
-			//Shift all of the indexes back one to make up for the erased key
-			for (auto Iter = NameMap.begin(); Iter != NameMap.end() && NameMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					NameIter = Iter;//NameMap.erase(Iter);
-			}
-
-			for (auto Iter = SurfaceMap.begin(); Iter != SurfaceMap.end() && SurfaceMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					SurfaceIter = Iter;//SurfaceMap.erase(Iter);
-			}
-
-			for (auto Iter = TextureMap.begin(); Iter != TextureMap.end() && TextureMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					TextureIter = Iter; TextureMap.erase(Iter);
-			}
-
-			if (NameIter != --NameMap.begin())
-				NameMap.erase(NameIter);
-			if (SurfaceIter != --SurfaceMap.begin())
-				SurfaceMap.erase(SurfaceIter);
-			if (TextureIter != --TextureMap.begin())
-				TextureMap.erase(TextureIter);
-		}
+		//if (--Data[SurfaceMap[in_Key]].SurfaceCount <= 0)
+			ShiftBack(SurfaceMap[in_Key]);
 
 		return 0;
 	}
@@ -234,172 +300,14 @@ public:
 		if (TextureMap.find(in_Key) == TextureMap.end())
 			return 1;
 
-		if (--Data[TextureMap[in_Key]].TextureCount <= 0)
-		{
-			int Position = TextureMap[in_Key];
-			Data.erase(Data.begin() + Position);
-
-			//Shift all of the indexes back one to make up for the erased key
-			for (auto Iter = NameMap.begin(); Iter != NameMap.end() && NameMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					NameMap.erase(Iter);
-			}
-
-			for (auto Iter = SurfaceMap.begin(); Iter != SurfaceMap.end() && SurfaceMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					SurfaceMap.erase(Iter);
-			}
-
-			for (auto Iter = TextureMap.begin(); Iter != TextureMap.end() && TextureMap.size() > 0; Iter++)
-			{
-				if (Iter->second > Position)
-					Iter->second--;
-				if (Iter->second == Position)
-					TextureMap.erase(Iter);
-			}
-		}
+		//if (--Data[TextureMap[in_Key]].TextureCount <= 0)
+			ShiftBack(TextureMap[in_Key]);
 
 		return 0;
 	}
 } AllImages;
 
-
-
-
-/*
-class ImageMap
-{
-private:
-	SDL_Surface **Data;
-	std::string *Name;
-	int *RefCount;
-	int Size;
-
-public:
-	ImageMap()
-	{
-		Data = nullptr;
-		RefCount = nullptr;
-		Size = 0;
-	}
-
-	void Add(SDL_Surface* in_Data, std::string in_Name)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (in_Name == Name[i])
-			{
-				RefCount[i]++;
-				return;
-			}
-		}
-
-		SDL_Surface **TempData = new SDL_Surface*[Size + 1];
-		std::string *TempName = new std::string[Size + 1];
-		int *TempCount = new int[Size + 1];
-
-		for (int i = 0; i < Size; i++)
-		{
-			TempData[i] = Data[i];
-			TempName[i] = Name[i];
-			TempCount[i] = RefCount[i];
-		}
-
-		TempData[Size] = in_Data;
-		TempName[Size] = in_Name;
-		TempCount[Size] = 1;
-
-		delete[] Data;
-		delete[] Name;
-		delete[] RefCount;
-
-		Data = TempData;
-		Name = TempName;
-		RefCount = TempCount;
-
-		Size++;
-	}
-
-	void Remove(SDL_Surface* in_Data)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (Data[i] == in_Data)
-			{
-				RefCount[i]--;
-
-				if (RefCount[i] <= 0)
-				{
-					SDL_Surface **TempData = new SDL_Surface*[Size];
-					std::string *TempName = new std::string[Size];
-					int *TempCount = new int[Size];
-
-					for (int ii = 0; ii < Size + 1; ii++)
-					{
-						if (ii < i)
-						{
-							TempData[ii] = Data[ii];
-							TempName[ii] = Name[ii];
-							TempCount[ii] = RefCount[ii];
-						}
-						else
-						{
-							TempData[ii] = Data[ii + 1];
-							TempName[ii] = Name[ii + 1];
-							TempCount[ii] = RefCount[ii + 1];
-						}
-					}
-
-					delete[] Data;
-					delete[] Name;
-					delete[] RefCount;
-
-					Data = TempData;
-					Name = TempName;
-					RefCount = TempCount;
-				}
-			}
-		}
-	}
-
-	int Find(SDL_Surface* in_Data)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (Data[i] == in_Data)
-				return i;
-		}
-
-		return -1;
-	}
-
-	int Find(std::string in_Name)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (Name[i] == in_Name)
-				return i;
-		}
-
-		return -1;
-	}
-};
-
-ImageMap Store;
-int ImageMapSize;
-*/
-
 static int OpenWindows = 0;
-
-static std::map <std::string, Image> Book1;
-static std::map <SDL_Surface*, Image> Book2;
-static std::map <SDL_Texture*, Image> Book3;
 
 
 BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved)
@@ -410,13 +318,9 @@ BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved
 		case DLL_THREAD_ATTACH:
 		{
 			static int OpenWindows = 0;
-			//static std::map <std::string, SDL_Surface*> ImageList;
-			//static std::map <SDL_Surface*, int> Test;
 			static ImageTable AllImages;
-			static std::map <std::string, Image> Book1;
-			static std::map <SDL_Surface*, Image> Book2;
-			static std::map <SDL_Surface*, Image> Book3;
 
+			//remove("Data.txt");
 
 			// Version info
 			std::ofstream File;
@@ -441,6 +345,18 @@ BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved
         case DLL_PROCESS_DETACH:
 		case DLL_THREAD_DETACH:
 		{
+			for (int i = 0; i < AllImages.Size(); i++)
+			{
+				Image* DeleteData = AllImages.Pull(i);
+
+				if (DeleteData->Data != nullptr)
+					SDL_FreeSurface(DeleteData->Data);
+				if (DeleteData->LoadData != nullptr)
+					SDL_FreeSurface(DeleteData->LoadData);
+				if (DeleteData->HData != nullptr)
+					SDL_DestroyTexture(DeleteData->HData);
+			}
+
 			//Close SDL
 			IMG_Quit();
 			TTF_Quit();
@@ -525,88 +441,19 @@ SDL_Surface DLL_API *SLGE::IMG_LoadEx(const char* in_File)
 {	
 	Image *Check = AllImages.Pull(in_File);
 
-	if (Check == nullptr || Check->Data == nullptr)
+	if (Check == nullptr || Check->LoadData == nullptr)
 	{
 		SDL_Surface *NewSurface = IMG_Load(in_File);
 
 		if (NewSurface == nullptr)
 			return nullptr;
 
-		AllImages.Add({ NewSurface, nullptr, in_File, 0, 0 });
+		AllImages.Add({ NewSurface, nullptr, nullptr, in_File, nullptr, nullptr });
 
 		return NewSurface;
 	}
 
-	Check->SurfaceCount++;
-	return Check->Data;
-
-
-
-
-
-
-	/*
-	SDL_Surface *Temp;
-
-	if (Book1.find(in_File) != Book1.end())
-	{
-		Temp = Book1[in_File].Data;
-
-		Book1[in_File].SurfaceCount++;
-		Book2[Temp].SurfaceCount++;
-		return Temp;
-	}
-	else
-	{
-		Temp = IMG_Load(in_File);
-
-		if (Temp == NULL)
-			return NULL;
-
-		Image Temp1 = { Temp, NULL, in_File, 1, 0 };
-
-		Book1[in_File] = Temp1;
-		Book2[Temp] = Temp1;
-
-		return Temp;
-	}
-	*/
-
-
-	//SDL_Surface* Temp = IMG_Load(in_File);
-
-	//return Temp;
-	//if (Temp == NULL)
-	//	return NULL;
-
-	//if (Test.find(Temp) != Test.end())
-	//	Test[Temp] = 1;
-	//else
-	//{
-	//	Test[Temp]++;
-	//	SDL_FreeSurface(Temp);
-	//}
-
-	//return Test.find(Temp)->first;
-
-	/*
-	if (ImageStore.find(std::string(in_File)) != ImageStore.end)
-	{
-		ImageStore[in_File].Data = IMG_Load(in_File);
-
-		if (ImageStore[in_File].Data != NULL)
-			ImageStore[in_File].RefCount = 1;
-		else
-		{
-			ImageStore.erase(ImageStore.find(in_File));
-			return NULL;
-		}
-	}
-	else
-		ImageStore[in_File].RefCount++;
-
-	return ImageStore[in_File].Data;
-	*/
+	return Check->LoadData;
 }
 
 SDL_Surface DLL_API *SLGE::SDL_CreateRGBSurfaceEx(Uint32 in_Flags, int in_Width, int in_Height, int in_Depth, Uint32 in_Rmask, Uint32 in_Gmask, Uint32 in_Bmask, Uint32 in_Amask)
@@ -616,65 +463,40 @@ SDL_Surface DLL_API *SLGE::SDL_CreateRGBSurfaceEx(Uint32 in_Flags, int in_Width,
 
 SDL_Surface DLL_API *SLGE::SDL_ConvertSurfaceEx(SDL_Surface* in_Surface, SDL_PixelFormat* in_Format, Uint32 in_Flags)
 {
-	SDL_Surface *NewSurface = SDL_ConvertSurface(in_Surface, in_Format, in_Flags);
-
-	if (NewSurface == nullptr)
-		return nullptr;
-
-	Image *Check = AllImages.Pull(NewSurface);
+	Image *Check = AllImages.Pull(in_Surface);
 
 	if (Check == nullptr || Check->Data == nullptr)
 	{
-		AllImages.Add({ NewSurface, nullptr, "", 0, 0 });
+		SDL_Surface *NewSurface = SDL_ConvertSurface(in_Surface, in_Format, in_Flags);
+
+		if (NewSurface == nullptr)
+			return nullptr;
+
+		AllImages.Add({ in_Surface, NewSurface, nullptr, "", in_Format, nullptr });
 
 		return NewSurface;
 	}
 
-	Check->SurfaceCount++;
 	return Check->Data;
-
-	
-	//if (Book2.find(in_Surface) != Book2.end())
-	//{
-	//	Book2[in_Surface].SurfaceCount++;
-	//	Book1[Book2[in_Surface].Name].SurfaceCount++;
-
-		//return SDL_ConvertSurface(in_Surface, in_Format, in_Flags);
-	//}
-	
-	//return NULL;
 }
 
 SDL_Texture DLL_API *SLGE::SDL_CreateTextureFromSurfaceEx(SDL_Renderer* in_Renderer, SDL_Surface* in_Surface)
 {
-	SDL_Texture *NewTexture = SDL_CreateTextureFromSurface(in_Renderer, in_Surface);
-		
-	if (NewTexture == nullptr)
-		return nullptr;
+	Image *Check = AllImages.Pull(in_Surface);
 
-	Image *Check = AllImages.Pull(NewTexture);
-
-	if (Check == nullptr || Check->Data == nullptr)
+	if (Check == nullptr || Check->HData == nullptr)
 	{
-		AllImages.Add({ nullptr, NewTexture, "", 0, 0 });
+		SDL_Texture *NewTexture = SDL_CreateTextureFromSurface(in_Renderer, in_Surface);
+
+		if (NewTexture == nullptr)
+			return nullptr;
+
+		AllImages.Add({ in_Surface, nullptr, NewTexture, "", nullptr, in_Renderer });
 
 		return NewTexture;
 	}
 
-	Check->TextureCount++;
 	return Check->HData;
-
-	//if (Book2.find(in_Surface) != Book2.end())
-	//{
-	//	SDL_Surface *Temp;
-
-		//Book2[in_Surface].RefCount++;
-		//Book1[Book2[in_Surface].Name].RefCount++;
-
-		//Book2[in_Surface].HData = 
-	//}
-
-	//return NULL;
 }
 
 void DLL_API SLGE::SDL_FreeSurfaceEx(SDL_Surface* in_Surface)
@@ -683,43 +505,6 @@ void DLL_API SLGE::SDL_FreeSurfaceEx(SDL_Surface* in_Surface)
 
 	if (Check == nullptr || Check->Data == nullptr)
 		return;
-
-	if (--(Check->SurfaceCount) <= 0)
-	{
-		SDL_FreeSurface(in_Surface);
-		AllImages.Remove(in_Surface);
-	}
-
-	/*
-	if (Book2.find(in_Surface) != Book2.end())
-	{
-		if (Book2[in_Surface].SurfaceCount > 1)
-			int hy = 9;
-
-		Book2[in_Surface].SurfaceCount--;
-		Book1[Book2[in_Surface].Name].SurfaceCount--;
-
-		if (Book2[in_Surface].SurfaceCount <= 0)
-		{
-			SDL_FreeSurface(Book2[in_Surface].Data);
-			Book1.erase(Book2[in_Surface].Name);
-			Book2.erase(in_Surface);
-		}
-	}
-	*/
-
-	/*
-	if (Test.find(in_Surface) != Test.end())
-	{
-		Test[in_Surface]--;
-
-		if (Test[in_Surface] <= 0)
-		{
-			SDL_FreeSurface(in_Surface);
-			Test.erase(in_Surface);
-		}
-	}
-	*/
 }
 
 void DLL_API SLGE::SDL_DestroyTextureEx(SDL_Texture* in_Texture)
@@ -728,12 +513,6 @@ void DLL_API SLGE::SDL_DestroyTextureEx(SDL_Texture* in_Texture)
 
 	if (Check == nullptr || Check->Data == nullptr)
 		return;
-
-	if (--(Check->TextureCount) <= 0)
-	{
-		SDL_DestroyTexture(in_Texture);
-		AllImages.Remove(in_Texture);
-	}
 }
 
 #undef DLL_API

@@ -1,4 +1,4 @@
-﻿Build started 1/10/2015 3:36:18 AM.
+﻿Build started 1/19/2015 10:11:36 PM.
      1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
@@ -10,4 +10,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.33
+Time Elapsed 00:00:01.07
