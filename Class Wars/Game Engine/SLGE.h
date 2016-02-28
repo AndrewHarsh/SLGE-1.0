@@ -96,8 +96,8 @@ namespace SLGE
 	//Base Classes
 	class DLL_API Window
 	{
-	friend class Object;
 	friend class Timer;
+	friend class Object;
 	protected:
 		SDL_Window *WindowHandle;
 		SDL_Renderer *HScreen;
@@ -162,12 +162,22 @@ namespace SLGE
 		Window(const int Width, const int Height, const std::string Caption);
 		Window(const int Width, const int Height, const std::string Caption, const bool Flags);
 
+		// Status
 		int GetOpenWindows();
 		int GetWidth();
 		int GetHeight();
 		int GetBPP();
+		Object* GetScreenObject(const int Index);
+		int GetNumberOfObjects();
+
+		bool IsShown();
+		bool IsMouseFocused();
+		bool IsKeyboardFocused();
+		bool IsMinimized();
+		bool IsHardwareAccelerated();
 		bool IsRunning();
 
+		// Action
 		int Init();
 		int Init(const int Width, const int Height);
 		int Init(const int in_Width, const int in_Height, const std::string Caption, const bool Flags);
@@ -179,34 +189,55 @@ namespace SLGE
 		int RemoveFromScreen(const int Position);
 
 		int Refresh();
+		int RunLoop(void (&Loop)(void));
 	};
 
 	class DLL_API Object
 	{
 	friend class Window;
+	typedef void (*PassiveFunction)();
 	protected:
 
 		Window *WindowHandle;
+
+		//Image
 		SDL_Surface **Image;
 		SDL_Texture **HImage;
 		SDL_Rect *Clip;
-		int NumberOfImages;
+		SDL_Rect *DisplayClip;
 		int ImageToDisplay;
-
+		int NumberOfImages;
+			
+		//Location
 		double X;
 		double Y;
 		double W;
 		double H;
+		double LastX;
+		double LastY;
+		double LastW;
+		double LastH;
 
+		//Attributes
+		bool DoResetLoopVariables;		//Resets variables that are changed every loop
+		bool DoHandleEvents;			//Handles events for the object
+		bool DoDetectCollisions;		//Object can collide with other objects 
+		bool DoAnimate;					//Object is animated
+		bool DoSetImage;				//Object's display X and Y are changed from the location X and Y
+		bool DoHandleSound;				//Handles sound for the object
 		bool DoDisplay;					//Object is displayed
-		bool DoCollisionDetection;		//Object collides with other objects
 		bool DoDynamicDepth;			//Object's z-layer can be dynamically changed 
 
+		//Replacable functions
 		virtual void ClearData();
-		virtual int PerFrameActions();
-		virtual int EventHandler(SDL_Event* Event);
-		virtual int CollisionDetection(Object* Object);
+		virtual int ResetLoopVariables();
+		virtual int HandleEvents(SDL_Event* Event);
+		virtual int DetectCollisions(Object* Object);
 		virtual int Animate();
+		virtual int SetImage();
+		virtual int HandleSound();
+
+		virtual int PerFrameLoop();
 
 		int Display();
 
@@ -215,16 +246,24 @@ namespace SLGE
 		Object();
 		Object(Window *WindowHandle);
 
+		//Status
 		int GetNumberOfImages();
 		int GetCurrentImage();
 		double GetX();
 		double GetY();
 		double GetW();
 		double GetH();
+
 		bool DoesDisplay();
-		bool DoesCollisionDetection();
+		bool DoesDetectCollisions();
 		bool DoesDynamicDepth();
 
+		bool IsOverlapping(SDL_Rect Area);
+		bool IsOverlapping(Object* Object);
+		bool IsWithin(SDL_Rect Area);
+		bool IsWithin(Object* Object);
+
+		//Actions
 		int Register(Window *Window);
 		void Deregister();
 		void SetCoords(const double X, const double Y, const double W = NULL, const double H = NULL);
@@ -249,10 +288,11 @@ namespace SLGE
 		double CurrentHealth;
 		double MaxHealth;
 
-		double AttackDamage;
-		double AnimateSpeed;
-		double AttackDistance;
 		double AnimateFrame;
+		double AnimateSpeed;
+
+		double AttackDamage;
+		double AttackDistance;
 
 		//Status
 		bool Moving;
@@ -260,10 +300,10 @@ namespace SLGE
 		bool BeingHit;
 
 		//Internal Functions
-		void ClearData();
-		int PerFrameActions();
-		int EventHandler(SDL_Event *Event);
-		int CollisionDetection(Object *Object);
+		void ClearData();		
+		int ResetLoopVariables();
+		int HandleEvents(SDL_Event *Event);
+		int DetectCollisions(Object *Object);
 		int Animate();
 
 	public:

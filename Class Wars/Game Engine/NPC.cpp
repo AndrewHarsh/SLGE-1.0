@@ -63,28 +63,43 @@ int DLL_API NPC::Wander(const SDL_Rect in_WanderArea, const double in_RestTime)
 		
 int DLL_API NPC::Follow(Object *in_Leader, const double in_Distance)
 {
+	DoDetectCollisions = false;
+
+	if (in_Leader->GetX() < X - in_Distance)
+		Move(Left);
+	else if (in_Leader->GetX() > X + in_Distance)
+		Move(Right);
+	if (in_Leader->GetY() < Y - in_Distance)
+		Move(Up);
+	else if (in_Leader->GetY() > Y + in_Distance)
+		Move(Down);
+
+
+	/*
 	if (in_Leader->GetX() < X + in_Distance)
 	{
-		if (in_Leader->GetY() < Y - in_Distance)
+		if (in_Leader->GetY() < Y + in_Distance)
 			Move(UpLeft);
-		else if (in_Leader->GetY() > Y + in_Distance)
+		else if (in_Leader->GetY() > Y - in_Distance)
 			Move(DownLeft);
 		else
 			Move(Left);
 	}
 	else if (in_Leader->GetX() > X - in_Distance)
 	{
-		if (in_Leader->GetY() < Y - in_Distance)
+		if (in_Leader->GetY() < Y + in_Distance)
 			Move(UpRight);
-		else if (in_Leader->GetY() > Y + in_Distance)
+		else if (in_Leader->GetY() > Y - in_Distance)
 			Move(DownRight);
 		else
 			Move(Right);
 	}
-	else if (in_Leader->GetY() < Y + in_Distance)
+	
+	if (in_Leader->GetY() < Y + in_Distance)
 		Move(Up);
 	else if (in_Leader->GetY() > Y - in_Distance)
 		Move(Down);
+	*/
 
 	return 0;
 }

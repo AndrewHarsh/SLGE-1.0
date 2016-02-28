@@ -10,6 +10,7 @@ DLL_API Object::Object()
 	Image = nullptr;
 	HImage = nullptr;
 	Clip = nullptr;
+	DisplayClip = nullptr;
 
 	ClearData();
 }
@@ -43,6 +44,12 @@ void DLL_API Object::ClearData()
 		Clip = nullptr;
 	}
 
+	if (DisplayClip != nullptr)
+	{
+		delete[] DisplayClip;
+		DisplayClip = nullptr;
+	}
+
 	NumberOfImages = 0;
 	ImageToDisplay = 0;
 
@@ -51,48 +58,104 @@ void DLL_API Object::ClearData()
 	W = 0;
 	H = 0;
 
-	DoDisplay = false;
-	DoCollisionDetection = false;
-	DoDynamicDepth = false;
+	DoResetLoopVariables = true;
+	DoHandleEvents = true;
+	DoDetectCollisions = true;
+	DoAnimate = true;
+	DoSetImage = true;
+	DoHandleSound = true;
+	DoDisplay = true;
+	DoDynamicDepth = true;
 }
 
-int DLL_API Object::PerFrameActions()
+int DLL_API Object::ResetLoopVariables()
 {
+	DoResetLoopVariables = false;
 	return 0;
 }
 
-int DLL_API Object::EventHandler(SDL_Event* in_Event)
+int DLL_API Object::HandleEvents(SDL_Event* in_Event)
 {
+	DoHandleEvents = false;
 	return 0;
 }
 
-int DLL_API Object::CollisionDetection(Object* in_Object)
+int DLL_API Object::DetectCollisions(Object* in_Object)
 {
+	DoDetectCollisions = false;
+	/*
+	if (IsCollidingWith(in_Object))
+	{
+		if (	LastX < in_Object->GetX() && 
+				LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
+				LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			SetCoords(in_Object->GetX() - in_Object->GetW() / 2 - W / 2, Y);
+
+		else if (LastX > in_Object->GetX() && 
+				LastY + H / 2 > in_Object->GetY() - in_Object->GetH() / 2 && 
+				LastY - H / 2 < in_Object->GetY() + in_Object->GetH() / 2)
+			SetCoords(in_Object->GetX() + in_Object->GetW() / 2 + W / 2, Y);
+
+		else if (LastY < in_Object->GetY() && 
+				 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
+				 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			SetCoords(X, in_Object->GetY() - in_Object->GetH() / 2 - H / 2);
+
+		else if (LastY > in_Object->GetY() && 
+				 LastX + W / 2 > in_Object->GetX() - in_Object->GetW() / 2 && 
+				 LastX - W / 2 < in_Object->GetX() + in_Object->GetW() / 2)
+			SetCoords(X, in_Object->GetY() + in_Object->GetH() / 2 + H / 2);
+
+		return 0;
+	}
+
+	else
+		return 0;
+		*/
+
 	return 0;
 }
 
 int DLL_API Object::Animate()
+{
+	if (++ImageToDisplay >= NumberOfImages)
+		ImageToDisplay = 0;
+
+	return 0;
+}
+
+int DLL_API Object::SetImage()
+{
+	DisplayClip[ImageToDisplay].x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
+	DisplayClip[ImageToDisplay].y = static_cast <int> (round(Y + H / 2.0 - Clip[ImageToDisplay].h));
+	DisplayClip[ImageToDisplay].w = Clip[ImageToDisplay].w;
+	DisplayClip[ImageToDisplay].h = Clip[ImageToDisplay].h;
+
+	return 0;
+}
+
+int DLL_API Object::HandleSound()
+{
+	DoHandleSound = false;
+	return 0;
+}
+
+int DLL_API Object::PerFrameLoop()
 {
 	return 0;
 }
 
 int DLL_API Object::Display()
 {
-	if (!DoDisplay || WindowHandle == nullptr || ((Image == nullptr || Image[ImageToDisplay] == NULL) && (HImage == nullptr || HImage[ImageToDisplay] == NULL)))
+	if (WindowHandle == nullptr)
 		return 1;
-
-	SDL_Rect Offset;
-
-	Offset.x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
-	//Offset.y = static_cast <int> (round(Y - Clip[ImageToDisplay].h / 2.0));
-	Offset.y = static_cast <int> (round(Y + H / 2.0 - Clip[ImageToDisplay].h));
-	Offset.w = Clip[ImageToDisplay].w;
-	Offset.h = Clip[ImageToDisplay].h;
 	
-	if (WindowHandle->HardwareAccelerated)
-		return SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &Offset);
-	else
-		return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
+	if (WindowHandle->HardwareAccelerated && HImage[ImageToDisplay] != NULL)
+		return SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &DisplayClip[ImageToDisplay]);
+	else if (Image[ImageToDisplay] != NULL)
+		return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &DisplayClip[ImageToDisplay]);
+	else 
+		return 1;
 }
 
 
@@ -132,9 +195,9 @@ bool DLL_API Object::DoesDisplay()
 	return DoDisplay;
 }
 
-bool DLL_API Object::DoesCollisionDetection()
+bool DLL_API Object::DoesDetectCollisions()
 {
-	return DoCollisionDetection;
+	return DoDetectCollisions;
 }
 
 bool DLL_API Object::DoesDynamicDepth()
@@ -153,7 +216,7 @@ int DLL_API Object::Register(Window *in_Window)
 	WindowHandle->AddToScreen(this);
 
 	DoDisplay = true;
-	DoCollisionDetection = false;
+	DoDetectCollisions = false;
 	DoDynamicDepth = false;
 
 	return 0;
@@ -164,7 +227,7 @@ void DLL_API Object::Deregister()
 	WindowHandle = nullptr;
 
 	DoDisplay = false;
-	DoCollisionDetection = false;
+	DoDetectCollisions = false;
 	DoDynamicDepth = false;
 }
 
@@ -189,35 +252,43 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 	{
 		SDL_Texture **TempImageArray = new SDL_Texture*[NumberOfImages + 1];
 		SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages + 1];
+		SDL_Rect *TempDisplayClipArray = new SDL_Rect[NumberOfImages + 1];
 
 		for (int i = 0; i < NumberOfImages; i++)
 		{
 			TempImageArray[i] = HImage[i];
 			TempClipArray[i] = Clip[i];
+			TempDisplayClipArray[i] = DisplayClip[i];
 		}
 
 		delete[] HImage;
 		delete[] Clip;
+		delete[] DisplayClip;
 
 		HImage = TempImageArray;
 		Clip = TempClipArray;
+		DisplayClip = TempDisplayClipArray;
 	}
 	else
 	{
 		SDL_Surface **TempImageArray = new SDL_Surface*[NumberOfImages + 1];
 		SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages + 1];
+		SDL_Rect *TempDisplayClipArray = new SDL_Rect[NumberOfImages + 1];
 
 		for (int i = 0; i < NumberOfImages; i++)
 		{
 			TempImageArray[i] = Image[i];
 			TempClipArray[i] = Clip[i];
+			TempDisplayClipArray[i] = DisplayClip[i];
 		}
 
 		delete[] Image;
 		delete[] Clip;
+		delete[] DisplayClip;
 
 		Image = TempImageArray;
 		Clip = TempClipArray;
+		DisplayClip = TempDisplayClipArray;
 	}
 
 	SDL_Surface* LoadedSurface = IMG_Load(in_Filename.c_str());
@@ -293,8 +364,12 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 	else
 		Clip[NumberOfImages].h = LoadedSurface->h;
 
-	ImageToDisplay = NumberOfImages;
-	NumberOfImages++;
+	DisplayClip[NumberOfImages].x = static_cast <int> (round(X - Clip[NumberOfImages].w / 2.0));
+	DisplayClip[NumberOfImages].y = static_cast <int> (round(Y + H / 2.0 - Clip[NumberOfImages].h));
+	DisplayClip[NumberOfImages].w = Clip[NumberOfImages].w;
+	DisplayClip[NumberOfImages].h = Clip[NumberOfImages].h;
+
+	ImageToDisplay = NumberOfImages++;
 	SDL_FreeSurface(LoadedSurface);
 
 	return 0;

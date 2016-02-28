@@ -17,7 +17,7 @@ DLL_API Window::Timer::Timer()
 	*LastFPSDisplay = HRC::now();
 	*LastBenchDisplay = HRC::now();
 
-	FPS = 10;	
+	FPS = 60;	
 
 	LARGE_INTEGER Li;
 	QueryPerformanceFrequency(&Li);
@@ -48,7 +48,8 @@ int DLL_API Window::Timer::CapFPS()
 
 	Uint32 Elapsed = EndTime - StartTime;
 	Duration = (double) Elapsed;
-
+	 
+	/*
 	File.open("Data.txt", std::ios::app);
 
 	if (File.is_open())
@@ -58,6 +59,7 @@ int DLL_API Window::Timer::CapFPS()
 		File << "				1000 / Duration:           " << 1000 / Duration << "   (FPS)" << std::endl;
 		File.close();
 	}
+	*/
 
 	if (Duration < 1000 / FPS)
 		SDL_Delay(1000 / FPS - Duration);

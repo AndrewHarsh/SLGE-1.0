@@ -57,10 +57,10 @@ void DLL_API Entity::ClearData()
 	AnimateSpeed = 0;
 	AnimateFrame = 0;
 
-	DoCollisionDetection = true;
+	DoDetectCollisions = true;
 }
 
-int DLL_API Entity::PerFrameActions()
+int DLL_API Entity::ResetLoopVariables()
 {
 	LastX = X;
 	LastY = Y;
@@ -70,12 +70,12 @@ int DLL_API Entity::PerFrameActions()
 	return 0;
 }
 
-int DLL_API Entity::EventHandler(SDL_Event *in_Event)
+int DLL_API Entity::HandleEvents(SDL_Event *in_Event)
 {
 	return 0;
 }
 
-int DLL_API Entity::CollisionDetection(Object* in_Object)
+int DLL_API Entity::DetectCollisions(Object* in_Object)
 {
 	if (IsCollidingWith(in_Object))
 	{
@@ -220,7 +220,7 @@ int DLL_API Entity::SetTraits(const double in_Speed, const double in_Health, con
 	CurrentHealth = in_Health;
 	AttackDamage = in_AttackDamage;
 
-	DoCollisionDetection = true;
+	DoDetectCollisions = true;
 	DoDynamicDepth = true;
 	return 0;
 }
@@ -235,6 +235,9 @@ int DLL_API Entity::SetAnimation(const double in_Speed)
 //Action Methods
 int DLL_API Entity::Move(const Direction in_Direction)
 {
+	if (WindowHandle->TimerHandle.GetFPS() <= 0)
+		return 1;
+
 	switch (in_Direction)
 	{
 		case Up:

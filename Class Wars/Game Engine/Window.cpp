@@ -176,10 +176,47 @@ int DLL_API Window::GetBPP()
 	return BitsPerPixel;
 }
 
+Object* DLL_API Window::GetScreenObject(const int in_Index)
+{
+	return ScreenObjects[in_Index];
+}
+
+int DLL_API Window::GetNumberOfObjects()
+{
+	return NumberOfObjects;
+}
+
+
+bool DLL_API Window::IsShown()
+{
+	return Shown;
+}
+
+bool DLL_API Window::IsMouseFocused()
+{
+	return MouseFocus;
+}
+
+bool DLL_API Window::IsKeyboardFocused()
+{
+	return KeyboardFocus;
+}
+
+bool DLL_API Window::IsMinimized()
+{
+	return Minimized;
+}
+
+bool DLL_API Window::IsHardwareAccelerated()
+{
+	return HardwareAccelerated;
+}
+
 bool DLL_API Window::IsRunning()
 {
 	return Running;
 }
+
 
 
 int DLL_API Window::Init()
@@ -265,6 +302,9 @@ int DLL_API Window::AddToScreen(Object *in_Object)
 		delete[] ScreenObjects;
 
 	ScreenObjects = TempArray;
+
+	//Makes sure loop variables are reset before the first loop.
+	ScreenObjects[NumberOfObjects - 1]->ResetLoopVariables();
 
 	return 0;
 }
@@ -382,10 +422,14 @@ int DLL_API Window::Refresh()
 	}
 	*/
 
+	//Handles events
 	while (SDL_PollEvent(&Event))
 	{
 		for (int i = 0; i < NumberOfObjects; i++)
-			ScreenObjects[i]->EventHandler(&Event);
+		{
+			if (ScreenObjects[i]->DoHandleEvents)
+				ScreenObjects[i]->HandleEvents(&Event);
+		}
 
 		EventHandler();
     }	   
@@ -395,7 +439,7 @@ int DLL_API Window::Refresh()
 	{
 		for (int ii = 0; ii < NumberOfObjects; ii++)
 		{
-			if (i == ii || !ScreenObjects[i]->DoesDynamicDepth() || !ScreenObjects[ii]->DoesDynamicDepth())
+			if (i == ii || !ScreenObjects[i]->DoDynamicDepth || !ScreenObjects[ii]->DoDynamicDepth)
 				continue;
 
 			if (ScreenObjects[i]->GetY() < ScreenObjects[ii]->GetY())
@@ -403,20 +447,33 @@ int DLL_API Window::Refresh()
 		}
 	}
 
-	//Does collision detection
+	//Goes through the default functions
 	for (int i = 0; i < NumberOfObjects; i++)
 	{
+		ScreenObjects[i]->PerFrameLoop();
+
 		for (int ii = 0; ii < NumberOfObjects; ii++)
 		{
-			if (i == ii || !ScreenObjects[i]->DoesCollisionDetection() || !ScreenObjects[ii]->DoesCollisionDetection())
+			if (i == ii || !ScreenObjects[i]->DoDetectCollisions || !ScreenObjects[ii]->DoDetectCollisions)
 				continue;
 
-			ScreenObjects[i]->CollisionDetection(ScreenObjects[ii]);
+			ScreenObjects[i]->DetectCollisions(ScreenObjects[ii]);
 		}
 
-		ScreenObjects[i]->Animate();
-		ScreenObjects[i]->Display();
-		ScreenObjects[i]->PerFrameActions();
+		if (ScreenObjects[i]->DoHandleSound)
+			ScreenObjects[i]->HandleSound();
+
+		if (ScreenObjects[i]->DoAnimate)
+			ScreenObjects[i]->Animate();
+
+		if (ScreenObjects[i]->DoSetImage)
+			ScreenObjects[i]->SetImage();
+
+		if (ScreenObjects[i]->DoDisplay)
+			ScreenObjects[i]->Display();
+
+		if (ScreenObjects[i]->DoResetLoopVariables)
+			ScreenObjects[i]->ResetLoopVariables();
 	}
 
 	//Screen title is FPS
@@ -437,6 +494,13 @@ int DLL_API Window::Refresh()
 	}
 	else
 		return SDL_UpdateWindowSurface(WindowHandle);
+
+	return 0;
+}
+
+int DLL_API Window::RunLoop(void (&in_Loop)(void))
+{
+	in_Loop();
 
 	return 0;
 }

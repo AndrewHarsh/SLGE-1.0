@@ -21,7 +21,7 @@ private:
 	bool MoveLeft;
 	bool MoveRight;
 
-	int PerFrameActions()
+	int ResetLoopVariables()
 	{
 		LastX = X;
 		LastY = Y;
@@ -40,7 +40,7 @@ private:
 		return 0;
 	}
 
-	int EventHandler(SDL_Event *Event)
+	int HandleEvents(SDL_Event *Event)
 	{
 		/*
 		const Uint8 *Keystate = SDL_GetKeyboardState(NULL);
@@ -127,13 +127,13 @@ void SetUp()
 		Player1.OpenImage("1.png", { i, 32, 32, 32 }, { 255, 0, 153, 0 });
 
 	Player1.SetCoords(540, 360, 32, 16);
-	Player1.SetTraits(100, 200, 5);
+	Player1.SetTraits(200, 200, 5);
 	Player1.SetAnimation(10);
 }
 
 extern "C" int SDL_main(int argc, char* argv[])
 {
-	SetUp();
+	SetUp();						 
 
 	while (Window1.IsRunning())
 	{
