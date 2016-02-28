@@ -517,6 +517,7 @@ int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despa
 	
 		if (Ret != Continue)
 		{
+			SDL_FreeSurface(BlackScreen);
 			in_Despawn();
 			return Ret;
 		}
@@ -524,6 +525,7 @@ int DLL_API Window_t::Run(Function in_Spawn, Function in_Loop, Function in_Despa
 		Refresh();
 	}
 
+	SDL_FreeSurface(BlackScreen);
 	return in_Despawn();
 }
 

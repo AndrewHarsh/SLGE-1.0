@@ -413,9 +413,9 @@ SDL_Window DLL_API *SLGE::SDL_CreateWindowEx(const char* in_Title, int in_X, int
 			return NULL;
 		}
 
-		TTF_Font *Temp = TTF_OpenFont("Cheeseburger.ttf", 16);
-		if (Temp == NULL)
-			std::cout << SDL_GetError();
+		//TTF_Font *Temp = TTF_OpenFont("Cheeseburger.ttf", 16);
+		//if (Temp == NULL)
+		//	std::cout << SDL_GetError();
 
 		//Mix_Init(MIX_INIT_FLAC | MIX_INIT_MOD | MIX_INIT_MP3 | MIX_INIT_OGG);
 

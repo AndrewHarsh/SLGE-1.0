@@ -40,11 +40,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>..\..\Assets;..\..\SDL2-2.0.3\include;..\Game Engine;$(IncludePath)</IncludePath>
-    <LibraryPath>..\..\SDL2-2.0.3\lib\x86;..\Game Engine\Debug;..\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\SDL2-2.0.3\lib\x86;..\Debug</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\..\Assets;..\..\SDL2-2.0.1\include;..\Game Engine;$(IncludePath)</IncludePath>
-    <LibraryPath>..\..\SDL2-2.0.1\lib\x86;..\Game Engine\Release;..\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\Assets;..\..\SDL2-2.0.3\include;..\Game Engine;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\SDL2-2.0.3\lib\x86;..\Debug</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

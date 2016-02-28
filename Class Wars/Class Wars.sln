@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Class Wars", "Class Wars\Cl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SLGE", "Game Engine\Game Engine.vcxproj", "{45526C37-8417-43EC-92BA-8250A2FE9465}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox\Sandbox.vcxproj", "{AE4D26E9-77E2-4402-8045-5E98F1EE1780}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -24,6 +26,10 @@ Global
 		{45526C37-8417-43EC-92BA-8250A2FE9465}.Debug|Win32.Build.0 = Debug|Win32
 		{45526C37-8417-43EC-92BA-8250A2FE9465}.Release|Win32.ActiveCfg = Release|Win32
 		{45526C37-8417-43EC-92BA-8250A2FE9465}.Release|Win32.Build.0 = Release|Win32
+		{AE4D26E9-77E2-4402-8045-5E98F1EE1780}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE4D26E9-77E2-4402-8045-5E98F1EE1780}.Debug|Win32.Build.0 = Debug|Win32
+		{AE4D26E9-77E2-4402-8045-5E98F1EE1780}.Release|Win32.ActiveCfg = Release|Win32
+		{AE4D26E9-77E2-4402-8045-5E98F1EE1780}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
