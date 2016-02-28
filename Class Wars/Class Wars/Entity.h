@@ -47,92 +47,6 @@ protected:
 		}
 	};
 
-	class Animation_t
-	{
-	protected:
-
-		struct AnimateDirection_t
-		{
-		friend class Entity_t;
-		private:
-
-			double TimeDisplayed; //In milliseconds
-
-		public:
-
-			int StartPosition;
-			int TotalNumber;
-			double Duration; //In milliseconds
-
-			void ClearData()
-			{
-				StartPosition = 0;
-				TotalNumber = 0;
-				Duration = 0;
-				TimeDisplayed = 0;
-			}
-
-		} Direction[8];
-
-	public:
-
-		bool Active;
-
-		void ClearData()
-		{
-			for (int i = 0; i < 8; i++)
-				Direction[i].ClearData();
-
-			Active = false;
-		}
-
-		AnimateDirection_t &operator[](Direction_t in_Direction)
-		{
-			if (in_Direction >= 0 && in_Direction < 8)
-				return Direction[in_Direction];
-
-			return Direction[0];
-		}
-
-		const AnimateDirection_t  &operator[](Direction_t in_Direction) const
-		{
-			if (in_Direction >= 0 && in_Direction < 8)
-				return Direction[in_Direction];
-
-			return Direction[0];
-		}
-
-		void SetAll(int in_StartPosition, double in_Duration, int in_TotalFrames)
-		{
-			SetTotalFramesAll(in_TotalFrames);
-			SetDurationAll(in_Duration);
-			SetStartPositionAll(in_StartPosition);
-		}
-
-		void SetTotalFramesAll(int in_TotalNumber)
-		{
-			for (int i = 0; i < 8; i++)
-				Direction[i].TotalNumber = in_TotalNumber;
-		}
-
-		void SetDurationAll(double in_Duration)
-		{
-			for (int i = 0; i < 8; i++)
-				Direction[i].Duration = in_Duration;
-		}
-
-		void SetStartPositionAll(int in_StartPosition)
-		{
-			int StartOffset = 0;
-
-			for (int i = 0; i < 8; i++)
-			{
-				Direction[i].StartPosition = in_StartPosition + StartOffset;
-				StartOffset += Direction[i].TotalNumber;
-			}
-		}
-	};
-
 	//Movement
 	double MoveSpeed; //In Pixels per second
 	double DestinationX;
@@ -214,14 +128,24 @@ public:
 	{
 		LastX = X;
 		LastY = Y;
+
+		(*Animation)[aAttacking].Active = false;
+		(*Animation)[aIdle].Active = false;
+		(*Animation)[aMoving].Active = false;
 	}
 
 	virtual int Display()
 	{
 		int Ret = 0;
 
-		if (Ret = Object_t::Display())
-			return Ret;
+		for (int i = 0; i < (int) ImageToDisplay->size(); i++)
+		{
+			//Object_t::Animate(i, Facing);
+			SetImage((*ImageToDisplay)[i]);
+
+			if ((Ret = (*Image)[(*ImageToDisplay)[i]].Display()) != EXIT_SUCCESS)
+				return Ret;
+		}
 
 		if (Ret = HealthBar.Display())
 			return Ret;
@@ -235,40 +159,40 @@ public:
 	{
 		if (Attacking.Active)
 		{
-			Attacking[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+			Attacking.Direction[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
 
-			while (Attacking[Facing].TimeDisplayed > Attacking[Facing].Duration &&
-				   Attacking[Facing].Duration > 0)
+			while (Attacking.Direction[Facing].TimeDisplayed > Attacking.Direction[Facing].Duration &&
+				   Attacking.Direction[Facing].Duration > 0)
 			{
-				Attacking[Facing].TimeDisplayed -= Attacking[Facing].Duration;
+				Attacking.Direction[Facing].TimeDisplayed -= Attacking.Direction[Facing].Duration;
 				(*ImageToDisplay)[AnimationLayer]++;
 
-				if ((*ImageToDisplay)[AnimationLayer] >= Attacking[Facing].StartPosition +  Attacking[Facing].TotalNumber ||
-					(*ImageToDisplay)[AnimationLayer] < Attacking[Facing].StartPosition)
+				if ((*ImageToDisplay)[AnimationLayer] >= Attacking.Direction[Facing].StartPosition +  Attacking.Direction[Facing].TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Attacking.Direction[Facing].StartPosition)
 				{
-					(*ImageToDisplay)[AnimationLayer] = Attacking[Facing].StartPosition;
+					(*ImageToDisplay)[AnimationLayer] = Attacking.Direction[Facing].StartPosition;
 				}
 			}
 		}
 		else if (Moving.Active)
 		{
-			Moving[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+			Moving.Direction[Facing].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
 
-			while (Moving[Facing].TimeDisplayed > Moving[Facing].Duration &&
-				   Moving[Facing].Duration > 0)
+			while (Moving.Direction[Facing].TimeDisplayed > Moving.Direction[Facing].Duration &&
+				   Moving.Direction[Facing].Duration > 0)
 			{
-				Moving[Facing].TimeDisplayed -= Moving[Facing].Duration;
+				Moving.Direction[Facing].TimeDisplayed -= Moving.Direction[Facing].Duration;
 				(*ImageToDisplay)[AnimationLayer]++;
 
-				if ((*ImageToDisplay)[AnimationLayer] >= Moving[Facing].StartPosition + Moving[Facing].TotalNumber ||
-					(*ImageToDisplay)[AnimationLayer] < Moving[Facing].StartPosition)
+				if ((*ImageToDisplay)[AnimationLayer] >= Moving.Direction[Facing].StartPosition + Moving.Direction[Facing].TotalNumber ||
+					(*ImageToDisplay)[AnimationLayer] < Moving.Direction[Facing].StartPosition)
 				{
-					(*ImageToDisplay)[AnimationLayer] = Moving[Facing].StartPosition;
+					(*ImageToDisplay)[AnimationLayer] = Moving.Direction[Facing].StartPosition;
 				}
 			}
 		}
 		else
-			(*ImageToDisplay)[AnimationLayer] = Idle[Facing].StartPosition;
+			(*ImageToDisplay)[AnimationLayer] = Idle.Direction[Facing].StartPosition;
 	}
 
 	virtual bool CanAttack(Entity_t *in_Victim)
@@ -358,7 +282,8 @@ public:
 			break;	   
 		}
 
-		Moving.Active = true;
+		(*Animation)[aMoving].Active = true;
+		//Moving.Active = true;
 		return 0;
 	}
 
@@ -596,6 +521,8 @@ public:
 
 	void Attack(Entity_t *in_Victim, Attack_t Weapon)
 	{
+		(*Animation)[aAttacking].Active = true;
+
 		in_Victim->TakeDamage(Weapon.Damage / WindowHandle->TimerHandle.GetFPS());
 	}
 };

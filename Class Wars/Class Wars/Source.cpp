@@ -306,8 +306,15 @@ FunctionReturn SpawnGame()
 			break;
 		default:
 			Player.Spawn(1, &Window1);
-
 			break;
+	}
+
+	Player.Spawn(5, &Window1);
+
+	for (int i = 1; i < 6; i++)
+	{
+		Player[i].Init();
+		Player[i].SetCoords(rand() % WIDTH, rand() % HEIGHT);
 	}
 
 	Inventory.Spawn(1, &Window1);
@@ -544,7 +551,7 @@ FunctionReturn RunGame()
 
 	//Display
 	//Window1.TimerHandle.Benchmark("Display All"); 
-	All <Entity_t> (&Entity_t::Animate);
+	//All <Entity_t> (&Entity_t::Animate);
 
 	All <Object_t> (&Object_t::Display);
 	All <Entity_t> (&Entity_t::Display);
@@ -559,8 +566,8 @@ FunctionReturn DespawnGame()
 
 	//Despawn all
 	Background.Despawn();
-	DummyTarget.Despawn();
 	Player.Despawn();
+	DummyTarget.Despawn();
 	Inventory.Despawn();
 	HUD.Despawn();
 	Bar.Despawn();
@@ -624,8 +631,9 @@ extern "C" int SDL_main(int argc, char* argv[])
 
 
 
-
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //================================================= Mike's Sandbox =========================================================================================
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 DynamicClass <Floor_t, Object_t> mikeWorld;			//The level
@@ -640,6 +648,9 @@ FunctionReturn SpawnMikeGame()
 	mikeWorld.Spawn(1, &Window1);
 	mikePlayer.Spawn(1, &Window1);
 	mikeMonster.Spawn(5, &Window1);
+
+	Room_t newroom;
+	
 
 	//Reference the first item in the mikeWorld object and add an image
 	//No clipping or colorkeying has been set
@@ -656,6 +667,11 @@ FunctionReturn SpawnMikeGame()
 	{
 		mikeMonster[i].AddImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
 		mikeMonster[i].SetCoords(100 + 100 * i, 100);
+	}
+
+	if (Window1.GetKeyState(SDL_SCANCODE_0))
+	{
+		
 	}
 
 	return Continue;

@@ -294,23 +294,63 @@ namespace SLGE
 		};
 	}
 
-	struct Coord_t
+	struct DLL_API Coord_t
 	{
 		double X;
 		double Y;
 	};
 
-	struct Size_t
+	struct DLL_API Size_t
 	{
 		double W;
 		double H;
 	};
 
-	struct Rect_t
+	struct DLL_API Rect_t
 	{
 		Coord_t Coord;
 		Size_t Size;
 	};
+
+	struct DLL_API Animation_t
+	{
+		bool Active;
+
+		struct DLL_API AnimateDirection_t
+		{
+		friend class Object_t;
+		friend struct Animation_t;
+
+			double TimeDisplayed; //In milliseconds
+
+			int StartPosition;
+			int TotalNumber;
+			double Duration; //In milliseconds
+
+			AnimateDirection_t();
+			void ClearData();
+
+			~AnimateDirection_t()
+			{
+				ClearData();
+			}
+
+		} Direction[16];
+
+		Animation_t();
+		~Animation_t()
+		{
+			ClearData();
+		}
+		void ClearData();
+		void SetAll(int in_StartPosition, double in_Duration, int in_TotalFrames);
+		void SetTotalFramesAll(int in_TotalNumber);
+		void SetDurationAll(double in_Duration);
+		void SetStartPositionAll(int in_StartPosition);
+	};
+
+
+
 
 	//Window_t
 	//	The base class for any window like object	
@@ -734,13 +774,13 @@ namespace SLGE
 	protected:
 
 		std::string *ID;
-
 		Window_t *WindowHandle;
 
 	//Image
 		std::vector <Image_t> *Image; //All images that could be displayed by a single object
 		std::vector <int> *ImageToDisplay; //An array of indexes for pointing to which image is to be displayed and in what order
-			
+		std::vector <Animation_t> *Animation; //An array of Animations for each layered image
+
 	//Location
 		double X; //X coordinate of the object but NOT the image
 		double Y; //Y coordinate of the object but NOT the image
@@ -753,6 +793,9 @@ namespace SLGE
 
 		//Saves all current data to a file
 		virtual int Log(std::ofstream &File, std::string Precursor);
+
+		//animates the object
+		virtual void Animate(int Layer, int Direction);
 
 		//Sets the Image X, Y, W, and H based on the object's X, Y, W, and H
 		//	@ImageIndex is the position of the image in the image array to set
@@ -769,10 +812,10 @@ namespace SLGE
 		Object_t(Window_t *WindowHandle);
 
 		//Cleans up the dynamically allocated variables
-		~Object_t();
+		virtual ~Object_t();
 
 		//Manual register function for static arrays
-		//	@Window is the window to register the object with
+		//	@Window is the window to register the object with								 
 		virtual int Register(Window_t *Window);
 
 		//Sets the ID for the object
@@ -804,7 +847,7 @@ namespace SLGE
 
 		//Returns the Image at an index
 		//	@Index is the index of the image
-		Image_t* GetImageAtIndex(int Index);
+		Image_t &GetImageAtIndex(int Index);
 
 		//Returns the index of a layered image
 		//	@Layer is the layer that the image will be displayed at

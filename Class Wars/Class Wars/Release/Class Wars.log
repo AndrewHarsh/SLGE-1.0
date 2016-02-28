@@ -1,15 +1,24 @@
-﻿Build started 2/17/2015 9:26:15 PM.
-     1>Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" on node 2 (Build target(s)).
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
-         Source.cpp
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.exe" /NOLOGO SLGE.lib SDL2.lib SDL2main.lib SDL2_image.lib SDL2_mixer.lib SDL2_ttf.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.lib" /MACHINE:X86 /SAFESEH Release\Source.obj
-         Generating code
-         Finished generating code
-         Class Wars.vcxproj -> C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.exe
-     1>Done Building Project "C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Class Wars\Class Wars.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:02.56
+﻿  Source.cpp
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: int __thiscall SLGE::Image_t::Rotate(double,struct SDL_Point)" (__imp_?Rotate@Image_t@SLGE@@QAEHNUSDL_Point@@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: int __thiscall SLGE::Image_t::SetTransparency(double)" (__imp_?SetTransparency@Image_t@SLGE@@QAEHN@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: int __thiscall SLGE::Image_t::SetSize(int,int)" (__imp_?SetSize@Image_t@SLGE@@QAEHHH@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: int __thiscall SLGE::Image_t::SetCoords(double,double)" (__imp_?SetCoords@Image_t@SLGE@@QAEHNN@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual int __thiscall SLGE::Object_t::Display(void)" (__imp_?Display@Object_t@SLGE@@UAEHXZ)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: void __thiscall SLGE::Object_t::SetSize(double,double)" (__imp_?SetSize@Object_t@SLGE@@QAEXNN@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: void __thiscall SLGE::Object_t::SetCoords(double,double)" (__imp_?SetCoords@Object_t@SLGE@@QAEXNN@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual bool __thiscall SLGE::Object_t::IsWithin(struct SDL_Rect)" (__imp_?IsWithin@Object_t@SLGE@@UAE_NUSDL_Rect@@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual bool __thiscall SLGE::Object_t::IsWithin(class SLGE::Object_t *)" (__imp_?IsWithin@Object_t@SLGE@@UAE_NPAV12@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual bool __thiscall SLGE::Object_t::IsOverlapping(struct SDL_Rect)" (__imp_?IsOverlapping@Object_t@SLGE@@UAE_NUSDL_Rect@@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual bool __thiscall SLGE::Object_t::IsOverlapping(class SLGE::Object_t *)" (__imp_?IsOverlapping@Object_t@SLGE@@UAE_NPAV12@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: int __thiscall SLGE::Object_t::SetID(char const * const)" (__imp_?SetID@Object_t@SLGE@@QAEHQBD@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: virtual int __thiscall SLGE::Object_t::Register(class SLGE::Window_t *)" (__imp_?Register@Object_t@SLGE@@UAEHPAVWindow_t@2@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) protected: virtual void __thiscall SLGE::Object_t::SetImage(int)" (__imp_?SetImage@Object_t@SLGE@@MAEXH@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) protected: virtual int __thiscall SLGE::Object_t::Log(class std::basic_ofstream<char,struct std::char_traits<char> > &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >)" (__imp_?Log@Object_t@SLGE@@MAEHAAV?$basic_ofstream@DU?$char_traits@D@std@@@std@@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) protected: virtual void __thiscall SLGE::Object_t::ClearData(void)" (__imp_?ClearData@Object_t@SLGE@@MAEXXZ)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: struct SLGE::Window_t::Mouse_t::Wheel_t const __thiscall SLGE::Window_t::Mouse_t::operator[](enum SLGE::WHEEL::Wheels)const " (__imp_??AMouse_t@Window_t@SLGE@@QBE?BUWheel_t@012@W4Wheels@WHEEL@2@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: struct SLGE::Window_t::Keyboard_t::Key_t const __thiscall SLGE::Window_t::Keyboard_t::operator[](enum SLGE::KEY::Keys)const " (__imp_??AKeyboard_t@Window_t@SLGE@@QBE?BUKey_t@012@W4Keys@KEY@2@@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __thiscall SLGE::Window_t::Keyboard_t::GetInputText(bool)" (__imp_?GetInputText@Keyboard_t@Window_t@SLGE@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@_N@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: void __thiscall SLGE::Window_t::Keyboard_t::StartCollectInputText(bool)" (__imp_?StartCollectInputText@Keyboard_t@Window_t@SLGE@@QAEX_N@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: unsigned int const __thiscall SLGE::Window_t::GetMouseState(int *,int *)const " (__imp_?GetMouseState@Window_t@SLGE@@QBE?BIPAH0@Z)
+Source.obj : error LNK2001: unresolved external symbol "__declspec(dllimport) public: __thiscall SLGE::Window_t::~Window_t(void)" (__imp_??1Window_t@SLGE@@QAE@XZ)
+C:\Users\nzbq9t\Dropbox\Game We are Making\Class Wars\Release\Class Wars.exe : fatal error LNK1120: 22 unresolved externals

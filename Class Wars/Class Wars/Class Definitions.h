@@ -19,6 +19,7 @@ using namespace SLGE;
 
 //Floor
 #include "Floor.h"
+#include "Room.h"
 
 //Walls
 #include "Walls.h"

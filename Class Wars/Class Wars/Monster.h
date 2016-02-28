@@ -40,7 +40,7 @@ public:
 		InitialHealth = 100;
 		CurrentHealth = 100;
 
-		Moving.SetAll(0, 0.1, 10);
+		//Moving.SetAll(0, 0.1, 10);
 
 		MainWeapon.Range = 5;
 		MainWeapon.Damage = 5;
@@ -51,9 +51,9 @@ public:
 		HealthBar.AddLayer("Health.png", { 0, 100, 50, 5 }, { NULL });
 		HealthBar.Init();
 
-		AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
-		MoveLayer(ImageToDisplay->size() - 1, 0);
-		AnimationLayer++;
+		//AddLayer("Collision Box.png", { 0, 0, (int)W, (int)H }, { 255, 0, 153, 0 });
+		//MoveLayer(ImageToDisplay->size() - 1, 0);
+		//AnimationLayer++;
 	}
 
 	virtual int Display()

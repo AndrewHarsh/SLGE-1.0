@@ -164,5 +164,8 @@
     <ClInclude Include="Class Definitions.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Room.h">
+      <Filter>Header Files\Classes\Floor</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

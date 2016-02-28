@@ -8,12 +8,11 @@ using namespace SLGE;
 DLL_API Object_t::Object_t()
 {
 	ID = new std::string;
-	ID->empty();
-
 	WindowHandle = nullptr;
 
 	Image = new std::vector <Image_t>;
 	ImageToDisplay = new std::vector <int>;
+	Animation = new std::vector <Animation_t>;
 
 	ClearData();
 }
@@ -22,10 +21,25 @@ DLL_API Object_t::~Object_t()
 {
 	ClearData();
 
+	//Animation = new std::vector <Animation_t>;
+
 	WindowHandle = nullptr;
-	delete Image;
-	delete ImageToDisplay;
-	delete ID;
+
+	Animation->clear();
+
+	if (Image != nullptr)
+		delete Image;
+	if (ImageToDisplay != nullptr)
+		delete ImageToDisplay;
+	if (ID != nullptr)
+		delete ID;
+	if (Animation != nullptr)
+		delete Animation;
+	
+	Animation = nullptr;
+	Image = nullptr;
+	ImageToDisplay = nullptr;
+	ID = nullptr;
 }
 
 DLL_API Object_t::Object_t(Window_t *in_WindowHandle) : Object_t()
@@ -78,13 +92,37 @@ void DLL_API Object_t::SetImage(int in_ImageIndex)
 		(*Image)[in_ImageIndex].SetCoords(X - (*Image)[in_ImageIndex].W() / 2, Y - (*Image)[in_ImageIndex].H() / 2);
 }
 
+void DLL_API Object_t::Animate(int in_Layer, int in_Direction)
+{
+	if (in_Layer >= 0 && in_Layer < (int) Animation->size() && 
+		in_Direction >= 0 && in_Direction < 16 && 
+		(*Animation)[in_Layer].Active)
+	{
+		(*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed += 1 / WindowHandle->TimerHandle.GetFPS();
+
+		while ((*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed > (*Animation)[in_Layer].Direction[in_Direction].Duration &&
+				(*Animation)[in_Layer].Direction[in_Direction].Duration > 0)
+		{
+			(*Animation)[in_Layer].Direction[in_Direction].TimeDisplayed -= (*Animation)[in_Layer].Direction[in_Direction].Duration;
+			(*ImageToDisplay)[in_Layer]++;
+
+			if ((*ImageToDisplay)[in_Layer] >= (*Animation)[in_Layer].Direction[in_Direction].StartPosition + (*Animation)[in_Layer].Direction[in_Direction].TotalNumber ||
+				(*ImageToDisplay)[in_Layer] < (*Animation)[in_Layer].Direction[in_Direction].StartPosition)
+			{
+				(*ImageToDisplay)[in_Layer] = (*Animation)[in_Layer].Direction[in_Direction].StartPosition;
+			}
+		}
+	}
+}
+
 int DLL_API Object_t::Display()
 {
 	for (int i = 0; i < (int) ImageToDisplay->size(); i++)
 	{
+		Animate(i, 0);
 		SetImage((*ImageToDisplay)[i]);
 
-		if ((*ImageToDisplay)[i] < (int) Image->size() && (*Image)[(*ImageToDisplay)[i]].Display() != EXIT_SUCCESS)
+		if ((*Image)[(*ImageToDisplay)[i]].Display() != EXIT_SUCCESS)
 			return 1;
 	}
 
@@ -98,12 +136,12 @@ const char DLL_API* Object_t::GetID() const
 	return ID->c_str(); 
 }
 
-Image_t DLL_API *Object_t::GetImageAtIndex(int in_Index)
+Image_t DLL_API &Object_t::GetImageAtIndex(int in_Index)
 {
 	if (in_Index >= 0 && in_Index < (int) Image->size())
-		return &((*Image)[in_Index]);
-	else
-		return nullptr;
+		return (*Image)[in_Index];
+
+	return (*Image)[0];
 }
 
 int DLL_API Object_t::GetIndexOfImage(const Image_t* in_Image)
@@ -337,6 +375,7 @@ int DLL_API Object_t::AddLayer(std::string in_Filename, SDL_Rect in_Clip, SDL_Co
 		return 1;
 
 	ImageToDisplay->push_back(Image->size() - 1);
+	Animation->push_back(Animation_t());
 
 	return 0;
 }
@@ -344,7 +383,10 @@ int DLL_API Object_t::AddLayer(std::string in_Filename, SDL_Rect in_Clip, SDL_Co
 int DLL_API Object_t::AddLayer(int in_ImagePosition)
 {
 	if (in_ImagePosition >= 0 && in_ImagePosition < (int) Image->size())
+	{
 		ImageToDisplay->push_back(in_ImagePosition);
+		Animation->push_back(Animation_t());
+	}
 	else
 		return 1;
 
@@ -371,7 +413,10 @@ int DLL_API Object_t::MoveLayer(int in_Position, const int in_NewPosition)
 int DLL_API Object_t::DeleteLayer(int in_Position)
 {
 	if (in_Position >= 0 && in_Position < (int) ImageToDisplay->size())
+	{
 		ImageToDisplay->erase(ImageToDisplay->begin() + in_Position);
+		Animation->erase(Animation->begin() + in_Position);
+	}
 	else
 		return 1;
 

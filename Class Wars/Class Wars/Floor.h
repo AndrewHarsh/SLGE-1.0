@@ -31,7 +31,8 @@ protected:
 		{
 			Register(in_Window);
 		}
-	};
+
+	}; 
 
 	//Used to clear ALL data from a class (use wisely)
 	void ClearData()

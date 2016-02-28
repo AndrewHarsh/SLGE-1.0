@@ -107,6 +107,7 @@
     <ClInclude Include="Options.h" />
     <ClInclude Include="Paladin.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Room.h" />
     <ClInclude Include="Slider Bar.h" />
     <ClInclude Include="User Interface.h" />
     <ClInclude Include="Walls.h" />

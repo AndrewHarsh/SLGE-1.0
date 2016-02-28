@@ -42,7 +42,16 @@ public:
 		//Animations
 		Moving.SetAll(1, 0.05, 8);
 		Attacking.SetAll(33, 0.1, 8);
-		Idle.SetAll(1, 0.1, 8);
+		Idle.SetDurationAll(0.1);
+		Idle.SetTotalFramesAll(1);
+		Idle.Direction[Down].StartPosition = 1;
+		Idle.Direction[Right].StartPosition = 9;
+		Idle.Direction[Left].StartPosition = 17;
+		Idle.Direction[Up].StartPosition = 25;
+
+		Animation->push_back(Moving);
+		Animation->push_back(Attacking);
+		Animation->push_back(Idle);
 
 
 		//Images
