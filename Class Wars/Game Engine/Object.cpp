@@ -22,14 +22,27 @@ DLL_API Object_t::Object_t(Window_t *in_WindowHandle) : Object_t()
 	Register(in_WindowHandle);
 }
 
+void DLL_API Object_t::SetDisplay()
+{
+	DisplayClip[ImageToDisplay].x = (int) (X - W / 2);
+	DisplayClip[ImageToDisplay].y = (int) (Y - H / 2);
+	DisplayClip[ImageToDisplay].w = (int) W;
+	DisplayClip[ImageToDisplay].h = (int) H;
+
+	//ImageCenter[ImageToDisplay].x = (int) X;
+	//ImageCenter[ImageToDisplay].y = (int) Y;
+}
+
 int DLL_API Object_t::Display()
 {
 	if (WindowHandle == nullptr)
 		return 1;
 
-	if (WindowHandle->HardwareAccelerated && HImage[ImageToDisplay] != NULL)
-		return SDL_RenderCopy(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &DisplayClip[ImageToDisplay]);
-	else if (Image[ImageToDisplay] != NULL)
+	SetDisplay();
+
+	if (WindowHandle->HardwareAccelerated && WindowHandle->HScreen != NULL && HImage[ImageToDisplay] != NULL)
+		return SDL_RenderCopyEx(WindowHandle->HScreen, HImage[ImageToDisplay], &Clip[ImageToDisplay], &DisplayClip[ImageToDisplay], ImageAngle[ImageToDisplay], &ImageCenter[ImageToDisplay], ImageFlip[ImageToDisplay]);
+	else if (WindowHandle->Screen != NULL && Image[ImageToDisplay] != NULL)
 		return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &DisplayClip[ImageToDisplay]);
 	else 
 		return 1;
@@ -170,6 +183,10 @@ int DLL_API Object_t::OpenImage(const std::string in_Filename, const SDL_Rect in
 		HImage = TempImageArray;
 		Clip = TempClipArray;
 		DisplayClip = TempDisplayClipArray;
+
+		ImageAngle.push_back(0);
+		ImageCenter.push_back({ X, Y });
+		ImageFlip.push_back(SDL_FLIP_NONE);
 	}
 	else
 	{

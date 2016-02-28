@@ -350,11 +350,20 @@ BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved
 				Image* DeleteData = AllImages.Pull(i);
 
 				if (DeleteData->Data != nullptr)
+				{
 					SDL_FreeSurface(DeleteData->Data);
+					DeleteData->Data = nullptr;
+				}
 				if (DeleteData->LoadData != nullptr)
+				{
 					SDL_FreeSurface(DeleteData->LoadData);
+					DeleteData->LoadData = nullptr;
+				}
 				if (DeleteData->HData != nullptr)
+				{
 					SDL_DestroyTexture(DeleteData->HData);
+					DeleteData->HData = nullptr;
+				}
 			}
 
 			//Close SDL

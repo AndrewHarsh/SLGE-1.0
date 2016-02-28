@@ -212,7 +212,7 @@ namespace SLGE
 		 	//std::vector	 Data_t <T1>::Link[Link[TYPE_NUM][i].Index].Index
 
 			//Shift all local indexes behind the deleted data back one
-			for (int i = 0; i < Data_t <T1>::Link.size(); i++)
+			for (int i = 0; i < (int) Data_t <T1>::Link.size(); i++)
 			{
 				// (*PointerToVec)[IndexOfVec].data >= IndexOfDataDeleted
 				if ((*Data_t <T1>::Link[i].Pointer)[Data_t <T1>::Link[i].Index].Data > Link[TYPE_NUM][in_Index].Data)
@@ -224,7 +224,7 @@ namespace SLGE
 			}
 
 			//Shift the global indexes behind the deleted data back one
-			for (int i = 0; i < Link[TYPE_NUM].size(); i++)
+			for (int i = 0; i < (int) Link[TYPE_NUM].size(); i++)
 			{
 				// Skip deleted index
 				if (i == in_Index)
@@ -249,7 +249,7 @@ namespace SLGE
 		 	//std::vector	 Data_t <T1>::Link[Link[TYPE_NUM][i].Index].Index
 
 			//Shift all local indexes behind the deleted data back one
-			for (int i = 0; i < Data_t <T1>::Link.size(); i++)
+			for (int i = 0; i < (int) Data_t <T1>::Link.size(); i++)
 			{
 				// (*PointerToVec)[IndexOfVec].data >= IndexOfDataDeleted
 				if ((*Data_t <T1>::Link[i].Pointer)[Data_t <T1>::Link[i].Index].Data > Link[TYPE_NUM][in_Index].Data)
@@ -261,7 +261,7 @@ namespace SLGE
 			}
 
 			//Shift the global indexes behind the deleted data back one
-			for (int i = 0; i < Link[TYPE_NUM].size(); i++)
+			for (int i = 0; i < (int) Link[TYPE_NUM].size(); i++)
 			{
 				// Skip deleted index
 				if (i == in_Index)
@@ -302,6 +302,9 @@ namespace SLGE
 
 		void Despawn()
 		{
+			//Data_t <C>::Data.empty();
+			//Data_t <C>::Link.empty();
+
 			Despawn(0, Data.size() - 1);
 		}
 
@@ -383,10 +386,10 @@ namespace SLGE
 			return Data.size();
 		}
 
-		//static int NumberOfAllObjects()
-		//{
-		//	return Data_t <C>::Data.size();
-		//}
+		static int NumberOfAllObjects()
+		{
+			return Data_t <C>::Data.size();
+		}
 
 		C &operator[](unsigned in_Index)
 		{
@@ -512,6 +515,9 @@ namespace SLGE
 		SDL_Texture **HImage;
 		SDL_Rect *Clip;
 		SDL_Rect *DisplayClip;
+		std::vector <double> ImageAngle;
+		std::vector <SDL_Point> ImageCenter;
+		std::vector <SDL_RendererFlip> ImageFlip;
 		int ImageToDisplay;
 		int NumberOfImages;
 			
@@ -554,6 +560,10 @@ namespace SLGE
 				DisplayClip = nullptr;
 			}
 
+			ImageAngle.empty();
+			ImageCenter.empty();
+			ImageCenter.empty();
+			ImageFlip.empty();
 			NumberOfImages = 0;
 			ImageToDisplay = 0;
 
@@ -562,6 +572,8 @@ namespace SLGE
 			W = 0;
 			H = 0;
 		}
+
+		virtual void SetDisplay();
 
 		int Display();
 

@@ -12,6 +12,9 @@ const int ARRAY_SIZE = 10;
 class AI_t;
 class Player_t;
 class Other_t;
+class UI_t;
+class Menu_t;
+class HUD_t;
 
 
 Window_t Window1(640, 480, "Cooler Program", false);
@@ -20,6 +23,9 @@ DynamicClass <Object_t> Background;
 DynamicClass <AI_t, Object_t> Array;
 DynamicClass <Player_t, Object_t> Player;
 DynamicClass <Other_t, Player_t, Object_t> Other;
+DynamicClass <UI_t, Object_t> Button;
+DynamicClass <Menu_t, UI_t, Object_t> Inventory;
+DynamicClass <HUD_t, Object_t> HUD;
 
 
 //
@@ -49,7 +55,7 @@ public:
 
 	Player_t()
 	{
-	};
+	}
 
 	Player_t(Window_t *in_Window)
 	{
@@ -65,23 +71,25 @@ public:
 	void EventHandler()
 	{
 		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
+			Y -= 100 / Window1.TimerHandle.GetFPS();
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
+			Y += 100 / Window1.TimerHandle.GetFPS();
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
+			X -= 100 / Window1.TimerHandle.GetFPS();
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
+			X += 100 / Window1.TimerHandle.GetFPS();
+
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_Q))
 		{
-			DisplayClip[ImageToDisplay].y -= 1;
-			
 			if (Array.NumberOfObjects() > 5)
 				Array.Despawn(0, 1);
 		}
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_E))
 		{
-			DisplayClip[ImageToDisplay].y += 1;
 			Array.Spawn(1, &Window1);
 			Array[Array.NumberOfObjects() - 1].OpenImage("1.png", { 0, 0, 32, 32 }, { NULL });
 			Array[Array.NumberOfObjects() - 1].SetCoords(rand() % Window1.GetWidth(), rand() % Window1.GetHeight(), 32, 32);
 		}
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
-			DisplayClip[ImageToDisplay].x -= 1;
-		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
-			DisplayClip[ImageToDisplay].x += 1;
 	}
 
 	void Animate()
@@ -97,12 +105,172 @@ public:
 
 	Other_t()
 	{
-	};
+	}
 
 	Other_t(Window_t *in_Window)
 	{
 		WindowHandle = in_Window;
 		OpenImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+	}
+};
+
+class UI_t : public Object_t
+{
+public:
+
+	UI_t()
+	{
+	}
+
+	UI_t(Window_t *in_Window)
+	{
+		Register(in_Window);
+
+		OpenImage("2.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		OpenImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		OpenImage("3.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+	}
+
+	bool IsPressed()
+	{
+		int null;
+
+		if (HoveringOver())
+		{
+			if (WindowHandle->GetMouseState(null, null) & SDL_BUTTON(SDL_BUTTON_LEFT))
+			{
+				ImageToDisplay = 1;
+				return true;
+			}
+		}
+		else
+			ImageToDisplay = 0;
+
+		return false;
+	}
+
+	bool HoveringOver()
+	{
+		int MouseX = 0; 
+		int MouseY = 0;
+
+		WindowHandle->GetMouseState(MouseX, MouseY);
+
+		if (IsOverlapping({ MouseX, MouseY, 1, 1 }))
+		{
+			ImageToDisplay = 2;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+};
+
+class Menu_t : public UI_t
+{
+	bool Open;
+	bool Moving;
+	double Speed; //in pixels per second
+
+public:
+
+	DynamicClass <UI_t, Object_t> Button;
+
+	Menu_t()
+	{
+	}
+
+	Menu_t(Window_t *in_Window)
+	{
+		Open = false;
+
+		Register(in_Window);
+
+		Button.Spawn(1, in_Window);
+
+		OpenImage("Menu.png", { NULL }, { NULL });
+		OpenImage("Menu.png", { NULL }, { NULL });
+		OpenImage("Menu.png", { NULL }, { NULL });
+		SetCoords(-250, WindowHandle->GetHeight() / 2, 500, 400);
+
+		//Button[0].OpenImage("3.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		Button[0].SetCoords(32, WindowHandle->GetHeight() / 2, 32, 32);
+
+		Speed = 1000;
+	}
+
+	void HandleEvents()
+	{
+		if (Button[0].IsPressed() && !Moving)
+		{
+			if (Open)
+				Open = false;
+			else
+				Open = true;
+
+			Moving = true;
+		}
+
+		if (Moving)
+		{
+			if (X < 250 && Open)
+			{
+				X += Speed / WindowHandle->TimerHandle.GetFPS();
+				Button[0].SetCoords(Button[0].GetX() + Speed / WindowHandle->TimerHandle.GetFPS(), Button[0].GetY());
+			}
+			else if (X > -250 && !Open)
+			{
+				X -= Speed / WindowHandle->TimerHandle.GetFPS();
+				Button[0].SetCoords(Button[0].GetX() - Speed / WindowHandle->TimerHandle.GetFPS(), Button[0].GetY());
+			}
+			else
+				Moving = false;
+		}
+	}
+};
+
+class HUD_t : public UI_t
+{
+
+public:
+
+	DynamicClass <Object_t> Selector;
+
+	HUD_t()
+	{
+
+	}
+
+	HUD_t(Window_t *in_Window)
+	{
+		Register(in_Window);
+		
+		OpenImage("HUD.png", { NULL }, { NULL });
+		SetCoords(Window1.GetWidth() / 2, Window1.GetHeight() - 50, 450, 50);
+	}
+
+	void HandleEvents()
+	{
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_1))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_2))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 48, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_3))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 97, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_4))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 145, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_5))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 193, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_6))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 241, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_7))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 290, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_8))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 340, Y);
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_9))
+			Selector[0].SetCoords(X - W / 2 + Selector[0].GetW() / 2 + 390, Y);
 	}
 };
 
@@ -118,24 +286,18 @@ void SpawnGame()
 	Array.Spawn(10, &Window1);
 	Player.Spawn(2, &Window1);
 	Other.Spawn(5, &Window1);
+	Button.Spawn(3, &Window1);
+	Inventory.Spawn(1, &Window1);
+	HUD.Spawn(1, &Window1);
 
-	Array.Despawn(0, 5);
-	Player.Despawn(0, 1);
-	Array.Spawn(5, &Window1);
-	Player.Spawn(5, &Window1);
-	Other.Despawn(0, 3);
-
-	Background.Spawn(1, &Window1);	//1 total (19 objects)
-	Array.Spawn(1, &Window1);		//10 total (10 AI)
-	Player.Spawn(1, &Window1);		//6 total (8 players)
-	Other.Spawn(1, &Window1);		//2 total (2 other)
-
-	Player.Despawn(0, 5);
-	Background.Despawn(0, 1);
+	HUD[0].Selector.Spawn(1, &Window1);
+	HUD[0].Selector[0].OpenImage("HUD Selector.png", { NULL }, { NULL });
+	HUD[0].Selector[0].SetCoords(HUD[0].GetX() - HUD[0].GetW() / 2 + 442 / 2, HUD[0].GetY(), 441, 50);
 
 	//Set the objects in their place
 	Background[0].OpenImage("Image.png", { NULL }, { NULL });
 	Background[0].SetCoords(0, 0, Window1.GetWidth(), Window1.GetHeight());
+
 
 	for (int i = 0; i < Array.NumberOfObjects(); i++)
 		Array[i].SetCoords(i * 50, 240, 32, 32);
@@ -145,23 +307,18 @@ void SpawnGame()
 
 	for (int i = 0; i < Other.NumberOfObjects(); i++)
 		Other[i].SetCoords(i * 100 + 100, 400, 32, 32);
+
+	for (int i = 0; i < Button.NumberOfObjects(); i++)
+		Button[i].SetCoords(Window1.GetWidth() / 2, i * 100 + 100, 32, 32);
 }
 
 void RunGame()
 {
 	DynamicClass <Player_t>::All(&Player_t::EventHandler);
+	DynamicClass <Menu_t>::All(&Menu_t::HandleEvents);
+	DynamicClass <HUD_t>::All(&HUD_t::HandleEvents);
 
-//	for (int i = 0; i < Array.NumberOfObjects(); i++)
-//	{
-		//for (int ii = 0; ii < Array.NumberOfObjects(); ii++)
-		//{
-		//	if (Array[ii].GetY() > Array[i].GetY())
-		//		DynamicClass <Object_t>::Swap <Object_t>(Array.GetPosition(i, 1), Array.GetPosition(ii, 1) + 1);
-		//}
-
-		//if (Player[0].GetY() < Array[i].GetY())
-		//	DynamicClass <Object_t>::Swap <Object_t>(Player.GetPosition(0, 1), Array.GetPosition(i, 1));
-//	}
+	DynamicClass <UI_t>::All(&UI_t::IsPressed);
 
 	DynamicClass <Object_t>::All(&Object_t::Display);
 }
@@ -174,6 +331,8 @@ void DespawnGame()
 	Array.Despawn();
 	Player.Despawn();
 	Other.Despawn();
+	Inventory.Despawn();
+	HUD.Despawn();
 }
 
 
