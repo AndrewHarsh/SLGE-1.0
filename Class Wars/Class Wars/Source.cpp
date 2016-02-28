@@ -769,12 +769,18 @@ DynamicClass <Player_TT> Player;
 
 void SpawnGame()
 {
-	Background.Spawn(Window1, 1);
-	Array.Spawn(Window1, 10);
-	Player.Spawn(Window1, 1);
+	Background.Spawn(1, Window1);
+	Array.Spawn(10, Window1);
+	Player.Spawn(1, Window1);
 
 	Background[0].OpenImage("Image.png", { NULL }, { NULL });
 	Background[0].SetCoords(0, 0, Window1.GetWidth(), Window1.GetHeight());
+
+	for (int i = 0; i < 10; i++)
+	{
+		Array[i].OpenImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+		Array[i].SetCoords(i * 50, 240, 32, 32);
+	}
 
 	for (int i = 0; i < 20; i++)
 	{
@@ -785,13 +791,10 @@ void SpawnGame()
 
 void RunGame()
 {
-	Player[0].EventHandler();
+	DynamicClass <Player_TT>::All(&Player_TT::EventHandler);
 
-	//Player[0].Animate();
-
-	Background[0].Display();
-	Player[0].Display();
-
+	DynamicClass <Object_t>::All(&Object_t::Display);
+	DynamicClass <Player_TT>::All(&Player_TT::Display);
 }
 
 void DespawnGame()

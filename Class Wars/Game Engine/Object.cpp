@@ -507,8 +507,8 @@ void DLL_API Object_t::SetCoords(const double in_X, const double in_Y, const dou
 	if (in_H > 0)
 		H = in_H;
 
-	DisplayClip[ImageToDisplay].x = X;
-	DisplayClip[ImageToDisplay].y = Y;
+	DisplayClip[ImageToDisplay].x = (int) X;
+	DisplayClip[ImageToDisplay].y = (int) Y;
 	DisplayClip[ImageToDisplay].w = Clip[ImageToDisplay].w;
 	DisplayClip[ImageToDisplay].h = Clip[ImageToDisplay].h;
 }

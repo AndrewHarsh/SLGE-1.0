@@ -687,6 +687,9 @@ int DLL_API Window_t::FetchEvents()
 
 int DLL_API Window_t::Refresh()
 {
+	//TimerHandle.FPS = 60000;
+	TimerHandle.CapFPS();
+	TimerHandle.DisplayFPS();
 	/*
 	if (HardwareAccelerated)
 	{

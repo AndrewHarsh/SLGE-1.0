@@ -96,15 +96,17 @@ namespace SLGE
 	};
 
 	template <class C>
-	struct Pair   
-	{ 
+	struct Tuple
+	{
 		std::vector <C*> Data;
-		std::vector <int> Offset;
+		std::vector <std::vector <int>*> Offset;
+		std::vector <int> Index;
 
-		Pair()
+		Tuple()
 		{
 			Data.empty();
 			Offset.empty();
+			Index.empty();
 		}
 	};
 
@@ -115,10 +117,11 @@ namespace SLGE
 		typedef void (C::*vMethod)();
 		typedef int (C::*iMethod)();
 
-		static Pair <C> DynamicClass_ClassList;
+		static Tuple <C> DynamicClass_ClassList;
 		std::vector <int> Index;
 
 	public:
+
 
 		DynamicClass()
 		{
@@ -127,35 +130,156 @@ namespace SLGE
 
 		void Spawn(int Amount)
 		{
-			Index.push_back(DynamicClass_ClassList.Offset.size());
-			DynamicClass_ClassList.Offset.push_back(DynamicClass_ClassList.Data.size());
-
 			for (int i = 0; i < Amount; i++)
+			{
+				Index.push_back(DynamicClass_ClassList.Data.size());
+				DynamicClass_ClassList.Offset.push_back(&Index);
+				DynamicClass_ClassList.Index.push_back(Index.size() - 1);
 				DynamicClass_ClassList.Data.push_back(new C());
+			}
 		}
 
-		void Spawn(Window_t &WindowHandle, int Amount)
+		void Spawn(int Amount, Window_t &WindowHandle)
 		{
-			 for (int i = 0; i < Amount; i++)
+			for (int i = 0; i < Amount; i++)
+			{
+				Index.push_back(DynamicClass_ClassList.Data.size());
+				DynamicClass_ClassList.Offset.push_back(&Index);
+				DynamicClass_ClassList.Index.push_back(Index.size() - 1);
 				DynamicClass_ClassList.Data.push_back(new C(&WindowHandle));
+			}
 		}
 
 		void Despawn()
 		{
-			Despawn(DynamicClass_ClassList.Data.size());
+			while (Index.size() > 0)
+				Despawn(0);
 		}
 
-		void Despawn(int Amount)
+		void Despawn(int in_Index, int in_Amount = 1)
 		{
-			if (Amount <= (int)DynamicClass_ClassList.Data.size() && Amount > 0)
+			if (in_Index >= 0 && in_Amount > 0 && in_Index + in_Amount <= (int) Index.size())
 			{
-				for (int i = (int)DynamicClass_ClassList.Data.size() - 1; i >= (int)DynamicClass_ClassList.Data.size() - Amount && i >= 0; i--)
+				for (int ii = 0; ii < in_Amount; ii++)
 				{
-					delete DynamicClass_ClassList.Data[i];
-					DynamicClass_ClassList.Data[i] = nullptr;
-				}
+					//Free data
+					delete DynamicClass_ClassList.Data[Index[in_Index]];
+					DynamicClass_ClassList.Data[Index[in_Index]] = nullptr;
 
-				DynamicClass_ClassList.Data._Pop_back_n(Amount);
+					//Shift table data
+					for (int i = 0; i < (int) DynamicClass_ClassList.Offset.size(); i++)
+					{
+						if (DynamicClass_ClassList.Offset[i]->at(DynamicClass_ClassList.Index[i]) > Index[in_Index])
+							(DynamicClass_ClassList.Offset[i]->at(DynamicClass_ClassList.Index[i]))--;
+					}
+
+
+					//Delete table data
+					DynamicClass_ClassList.Data.erase(DynamicClass_ClassList.Data.begin() + Index[in_Index]);
+					DynamicClass_ClassList.Offset.erase(DynamicClass_ClassList.Offset.begin() + Index[in_Index]);
+					DynamicClass_ClassList.Index.erase(DynamicClass_ClassList.Index.begin() + Index[in_Index]);
+					Index.erase(Index.begin() + in_Index);
+
+					//Update table Index
+					for (int i = 0; i < (int) Index.size(); i++)
+						DynamicClass_ClassList.Index[Index[i]] = i;
+
+					in_Index++;
+				}
+			}
+		}
+
+		static void All(bMethod Run)
+		{
+			for (int i = 0; i < (int) DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*Run)();
+		}
+
+		static void All(vMethod Run)
+		{
+			for (int i = 0; i < (int) DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*(Run))();
+		}
+
+		static void All(iMethod Run)
+		{
+			for (int i = 0; i < (int) DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*(Run))();
+		}
+
+		int NumberOfObjects()
+		{
+			return Index.size();
+		}
+
+		C &operator[](unsigned in_Index)
+		{
+			if (in_Index >= 0 && in_Index < Index.size())
+				return *(DynamicClass_ClassList.Data[Index[in_Index]]);
+		
+			//return C();
+			return *(DynamicClass_ClassList.Data[Index[0]]);
+		}
+
+		const C &operator[](unsigned Index) const
+		{
+			if (in_Index >= 0 && in_Index < Index.size())
+				return *(DynamicClass_ClassList.Data[Index[in_Index]]);
+
+			//return C();
+			return *(DynamicClass_ClassList.Data[Index[0]]);
+		}
+
+		/*
+		DynamicClass()
+		{
+			Index.empty();
+		}
+
+		void Spawn(int Amount)
+		{
+			for (int i = 0; i < Amount; i++)
+			{
+				Index.push_back(DynamicClass_ClassList.Offset.size());
+				DynamicClass_ClassList.Offset.push_back(DynamicClass_ClassList.Data.size());
+				DynamicClass_ClassList.Data.push_back(new C());
+			}
+		}
+
+		void Spawn(Window_t &WindowHandle, int Amount)
+		{
+			for (int i = 0; i < Amount; i++)
+			{
+				Index.push_back(DynamicClass_ClassList.Offset.size());
+				DynamicClass_ClassList.Offset.push_back(DynamicClass_ClassList.Data.size());
+				DynamicClass_ClassList.Data.push_back(new C(&WindowHandle));
+			}
+		}
+
+		void Despawn()
+		{
+			for (int i = 0; i < Index.size(); i++)
+				Despawn(0);
+		}
+
+		void Despawn(int in_Index)
+		{
+			if (in_Index >= 0 && in_Index < (int)Index.size())
+			{
+				//Free data
+				delete DynamicClass_ClassList.Data[DynamicClass_ClassList.Offset[Index[in_Index]]];
+				DynamicClass_ClassList.Data[DynamicClass_ClassList.Offset[Index[in_Index]]] = nullptr;
+
+				//Delete table data
+				DynamicClass_ClassList.Data.erase(DynamicClass_ClassList.Data.begin() + DynamicClass_ClassList.Offset[Index[in_Index]]);
+				DynamicClass_ClassList.Offset.erase(DynamicClass_ClassList.Offset.begin() + Index[in_Index]);
+
+				//Shift table data
+				for (int i = 0; i < DynamicClass_ClassList.Offset.size(); i++)
+				{
+					if (DynamicClass_ClassList.Offset[i] > Index[in_Index])
+						DynamicClass_ClassList.Offset[i]--;
+				}
 			}
 		}
 
@@ -179,28 +303,29 @@ namespace SLGE
 
 		int NumberOfObjects()
 		{
-			DynamicClass_ClassList.Data.size();
+			return Index.size();
 		}
 
-		C &operator[](unsigned Index)
+		C &operator[](unsigned in_Index)
 		{
-			if (Index >= 0 && Index < DynamicClass_ClassList.Data.size())
-				return *(DynamicClass_ClassList.Data[Index]);
+			if (in_Index >= 0 && in_Index < Index.size())
+				return *(DynamicClass_ClassList.Data[DynamicClass_ClassList.Offset[Index[in_Index]]]);
 
 			return C();
 		}
 
 		const C &operator[](unsigned Index) const
 		{
-			if (Index >= 0 && Index < DynamicClass_ClassList.Data.size())
-				return *(DynamicClass_ClassList.Data[Index]);
+			if (in_Index >= 0 && in_Index < Index.size())
+				return *(DynamicClass_ClassList.Data[DynamicClass_ClassList.Offset[Index[in_Index]]]);
 
 			return C();
 		}
-	};
+		*/
+		};
 
 	template <class C> 
-	Pair <C> DynamicClass <C>::DynamicClass_ClassList;
+	Tuple <C> DynamicClass <C>::DynamicClass_ClassList;
 
 	//Base Classes
 	class DLL_API Window

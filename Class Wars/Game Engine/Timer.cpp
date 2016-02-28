@@ -62,7 +62,7 @@ int DLL_API Window::Timer::CapFPS()
 	*/
 
 	if (Duration < 1000 / FPS)
-		SDL_Delay(1000 / FPS - Duration);
+		SDL_Delay((Uint32)(1000 / FPS - Duration));
 
 	EndTime = SDL_GetTicks();
 	Duration = EndTime - StartTime;
@@ -197,7 +197,7 @@ int DLL_API Window_t::Timer_t::CapFPS()
 	Duration = (double) Elapsed;
 	 
 	if (Duration < 1000 / FPS)
-		SDL_Delay(1000 / FPS - Duration);
+		SDL_Delay((Uint32)(1000 / FPS - Duration));
 
 	EndTime = SDL_GetTicks();
 	Duration = EndTime - StartTime;

@@ -241,7 +241,7 @@ int DLL_API Entity::MoveTo(const double in_X, const double in_Y)
 	double SpeedX = Speed * cos(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
 	double SpeedY = Speed * sin(atan(DistanceY / DistanceX)) / WindowHandle->TimerHandle.GetFPS();
 
-	if (IsOverlapping({ in_X, in_Y, Speed / WindowHandle->TimerHandle.GetFPS(), Speed / WindowHandle->TimerHandle.GetFPS() }))
+	if (IsOverlapping({ (int)in_X, (int)in_Y, (int)(Speed / WindowHandle->TimerHandle.GetFPS()), (int)(Speed / WindowHandle->TimerHandle.GetFPS()) }))
 	{
 		SetCoords(in_X, in_Y);
 		Moving = false;
