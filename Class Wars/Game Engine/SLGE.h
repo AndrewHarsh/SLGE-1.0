@@ -26,11 +26,12 @@
 #define SDL_CreateWindow SDL_CreateWindowEx
 #define SDL_DestroyWindow SDL_DestroyWindowEx
 
-//#define IMG_Load IMG_LoadEx
-//#define SDL_ConvertSurface SDL_ConvertSurfaceEx
-//#define SDL_CreateTextureFromSurface SDL_CreateTextureFromSurfaceEx
-//#define SDL_FreeSurface SDL_FreeSurfaceEx
-//#define SDL_DestroyTexture SDL_DestroyTextureEx
+#define IMG_Load IMG_LoadEx
+#define SDL_CreateRGBSurface SDL_CreateRGBSurfaceEx
+#define SDL_ConvertSurface SDL_ConvertSurfaceEx
+#define SDL_CreateTextureFromSurface SDL_CreateTextureFromSurfaceEx
+#define SDL_FreeSurface SDL_FreeSurfaceEx
+#define SDL_DestroyTexture SDL_DestroyTextureEx
 
 
 #ifdef SLGE_EXPORT
@@ -64,6 +65,7 @@ namespace SLGE
 	void DLL_API SDL_DestroyWindowEx(SDL_Window* Window);
 
 	SDL_Surface DLL_API *IMG_LoadEx(const char* File);
+	SDL_Surface DLL_API *SDL_CreateRGBSurfaceEx(Uint32 Flags, int Width, int Height, int Depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
 	SDL_Surface DLL_API *SDL_ConvertSurfaceEx(SDL_Surface*, SDL_PixelFormat*, Uint32);
 	SDL_Texture DLL_API *SDL_CreateTextureFromSurfaceEx(SDL_Renderer*, SDL_Surface*);
 	void DLL_API SDL_FreeSurfaceEx(SDL_Surface*);

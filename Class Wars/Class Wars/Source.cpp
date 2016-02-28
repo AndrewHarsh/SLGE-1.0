@@ -6,7 +6,7 @@ SDL_Event Event;
 
 
 Window Window1(1080, 720, "Cool Program", true);
-Window Window2(640, 480, "Window 2", true);
+Window Window2(640, 480, "Window 2", false);
 
 //Must initialize each object with a Window
 Object Background(&Window1);
@@ -14,7 +14,7 @@ Entity Person(&Window1);
 NPC Animation(&Window1);
 UI Button(&Window1);
 
-const int ARRAY_SIZE = 30; //MAX: 4000 (as of right now)
+const int ARRAY_SIZE = 3000; //MAX: 4000 (as of right now)
 
 //Arrays cannot be initialized with a window in the constructor
 Object Array[ARRAY_SIZE];
@@ -53,9 +53,9 @@ extern "C" int SDL_main(int argc, char* argv[])
 	for (int i = 0; i < 160; i += 32)
 		Animation.OpenImage("1.png", { i, 32, 32, 32 }, { 255, 0, 153, 0 });
 
-	Button.OpenImage("3.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
+	Button.OpenImage("1.png", { 0, 0, 32, 32 }, { 255, 0, 153, 0 });
 	Button.OpenImage("2.png", { 32, 0, 32, 32 }, { 255, 0, 153, 0 });
-	Button.OpenImage("1.png", { 64, 0, 32, 32 }, { 255, 0, 153, 0 });
+	Button.OpenImage("3.png", { 64, 0, 32, 32 }, { 255, 0, 153, 0 });
 
 	//Set the Coordinates for X, Y, W, H (Width and Height are not the width and height of the image)
 	Background.SetCoords(540, 360, 1080, 720);

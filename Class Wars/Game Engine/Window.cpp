@@ -246,7 +246,7 @@ int DLL_API Window::Refresh()
 	if (HardwareAccelerated)
 	{
 		SDL_Rect Test1 = { 0, 0, Width, Height / 2 };
-		SDL_RenderSetViewport(HScreen, &Test1);
+		//SDL_RenderSetViewport(HScreen, &Test1);
 	}
 
 	while (SDL_PollEvent(&Event))
