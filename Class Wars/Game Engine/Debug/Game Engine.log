@@ -1,0 +1,9 @@
+﻿  Window.cpp
+  UI.cpp
+  Object.cpp
+  NPC.cpp
+  Entity.cpp
+  DllMaincpp.cpp
+  Generating Code...
+     Creating library C:\Users\nzbq9t\Documents\From Old HDD\Class Wars Backup\Game We are Making 1-5-15\Class Wars\Debug\SLGE.lib and object C:\Users\nzbq9t\Documents\From Old HDD\Class Wars Backup\Game We are Making 1-5-15\Class Wars\Debug\SLGE.exp
+  Game Engine.vcxproj -> C:\Users\nzbq9t\Documents\From Old HDD\Class Wars Backup\Game We are Making 1-5-15\Class Wars\Debug\SLGE.dll

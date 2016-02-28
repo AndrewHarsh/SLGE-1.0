@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Class Wars", "Class Wars\Class Wars.vcxproj", "{1547B223-F7BF-46F2-8FD6-EEED796E1F5C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{45526C37-8417-43EC-92BA-8250A2FE9465} = {45526C37-8417-43EC-92BA-8250A2FE9465}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SLGE", "Game Engine\Game Engine.vcxproj", "{45526C37-8417-43EC-92BA-8250A2FE9465}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1547B223-F7BF-46F2-8FD6-EEED796E1F5C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1547B223-F7BF-46F2-8FD6-EEED796E1F5C}.Debug|Win32.Build.0 = Debug|Win32
+		{1547B223-F7BF-46F2-8FD6-EEED796E1F5C}.Release|Win32.ActiveCfg = Release|Win32
+		{1547B223-F7BF-46F2-8FD6-EEED796E1F5C}.Release|Win32.Build.0 = Release|Win32
+		{45526C37-8417-43EC-92BA-8250A2FE9465}.Debug|Win32.ActiveCfg = Debug|Win32
+		{45526C37-8417-43EC-92BA-8250A2FE9465}.Debug|Win32.Build.0 = Debug|Win32
+		{45526C37-8417-43EC-92BA-8250A2FE9465}.Release|Win32.ActiveCfg = Release|Win32
+		{45526C37-8417-43EC-92BA-8250A2FE9465}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
