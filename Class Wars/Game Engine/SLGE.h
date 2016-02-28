@@ -8,6 +8,7 @@
 #include <chrono>
 #include <thread>
 #include <Windows.h>
+#include <vector>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -60,6 +61,7 @@ namespace SLGE
 	class Entity;
 	class NPC;
 	class UI;
+	class Window_t;
 
 
 	SDL_Window DLL_API *SDL_CreateWindowEx(const char* Title, int X, int Y, int W, int H, Uint32 Flags);
@@ -92,6 +94,113 @@ namespace SLGE
 		unsigned int B;
 		unsigned int A;
 	};
+
+	template <class C>
+	struct Pair   
+	{ 
+		std::vector <C*> Data;
+		std::vector <int> Offset;
+
+		Pair()
+		{
+			Data.empty();
+			Offset.empty();
+		}
+	};
+
+	template <class C>
+	class DynamicClass
+	{
+		typedef bool (C::*bMethod)();
+		typedef void (C::*vMethod)();
+		typedef int (C::*iMethod)();
+
+		static Pair <C> DynamicClass_ClassList;
+		std::vector <int> Index;
+
+	public:
+
+		DynamicClass()
+		{
+			Index.empty();
+		}
+
+		void Spawn(int Amount)
+		{
+			Index.push_back(DynamicClass_ClassList.Offset.size());
+			DynamicClass_ClassList.Offset.push_back(DynamicClass_ClassList.Data.size());
+
+			for (int i = 0; i < Amount; i++)
+				DynamicClass_ClassList.Data.push_back(new C());
+		}
+
+		void Spawn(Window_t &WindowHandle, int Amount)
+		{
+			 for (int i = 0; i < Amount; i++)
+				DynamicClass_ClassList.Data.push_back(new C(&WindowHandle));
+		}
+
+		void Despawn()
+		{
+			Despawn(DynamicClass_ClassList.Data.size());
+		}
+
+		void Despawn(int Amount)
+		{
+			if (Amount <= (int)DynamicClass_ClassList.Data.size() && Amount > 0)
+			{
+				for (int i = (int)DynamicClass_ClassList.Data.size() - 1; i >= (int)DynamicClass_ClassList.Data.size() - Amount && i >= 0; i--)
+				{
+					delete DynamicClass_ClassList.Data[i];
+					DynamicClass_ClassList.Data[i] = nullptr;
+				}
+
+				DynamicClass_ClassList.Data._Pop_back_n(Amount);
+			}
+		}
+
+		static void All(bMethod Run)
+		{
+			for (int i = 0; i < DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*Run)();
+		}
+
+		void All(vMethod Run)
+		{
+			for (int i = 0; i < DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*(Run))();
+		}
+
+		void All(iMethod Run)
+		{
+			for (int i = 0; i < DynamicClass_ClassList.Data.size(); i++)
+				(DynamicClass_ClassList.Data[i]->*(Run))();
+		}
+
+		int NumberOfObjects()
+		{
+			DynamicClass_ClassList.Data.size();
+		}
+
+		C &operator[](unsigned Index)
+		{
+			if (Index >= 0 && Index < DynamicClass_ClassList.Data.size())
+				return *(DynamicClass_ClassList.Data[Index]);
+
+			return C();
+		}
+
+		const C &operator[](unsigned Index) const
+		{
+			if (Index >= 0 && Index < DynamicClass_ClassList.Data.size())
+				return *(DynamicClass_ClassList.Data[Index]);
+
+			return C();
+		}
+	};
+
+	template <class C> 
+	Pair <C> DynamicClass <C>::DynamicClass_ClassList;
 
 	//Base Classes
 	class DLL_API Window
@@ -195,7 +304,8 @@ namespace SLGE
 	class DLL_API Object
 	{
 	friend class Window;
-	protected:
+	public:
+	//protected:
 
 		Window *WindowHandle;
 		//std::string *ObjectID;
@@ -476,7 +586,195 @@ namespace SLGE
 		bool HoveringOver();
 		bool IsClicked();
 	};
+
+
+
+
+
+	class DLL_API Window_t
+	{
+		typedef void(*Function)();
+		friend class Timer_t;
+		friend class Object_t;
+	protected:
+		SDL_Window *WindowHandle;
+		SDL_Renderer *HScreen;
+		SDL_Surface *Screen;
+		SDL_Event Event;
+		const Uint8 *KeyState;
+
+		int Width;
+		int Height;
+		const int BitsPerPixel = 32;
+		std::string *Caption;
+		int WindowID;
+
+		bool Shown;
+		bool MouseFocus;
+		bool KeyboardFocus;
+		bool Minimized;
+		bool HardwareAccelerated;
+		bool Running;
+
+		void ClearData();
+		int FetchEvents();
+		int EventHandler();
+		int Refresh();
+		
+	public:
+
+		class DLL_API Timer_t
+		{
+		friend class Window_t;
+		protected:
+
+			HRC::time_point *LastFrame;
+			HRC::time_point *LastBench;
+			HRC::time_point *LastFPSDisplay;
+			HRC::time_point *LastBenchDisplay;
+			Uint32 StartTime;
+			double CPUFreq;
+			long double Duration;
+			char *LastIdentifier;
+
+			int FPS;
+			double CurrentFPS;
+
+			void DisplayFPS();
+			int CapFPS();
+
+		public:
+
+			Timer_t();
+
+			double GetFPS();
+
+			int Benchmark(const char Identifier[]);
+
+		} TimerHandle;
+		
+		Window_t();
+		Window_t(const int Width, const int Height);
+		Window_t(const int Width, const int Height, const std::string Caption);
+		Window_t(const int Width, const int Height, const std::string Caption, const bool Flags);
+
+		int GetWidth();
+		int GetHeight();
+		int GetBPP();
+		const SDL_Event* GetEvent() const;
+		const Uint8 GetKeyState(int Key) const;
+		const Uint32 GetMouseState(int &X, int &Y) const;
+
+		bool IsShown();
+		bool IsMouseFocused();
+		bool IsKeyboardFocused();
+		bool IsMinimized();
+		bool IsHardwareAccelerated();
+		bool IsRunning();
+
+		// Action
+		int Init();
+		int Init(const int Width, const int Height);
+		int Init(const int Width, const int Height, const std::string Caption, const bool Flags);
+
+		int Run(Function Spawn, Function Loop, Function Despawn);
+	};
+
+	class DLL_API Object_t
+	{
+		friend class Window_t;
+	protected:
+
+		Window_t *WindowHandle;
+
+		//Image
+		SDL_Surface **Image;
+		SDL_Texture **HImage;
+		SDL_Rect *Clip;
+		SDL_Rect *DisplayClip;
+		int ImageToDisplay;
+		int NumberOfImages;
+			
+		//Location
+		double X;
+		double Y;
+		double W;
+		double H;
+
+	public:	
+
+		//Replacable functions
+		virtual void ClearData()
+		{
+			if (Image != nullptr)
+			{
+				for (int i = 0; i < NumberOfImages; i++)
+					SDL_FreeSurface(Image[i]);
+
+				Image = nullptr;
+			}
+
+			if (HImage != nullptr)
+			{
+				for (int i = 0; i < NumberOfImages; i++)
+					SDL_DestroyTexture(HImage[i]);
+
+				HImage = nullptr;
+			}
+
+			if (Clip != nullptr)
+			{
+				delete[] Clip;
+				Clip = nullptr;
+			}
+
+			if (DisplayClip != nullptr)
+			{
+				delete[] DisplayClip;
+				DisplayClip = nullptr;
+			}
+
+			NumberOfImages = 0;
+			ImageToDisplay = 0;
+
+			X = 0;
+			Y = 0;
+			W = 0;
+			H = 0;
+		}
+
+		int Display();
+
+	//public:
+
+		Object_t();
+		Object_t(Window_t *WindowHandle);
+		int Register(Window_t *Window);
+		void Deregister();
+
+		//Status
+		int GetNumberOfImages();
+		int GetCurrentImage();
+		double GetX();
+		double GetY();
+		double GetW();
+		double GetH();
+
+		bool IsOverlapping(SDL_Rect Area);
+		bool IsOverlapping(Object_t* Object);		   
+		bool IsWithin(SDL_Rect Area);
+		bool IsWithin(Object_t* Object);
+
+		//Actions
+		void SetCoords(const double X, const double Y, const double W = NULL, const double H = NULL);
+
+		int OpenImage(const std::string Filename, SDL_Rect Clip, const Color ColorKey);
+		int SelectImage(const int Position);
+		int MoveImage(const int Position, const int NewPosition);
+		int DeleteImage(const int Position);
+	};
 }
 
 #undef DLL_API
 #endif
+													

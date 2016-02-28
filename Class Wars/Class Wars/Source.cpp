@@ -1,9 +1,20 @@
 #include <SLGE.h>
 
+//#define OLD_VERSION
+
 using namespace SLGE;
 const int ARRAY_SIZE = 10;
 
+#ifndef OLD_VERSION
+Window_t Window1(640, 480, "Cooler Program", false);
+#else
 Window Window1(640, 480, "Cool Program", false);
+
+
+class World_t : public Window
+{
+	
+} World;
 
 //Must initialize each object with a Window
 Object Background(&Window1);
@@ -11,9 +22,14 @@ Object Background(&Window1);
 //Arrays cannot be initialized with a window in the constructor
 //NPC Array[ARRAY_SIZE];
 
+#endif
 
+
+#ifdef OLD_VERSION
 class Dummy_t : public Entity
 {
+public:
+
 	class HealthBar_t : public Object
 	{
 		friend class Dummy_t;
@@ -119,13 +135,13 @@ public:
 		HealthBar[1].SetCoords(X, Y, W * 2, 40);
 	}
 
-} Array[ARRAY_SIZE];
-
+}Array[ARRAY_SIZE];
 
 
 class Player_t : public Entity
 {
 private:
+public:
 	
 	struct
 	{
@@ -215,6 +231,7 @@ private:
 	int MouseX;
 	int MouseY;
 
+public:
 
 	int ResetLoopVariables()
 	{
@@ -469,6 +486,11 @@ private:
 	}
 
 public:
+	Player_t()
+	{
+		ClearData();
+	}
+
 	Player_t(Window* WindowHandle)
 	{
 		ClearData();
@@ -579,11 +601,8 @@ public:
 
 } Player(&Window1);
 
-
 void SetUp()
 {
-	srand(unsigned(time(NULL)));
-
 	//Load the images 
 	Background.OpenImage("Image.png", { NULL }, { NULL });
 
@@ -699,13 +718,123 @@ void GameLoop()
 	Player.FireArrows();
 }
 
+#else
+ 
+
+class Player_TT : public Object_t
+{
+	friend class DynamicClass <Player_TT>;
+
+public:
+
+	Player_TT()
+	{
+	};
+
+	Player_TT(Window_t *in_Window)
+	{
+		WindowHandle = in_Window;
+	}
+
+	void EventHandler()
+	{
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_W))
+			DisplayClip[ImageToDisplay].y -= 1;
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_S))
+			DisplayClip[ImageToDisplay].y += 1;
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_A))
+			DisplayClip[ImageToDisplay].x -= 1;
+		if (WindowHandle->GetKeyState(SDL_SCANCODE_D))
+			DisplayClip[ImageToDisplay].x += 1;
+	}
+
+	void Animate()
+	{
+		if (++ImageToDisplay >= NumberOfImages)
+			ImageToDisplay = 0;
+	}
+};
+
+
+
+//DynamicClass <Object> Obj;
+//DynamicClass <Entity> Ent;
+//DynamicClass <UI> GUI;
+
+DynamicClass <Object_t> Background;
+DynamicClass <Object_t> Array;
+DynamicClass <Player_TT> Player;
+
+
+
+void SpawnGame()
+{
+	Background.Spawn(Window1, 1);
+	Array.Spawn(Window1, 10);
+	Player.Spawn(Window1, 1);
+
+	Background[0].OpenImage("Image.png", { NULL }, { NULL });
+	Background[0].SetCoords(0, 0, Window1.GetWidth(), Window1.GetHeight());
+
+	for (int i = 0; i < 20; i++)
+	{
+		for (int ii = 0; ii < 8; ii++)
+			Player[0].OpenImage("Player.png", { (ii * 100) + 1, (i * 100) + 1, 98, 98 }, { 255, 255, 255, 0 });
+	}
+}
+
+void RunGame()
+{
+	Player[0].EventHandler();
+
+	//Player[0].Animate();
+
+	Background[0].Display();
+	Player[0].Display();
+
+}
+
+void DespawnGame()
+{
+	Background.Despawn();
+	Array.Despawn();
+	Player.Despawn();
+}
+
+#endif
+
 extern "C" int SDL_main(int argc, char* argv[])
 {
-	SetUp();						 
+	srand(unsigned(time(NULL)));
+
+	SDL_Event Trial;
+	SDL_Event Trial2;
+
+	ZeroMemory(&Trial, sizeof(SDL_Event));
+	ZeroMemory(&Trial2, sizeof(SDL_Event));
+	 
+	Trial.button.x = 34;
+	Trial2.cdevice.type = 34;
+	Trial2.button.y = 89;
+
+	char *Holder1 = reinterpret_cast <char*> (&Trial);
+	char *Holder2 = reinterpret_cast <char*> (&Trial2);
+
+	for (int i = 0; i < 56; i++)
+		Holder2[i] |= Holder1[i];
+
+
+#ifndef OLD_VERSION
+	Window1.Run(SpawnGame, RunGame, DespawnGame);
+
+#else
+	SetUp();
 
 	while (Window1.IsRunning())
 		Window1.Run(GameLoop);
+#endif
 
 
 	return 0;
 }
+	
