@@ -1,6 +1,20 @@
+#ifndef _SLGE_H_
+#define _SLGE_H_
+
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <chrono>
+#include <thread>
 #include <Windows.h>
 #include <SDL.h>
+
+#pragma comment(lib, "SDL2")
+#pragma comment(lib, "SDL2main")
+#pragma comment(lib, "SDL2_image")
+#pragma comment(lib, "SDL2_mixer")
+#pragma comment(lib, "SDL2_ttf")
+
 
 #define SDL_IMAGE
 #define SDL_TTF
@@ -32,6 +46,13 @@
 
 namespace SLGE
 {
+	const char Version[] = "1.0.0";
+
+	typedef std::chrono::high_resolution_clock HRC;
+	using std::chrono::milliseconds;
+	using std::chrono::microseconds;
+	using std::chrono::duration_cast;
+
 	enum Direction;
 	struct Color;
 	class Window;
@@ -60,6 +81,7 @@ namespace SLGE
 		unsigned int A;
 	};
 
+	//Base Classes
 	class DLL_API Window
 	{
 	friend class Object;
@@ -72,27 +94,85 @@ namespace SLGE
 		int Width;
 		int Height;
 		const int BitsPerPixel = 32;
+		char* Caption;
 
 		Object **ScreenObjects;
 		int NumberOfObjects;
 
+		bool Running;
+
 		void ClearData();
-		int Display(const Object *ObjectToDisplay);
-		int EventHandler(const Object *ObjectToDisplay);
 
 	public:
 
+		class DLL_API Timer
+		{
+		friend class Window;
+		protected:
+
+			HRC::time_point *LastFrame;
+			HRC::time_point *LastBench;
+			HRC::time_point *LastFPSDisplay;
+			HRC::time_point *LastBenchDisplay;
+			char *LastIdentifier;
+
+			int FPS;
+			double CurrentFPS;
+
+			void DisplayFPS();
+			int CapFPS();
+
+		public:
+
+			Timer();
+
+			int Benchmark(const char Identifier[]);
+
+		} TimerHandle;
+
 		Window();
+		Window(const int Width, const int Height);
+		template <int S>
+		Window(const int Width, const int Height, const char(&Caption)[S])
+		{
+			Init(Width, Height, Caption);
+		}
+		~Window();
 
 		int GetWidth();
 		int GetHeight();
 		int GetBPP();
+		bool IsRunning();
 
 		int Init();
 		int Init(const int Width, const int Height);
+		template <int S>
+		int Init(const int in_Width, const int in_Height, const char(&in_Caption)[S])
+		{
+			Width = in_Width;
+			Height = in_Height;
+	
+			if (Caption != nullptr)
+			{
+				delete[] Caption;
+				Caption = nullptr;
+			}
+
+			Caption = new char[S];
+
+			for (int i = 0; i < S; i++)
+				Caption[i] = in_Caption[i];
+
+			Caption[S - 1] = '\0';
+
+			return Init();
+		}
 
 		int AddToScreen(Object *ScreenObject);
+		int ChangeScreenPosition(Object *ScreenObject, const int NewPosition);
+		int ChangeScreenPosition(const int OldPosition, const int NewPosition);
 		int RemoveFromScreen(Object *ScreenObject);
+		int RemoveFromScreen(const int Position);
 
 		int Refresh();
 	};
@@ -113,9 +193,12 @@ namespace SLGE
 		double W;
 		double H;
 
-		void ClearData();
-		virtual int Display();
-		virtual int EventHandler();
+		virtual void ClearData();
+		virtual void PerFrameActions();
+		virtual void EventHandler(SDL_Event* Event);
+		virtual void CollisionDetection();
+		virtual void Animate();
+		virtual void Display();
 
 	public:
 
@@ -129,14 +212,17 @@ namespace SLGE
 		double GetW();
 		double GetH();
 
-		int Init(Window *Window);
+		int Register(Window *Window);
+		void Deregister();
 		void SetCoords(const double X, const double Y, const double W, const double H);
 
 		int OpenImage(const std::string Filename, SDL_Rect Clip, const Color ColorKey);
 		int SelectImage(const int Position);
+		int MoveImage(const int Position, const int NewPosition);
 		int DeleteImage(const int Position);
 	};
 
+	//Built-in Classes
 	class DLL_API Entity : public Object
 	{
 	protected:
@@ -184,22 +270,32 @@ namespace SLGE
 	{
 	protected:
 
-		char *Text;
-		int TextLength;
+		std::string *Text;
+		std::string *InputText;
+		SDL_Surface *TextImage;
 		TTF_Font *Font;
 		SDL_Color FontColor;
 
-		float TextX;
-		float TextY;
+		double TextX;
+		double TextY;
+		int MouseX;
+		int MouseY;
+
+		bool LeftMouseUp;
+		bool RightMouseUp;
 
 		void ClearData();
+		void EventHandler(SDL_Event *Event);
 
 	public:
 
 		UI();
 		UI(Window *WindowHandle);
 
+		bool HoveringOver();
+		bool IsClicked();
 	};
 }
 
 #undef DLL_API
+#endif

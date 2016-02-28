@@ -13,9 +13,28 @@ DLL_API Window::Window()
 	Width = 1080;
 	Height = 720;
 
+	char TempCaption[] = "SDL Program";
+	Caption = new char[sizeof(TempCaption)];
+
+	for (int i = 0; i < sizeof(TempCaption); i++)
+		Caption[i] = TempCaption[i];
+
 	NumberOfObjects = 0;
+	Running = false;
 
 	Init();
+}
+
+DLL_API Window::Window(const int in_Width, const int in_Height)
+{
+	Caption = nullptr;
+
+	Init(in_Width, in_Height);
+}
+
+DLL_API Window::~Window()
+{
+	SDL_Quit();
 }
 
 void DLL_API Window::ClearData()
@@ -42,6 +61,7 @@ void DLL_API Window::ClearData()
 	Height = 720;
 
 	NumberOfObjects = 0;
+	Running = false;
 }
 
 
@@ -58,6 +78,11 @@ int DLL_API Window::GetHeight()
 int DLL_API Window::GetBPP()
 {
 	return BitsPerPixel;
+}
+
+bool DLL_API Window::IsRunning()
+{
+	return Running;
 }
 
 
@@ -78,8 +103,11 @@ int DLL_API Window::Init()
 	//Initialization flag
 	bool Success = true;
 
+	if (SDL_WasInit(NULL))
+		SDL_Quit();
+
 	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 	{
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		Success = false;
@@ -109,7 +137,7 @@ int DLL_API Window::Init()
 #endif
 
 		//create window
-		WindowHandle = SDL_CreateWindow("3D Test Program", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Width, Height, NULL);//SDL_WINDOW_FULLSCREEN);
+		WindowHandle = SDL_CreateWindow(Caption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Width, Height, NULL);//SDL_WINDOW_FULLSCREEN);
 		if (WindowHandle == NULL)
 		{
 			printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -118,7 +146,6 @@ int DLL_API Window::Init()
 
 		else
 		{
-
 #ifdef SDL_IMAGE
 			int imgFlags = IMG_INIT_PNG;
 			if (!(IMG_Init(imgFlags) & imgFlags))
@@ -129,6 +156,7 @@ int DLL_API Window::Init()
 #endif
 			//Get window surface
 			Screen = SDL_GetWindowSurface(WindowHandle);
+			Running = true;
 		}
 	}
 
@@ -144,29 +172,16 @@ int DLL_API Window::Init(const int in_Width, const int in_Height)
 }
 
 
-int DLL_API Window::Display(const Object *in_Object)
+int DLL_API Window::AddToScreen(Object *in_Object)
 {
-	if (in_Object->Image == nullptr)
-		return 1;
-
-	SDL_Rect Offset;
-
-	Offset.x = static_cast <int> (in_Object->X >= 0 ? in_Object->X + 0.5 : in_Object->X - 0.5);
-	Offset.y = static_cast <int> (in_Object->Y >= 0 ? in_Object->Y + 0.5 : in_Object->Y - 0.5);
-
-	return SDL_BlitSurface(in_Object->Image[in_Object->ImageToDisplay], &in_Object->Clip[in_Object->ImageToDisplay], Screen, &Offset);
-}
-
-int DLL_API Window::AddToScreen(Object *in_ScreenObject)
-{
-	in_ScreenObject->WindowHandle = this;
+	in_Object->WindowHandle = this;
 
 	Object **TempArray = new Object*[NumberOfObjects + 1];
 
 	for (int i = 0; i < NumberOfObjects; i++)
 		TempArray[i] = ScreenObjects[i];
 
-	TempArray[NumberOfObjects++] = in_ScreenObject;
+	TempArray[NumberOfObjects++] = in_Object;
 
 	if (ScreenObjects != nullptr)
 		delete[] ScreenObjects;
@@ -176,14 +191,24 @@ int DLL_API Window::AddToScreen(Object *in_ScreenObject)
 	return 0;
 }
 
-int DLL_API Window::RemoveFromScreen(Object *in_ScreenObject)
+int DLL_API Window::ChangeScreenPosition(Object *in_Object, const int in_NewPosition)
+{
+	return 0;
+}
+
+int DLL_API Window::ChangeScreenPosition(const int in_OldPosition, const int in_NewPosition)
+{
+	return 0;
+}
+
+int DLL_API Window::RemoveFromScreen(Object *in_Object)
 {
 	Object **TempArray = new Object*[NumberOfObjects - 1];
 	int Offset = 0;
 
 	for (int i = 0; i < NumberOfObjects - 1; i++)
 	{
-		if (ScreenObjects[i] == in_ScreenObject)
+		if (ScreenObjects[i] == in_Object)
 			Offset++;
 
 		TempArray[i] = ScreenObjects[i + Offset];
@@ -205,15 +230,60 @@ int DLL_API Window::RemoveFromScreen(Object *in_ScreenObject)
 	return 0;
 }
 
+int DLL_API Window::RemoveFromScreen(const int in_Position) 
+{
+	if (in_Position < 0 || in_Position >= NumberOfObjects)
+		return 1;
+
+	Object **TempArray = new Object*[NumberOfObjects - 1];
+
+	for (int i = 0; i < NumberOfObjects - 1; i++)
+	{
+		if (i < in_Position)
+			TempArray[i] = ScreenObjects[i];
+		else
+			TempArray[i] = ScreenObjects[i + 1];
+	}
+
+	if (ScreenObjects != nullptr)
+		delete[] ScreenObjects;
+
+	ScreenObjects = TempArray;
+	NumberOfObjects--;
+
+	return 0;
+}
+
 
 int DLL_API Window::Refresh()
 {
+	while (SDL_PollEvent(&Event))
+	{
+		for (int i = 0; i < NumberOfObjects; i++)
+			ScreenObjects[i]->EventHandler(&Event);
+
+		if (Event.type == SDL_QUIT)
+			Running = false;
+	}
+
+	TimerHandle.Benchmark("To ObjectEvent");
+
 	for (int i = 0; i < NumberOfObjects; i++)
 	{
-		//Display(ScreenObjects[i]);
+		std::string ID = "Object";
+		ID.append(std::to_string(i + 1));
+
+		ScreenObjects[i]->PerFrameActions();
+		ScreenObjects[i]->CollisionDetection();
+		ScreenObjects[i]->Animate();
 		ScreenObjects[i]->Display();
-		ScreenObjects[i]->EventHandler();
+		TimerHandle.Benchmark(ID.c_str());
 	}
+
+	TimerHandle.Benchmark("To ObjectDisp");
+
+	TimerHandle.DisplayFPS();
+	TimerHandle.CapFPS();
 
 	return SDL_UpdateWindowSurface(WindowHandle);
 }

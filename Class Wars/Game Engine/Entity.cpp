@@ -11,7 +11,7 @@ DLL_API Entity::Entity()
 
 DLL_API Entity::Entity(Window *in_WindowHandle)
 {
-	WindowHandle = in_WindowHandle;
+	Register(in_WindowHandle);
 
 	Entity::Entity();
 }
@@ -43,6 +43,17 @@ double DLL_API Entity::GetAttackDamage()
 
 
 int DLL_API Entity::SetTraits(const double in_Speed, const double in_Health, const double in_AttackDamage)
+{
+	return 0;
+}
+
+
+int DLL_API Entity::Move(const Direction in_Direction)
+{
+	return 0;
+}
+
+int DLL_API Entity::MoveTo(const double in_X, const double in_Y)
 {
 	return 0;
 }

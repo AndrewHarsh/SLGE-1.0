@@ -1,33 +1,37 @@
 #include "SLGE.h"
 
+using namespace SLGE;
+
 BOOL WINAPI DllMain(HINSTANCE ModuleHandle, DWORD ReasonForCall, LPVOID Reserved)
 {
-	if (ReasonForCall == DLL_PROCESS_ATTACH) // Self-explanatory
-	{
-		DisableThreadLibraryCalls(ModuleHandle); // Disable DllMain calls for DLL_THREAD_*
+    switch(ReasonForCall) 
+    { 
+		case DLL_PROCESS_ATTACH:
+		case DLL_THREAD_ATTACH:
+		{
+			std::ofstream File;
+			File.open("Splatter Labs Game Engine Version.txt", std::ios::out);
 
-		if (Reserved == NULL) // Dynamic load
-		{
-			// Return FALSE if you don't want your module to be dynamically loaded
-			//SDLInit();
-		}
-		else // Static load
-		{
-			// Return FALSE if you don't want your module to be statically loaded
-			//return FALSE;
-		}
-	}
+			if (File.is_open())
+			{
+				File << "Author:" << "\n\n";
 
-	if (ReasonForCall == DLL_PROCESS_DETACH) // Self-explanatory
-	{
-		if (Reserved == NULL) // Either loading the DLL has failed or FreeLibrary was called
-		{
-			// Cleanup
+				File << "	Andrew Harsh" << "\n";
+				File << "	Senior Framework Developer" << "\n";
+				File << "	Splatter Labs" << "\n";
+				File << "	" << __DATE__ << "\n\n";
+
+				File << "Version:" << "\n\n";
+
+				File << "	" << Version;
+			}
+			break;
 		}
-		else // Process is terminating
-		{
-			// Cleanup
-		}
-	}
-	return TRUE;
+
+        case DLL_PROCESS_DETACH:
+		case DLL_THREAD_DETACH:
+			remove("Splatter Labs Game Engine Version.txt");
+            break;
+    }
+    return TRUE;
 }

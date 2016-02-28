@@ -14,7 +14,7 @@ DLL_API Object::Object()
 
 DLL_API Object::Object(Window *in_WindowHandle)
 {
-	WindowHandle = in_WindowHandle;
+	Register(in_WindowHandle);
 
 	ClearData();
 }
@@ -42,6 +42,35 @@ void DLL_API Object::ClearData()
 	Y = 0;
 	W = 0;
 	H = 0;
+}
+
+void DLL_API Object::PerFrameActions()
+{
+}
+
+void DLL_API Object::EventHandler(SDL_Event* in_Event)
+{
+}
+
+void DLL_API Object::CollisionDetection()
+{
+}
+
+void DLL_API Object::Animate()
+{
+}
+
+void DLL_API Object::Display()
+{
+	if (WindowHandle == nullptr || Image == nullptr || Image[ImageToDisplay] == NULL)
+		return;
+
+	SDL_Rect Offset;
+
+	Offset.x = static_cast <int> (round(X - Clip[ImageToDisplay].w / 2.0));
+	Offset.y = static_cast <int> (round(Y - Clip[ImageToDisplay].h / 2.0));
+
+	SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
 }
 
 
@@ -76,33 +105,33 @@ double DLL_API Object::GetH()
 }
 
 
-int DLL_API Object::Init(Window *in_Window)
+int DLL_API Object::Register(Window *in_Window)
 {
 	if (in_Window->WindowHandle == nullptr || in_Window->Screen == nullptr)
 		return 1;
 
 	WindowHandle = in_Window;
+	WindowHandle->AddToScreen(this);
 
 	return 0;
 }
 
-int DLL_API Object::Display()
+void DLL_API Object::Deregister()
 {
-	if (WindowHandle == nullptr)
-		return 1;
-
-	SDL_Rect Offset;
-
-	Offset.x = static_cast <int> (X >= 0 ? X + 0.5 : X - 0.5);
-	Offset.y = static_cast <int> (Y >= 0 ? Y + 0.5 : Y - 0.5);
-
-	return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
+	WindowHandle = nullptr;
 }
 
-int DLL_API Object::EventHandler()
+void DLL_API Object::SetCoords(const double in_X, const double in_Y, const double in_W, const double in_H)
 {
-	return 0;
+	X = in_X;
+	Y = in_Y;
+
+	if (in_W > 0)
+		W = in_W;
+	if (in_H > 0)
+		H = in_H;
 }
+
 										 
 int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_Clip, const Color in_ColorKey)
 {
@@ -129,6 +158,7 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 	if (LoadedSurface == NULL)
 	{
 		printf("Unable to load image %s! SDL_image Error: %s\n", in_Filename.c_str(), IMG_GetError());
+		Image[NumberOfImages] = NULL;
 		return 1;
 	}
 
@@ -155,16 +185,15 @@ int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_C
 	}
 
 
-
 	Clip[NumberOfImages].x = in_Clip.x;
 	Clip[NumberOfImages].y = in_Clip.y;
 
-	if (in_Clip.w > 0)
+	if (in_Clip.w > 0 && in_Clip.x + in_Clip.w <= LoadedSurface->w)
 		Clip[NumberOfImages].w = in_Clip.w;
 	else
 		Clip[NumberOfImages].w = LoadedSurface->w;
 
-	if (in_Clip.h > 0)
+	if (in_Clip.h > 0 && in_Clip.y + in_Clip.h <= LoadedSurface->h)
 		Clip[NumberOfImages].h = in_Clip.h;
 	else
 		Clip[NumberOfImages].h = LoadedSurface->h;
@@ -221,17 +250,6 @@ int DLL_API Object::DeleteImage(const int in_Position)
 		return 1;
 
 	return 0;
-}
-
-void DLL_API Object::SetCoords(const double in_X, const double in_Y, const double in_W, const double in_H)
-{
-	X = in_X;
-	Y = in_Y;
-
-	if (in_W > 0)
-		W = in_W;
-	if (in_H > 0)
-		H = in_H;
 }
 
 #undef DLL_API

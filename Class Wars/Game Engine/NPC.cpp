@@ -11,7 +11,7 @@ DLL_API NPC::NPC()
 
 DLL_API NPC::NPC(Window *in_WindowHandle)
 {
-	WindowHandle = in_WindowHandle;
+	Register(in_WindowHandle);
 
 	NPC::NPC();
 }
