@@ -32,7 +32,15 @@
 
 namespace SLGE
 {
-	enum Direction
+	enum Direction;
+	struct Color;
+	class Window;
+	class Object;
+	class Entity;
+	class NPC;
+	class UI;
+
+	enum DLL_API Direction
 	{
 		Up,
 		UpRight,
@@ -43,14 +51,6 @@ namespace SLGE
 		Left,
 		UpLeft
 	};
-
-	struct Color;
-	class Window;
-	class Object;
-	class Entity;
-	class NPC;
-	class UI;
-
 
 	struct DLL_API Color
 	{
@@ -67,23 +67,18 @@ namespace SLGE
 
 		SDL_Window *WindowHandle;
 		SDL_Surface *Screen;
+		SDL_Event Event;
 
 		int Width;
 		int Height;
 		const int BitsPerPixel = 32;
 
 		Object **ScreenObjects;
-		Entity **ScreenEntities;
-		NPC **ScreenNPCs;
-		UI **ScreenUIs;
-
 		int NumberOfObjects;
-		int NumberOfEntities;
-		int NumberOfNPCs;
-		int NumberOfUIs;
 
 		void ClearData();
 		int Display(const Object *ObjectToDisplay);
+		int EventHandler(const Object *ObjectToDisplay);
 
 	public:
 
@@ -97,9 +92,7 @@ namespace SLGE
 		int Init(const int Width, const int Height);
 
 		int AddToScreen(Object *ScreenObject);
-		int AddToScreen(Entity *ScreenEntitiy);
-		int AddToScreen(NPC *ScreenNPC);
-		int AddToScreen(UI *ScreenUI);
+		int RemoveFromScreen(Object *ScreenObject);
 
 		int Refresh();
 	};
@@ -120,11 +113,13 @@ namespace SLGE
 		double W;
 		double H;
 
-		Object();
 		void ClearData();
+		virtual int Display();
+		virtual int EventHandler();
 
 	public:
 
+		Object();
 		Object(Window *WindowHandle);
 
 		int GetNumberOfImages();
@@ -134,7 +129,7 @@ namespace SLGE
 		double GetW();
 		double GetH();
 
-		int Init(Window *Window, const std::string Image);
+		int Init(Window *Window);
 		void SetCoords(const double X, const double Y, const double W, const double H);
 
 		int OpenImage(const std::string Filename, SDL_Rect Clip, const Color ColorKey);
@@ -150,11 +145,11 @@ namespace SLGE
 		double Health;
 		double AttackDamage;
 
-		Entity();
 		void ClearData();
 
 	public:
 
+		Entity();
 		Entity(Window *WindowHandle);
 
 		double GetSpeed();
@@ -174,11 +169,11 @@ namespace SLGE
 	{
 	protected:
 
-		NPC();
 		void ClearData();
 
 	public:
 
+		NPC();
 		NPC(Window *WindowHandle);
 
 		int Wander(const SDL_Rect WanderArea, const double RestTime);
@@ -197,11 +192,11 @@ namespace SLGE
 		float TextX;
 		float TextY;
 
-		UI();
 		void ClearData();
 
 	public:
 
+		UI();
 		UI(Window *WindowHandle);
 
 	};

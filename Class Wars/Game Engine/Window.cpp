@@ -9,17 +9,11 @@ DLL_API Window::Window()
 	Screen = nullptr;
 
 	ScreenObjects = nullptr;
-	ScreenEntities = nullptr;
-	ScreenNPCs = nullptr;
-	ScreenUIs = nullptr;
 
 	Width = 1080;
 	Height = 720;
 
 	NumberOfObjects = 0;
-	NumberOfEntities = 0;
-	NumberOfNPCs = 0;
-	NumberOfUIs = 0;
 
 	Init();
 }
@@ -44,31 +38,10 @@ void DLL_API Window::ClearData()
 		ScreenObjects = nullptr;
 	}
 
-	if (ScreenEntities != nullptr)
-	{
-		delete[] ScreenEntities;
-		ScreenEntities = nullptr;
-	}
-
-	if (ScreenNPCs != nullptr)
-	{
-		delete[] ScreenNPCs;
-		ScreenNPCs = nullptr;
-	}
-
-	if (ScreenUIs != nullptr)
-	{
-		delete[] ScreenUIs;
-		ScreenUIs = nullptr;
-	}
-
 	Width = 1080;
 	Height = 720;
 
 	NumberOfObjects = 0;
-	NumberOfEntities = 0;
-	NumberOfNPCs = 0;
-	NumberOfUIs = 0;
 }
 
 
@@ -186,6 +159,8 @@ int DLL_API Window::Display(const Object *in_Object)
 
 int DLL_API Window::AddToScreen(Object *in_ScreenObject)
 {
+	in_ScreenObject->WindowHandle = this;
+
 	Object **TempArray = new Object*[NumberOfObjects + 1];
 
 	for (int i = 0; i < NumberOfObjects; i++)
@@ -201,53 +176,31 @@ int DLL_API Window::AddToScreen(Object *in_ScreenObject)
 	return 0;
 }
 
-int DLL_API Window::AddToScreen(Entity *in_ScreenEntitiy)
+int DLL_API Window::RemoveFromScreen(Object *in_ScreenObject)
 {
-	Entity **TempArray = new Entity*[NumberOfEntities + 1];
+	Object **TempArray = new Object*[NumberOfObjects - 1];
+	int Offset = 0;
 
-	for (int i = 0; i < NumberOfEntities; i++)
-		TempArray[i] = ScreenEntities[i];
+	for (int i = 0; i < NumberOfObjects - 1; i++)
+	{
+		if (ScreenObjects[i] == in_ScreenObject)
+			Offset++;
 
-	TempArray[NumberOfEntities++] = in_ScreenEntitiy;
-	
-	if (ScreenEntities != nullptr)
-		delete[] ScreenEntities;
+		TempArray[i] = ScreenObjects[i + Offset];
+	}
 
-	ScreenEntities = TempArray;
+	if (Offset != 0)
+	{
+		if (ScreenObjects != nullptr)
+			delete[] ScreenObjects;
 
-	return 0;
-}
-
-int DLL_API Window::AddToScreen(NPC *in_ScreenNPC)
-{
-	NPC **TempArray = new NPC*[NumberOfNPCs + 1];
-
-	for (int i = 0; i < NumberOfNPCs; i++)
-		TempArray[i] = ScreenNPCs[i];
-
-	TempArray[NumberOfNPCs++] = in_ScreenNPC;
-	
-	if (ScreenNPCs != nullptr)
-		delete[] ScreenNPCs;
-	
-	ScreenNPCs = TempArray;
-
-	return 0;
-}
-
-int DLL_API Window::AddToScreen(UI *in_ScreenUI)
-{
-	UI **TempArray = new UI*[NumberOfUIs + 1];
-
-	for (int i = 0; i < NumberOfUIs; i++)
-		TempArray[i] = ScreenUIs[i];
-
-	TempArray[NumberOfUIs++] = in_ScreenUI;
-	
-	if (ScreenUIs != nullptr)
-		delete[] ScreenUIs;
-	
-	ScreenUIs = TempArray;
+		ScreenObjects = TempArray;
+		NumberOfObjects--;
+	}
+	else
+	{
+		delete[] TempArray;
+	}
 
 	return 0;
 }
@@ -257,22 +210,9 @@ int DLL_API Window::Refresh()
 {
 	for (int i = 0; i < NumberOfObjects; i++)
 	{
-		Display(ScreenObjects[i]);
-	}
-
-	for (int i = 0; i < NumberOfEntities; i++)
-	{
-		Display(ScreenEntities[i]);
-	}
-
-	for (int i = 0; i < NumberOfNPCs; i++)
-	{
-		Display(ScreenNPCs[i]);
-	}
-
-	for (int i = 0; i < NumberOfUIs; i++)
-	{
-		Display(ScreenUIs[i]);
+		//Display(ScreenObjects[i]);
+		ScreenObjects[i]->Display();
+		ScreenObjects[i]->EventHandler();
 	}
 
 	return SDL_UpdateWindowSurface(WindowHandle);

@@ -7,7 +7,7 @@ SDL_Event Event;
 Window Window1;
 
 //Must initialize each object with the Window
-Object Background(&Window1);
+Object Background;
 Entity Person(&Window1);
 Entity Animation(&Window1);
 
@@ -16,6 +16,9 @@ int main(int argc, char* argv[])
 {
 	//Must initialize Window first thing
 	Window1.Init(1080, 720);
+
+	//Must manually initialize any object with the window that was not initialized in the constructor
+	Background.Init(&Window1);
 
 	//Load the images 
 	Background.OpenImage("Image.png", { NULL }, { NULL });
@@ -37,9 +40,10 @@ int main(int argc, char* argv[])
 	Animation.SetCoords(100, 100, 32, 32);
 
 	//Puts the image on the screen
+	Window1.AddToScreen(&Background);
 	Window1.AddToScreen(&Person);
 	Window1.AddToScreen(&Animation);
-	Window1.AddToScreen(&Background);
+	
 
 	int Counter = 0;
 	int Counter2 = 0;
@@ -72,7 +76,10 @@ int main(int argc, char* argv[])
 					Person.SetCoords(300, 360, 200, 200);
 
 				if (Event.key.keysym.sym == SDLK_d)
+				{
 					Person.SetCoords(800, 360, 200, 200);
+					Window1.RemoveFromScreen(&Animation);
+				}
 			}
 		} 
 	}

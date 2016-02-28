@@ -76,18 +76,39 @@ double DLL_API Object::GetH()
 }
 
 
-int DLL_API Object::Init(Window *in_Window, const std::string in_Image)
+int DLL_API Object::Init(Window *in_Window)
 {
 	if (in_Window->WindowHandle == nullptr || in_Window->Screen == nullptr)
 		return 1;
 
 	WindowHandle = in_Window;
 
-	return OpenImage(in_Image, { 0, 0, 0, 0 }, { 0, 0, 0, 0 });
+	return 0;
 }
 
+int DLL_API Object::Display()
+{
+	if (WindowHandle == nullptr)
+		return 1;
+
+	SDL_Rect Offset;
+
+	Offset.x = static_cast <int> (X >= 0 ? X + 0.5 : X - 0.5);
+	Offset.y = static_cast <int> (Y >= 0 ? Y + 0.5 : Y - 0.5);
+
+	return SDL_BlitSurface(Image[ImageToDisplay], &Clip[ImageToDisplay], WindowHandle->Screen, &Offset);
+}
+
+int DLL_API Object::EventHandler()
+{
+	return 0;
+}
+										 
 int DLL_API Object::OpenImage(const std::string in_Filename, const SDL_Rect in_Clip, const Color in_ColorKey)
 {
+	if (WindowHandle == nullptr)
+		return 1;
+
 	SDL_Surface **TempImageArray = new SDL_Surface*[NumberOfImages + 1];
 	SDL_Rect *TempClipArray = new SDL_Rect[NumberOfImages + 1];
 
